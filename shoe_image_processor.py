@@ -550,6 +550,10 @@ class ShoeImageProcessor:
             
             # 读取图片
             with Image.open(input_path) as image:
+                # 获取原始图片信息
+                original_format = image.format
+                original_mode = image.mode
+                
                 # 智能裁剪
                 final_image = self.smart_crop(image, target_ratio, preserve_resolution=preserve_resolution)
                 
@@ -564,45 +568,104 @@ class ShoeImageProcessor:
                 cropped_pixels = final_image.width * final_image.height
                 pixel_ratio = cropped_pixels / original_pixels
                 
-                # 基础保存设置
-                save_kwargs = {
-                    'format': 'JPEG',
-                    'optimize': True,
-                }
+                # 根据原图格式确定保存格式和参数
+                output_format = original_format
+                save_kwargs = {}
                 
-                # 根据原文件大小和像素比例智能调整质量
-                if high_quality:
-                    # 估算合理的质量值
-                    if pixel_ratio > 0.8:  # 裁剪不多，保持较高质量
-                        base_quality = 92
-                    elif pixel_ratio > 0.5:  # 中等裁剪
-                        base_quality = 88
-                    else:  # 大幅裁剪
-                        base_quality = 85
-                        
-                    # 根据原文件大小调整
-                    if original_file_size < 500 * 1024:  # 小于500KB
-                        save_kwargs['quality'] = min(base_quality + 5, 95)
-                    elif original_file_size < 2 * 1024 * 1024:  # 小于2MB
-                        save_kwargs['quality'] = base_quality
-                    else:  # 大文件
-                        save_kwargs['quality'] = max(base_quality - 5, 80)
-                        
-                    # 对于高质量，保留色度采样设置
-                    save_kwargs['subsampling'] = 0
+                # 如果原图是PNG且有透明通道，保持透明度
+                if original_format == 'PNG':
+                    save_kwargs['format'] = 'PNG'
+                    if original_mode in ('RGBA', 'LA') or 'transparency' in image.info:
+                        save_kwargs['optimize'] = True
+                        # PNG使用compress_level而不是quality
+                        if high_quality:
+                            save_kwargs['compress_level'] = 6  # 0-9，6是平衡点
+                        else:
+                            save_kwargs['compress_level'] = 9  # 更高压缩
+                    else:
+                        # 没有透明度的PNG可以考虑转为JPEG以减小文件大小
+                        if original_file_size > 1024 * 1024:  # 大于1MB的PNG考虑转JPEG
+                            save_kwargs['format'] = 'JPEG'
+                            save_kwargs['optimize'] = True
+                            # 调整输出路径扩展名
+                            output_base, _ = os.path.splitext(output_path)
+                            output_path = output_base + '.jpg'
+                            logger.info(f"大尺寸PNG文件将转换为JPEG以减小文件大小")
+                        else:
+                            save_kwargs['format'] = 'PNG'
+                            save_kwargs['optimize'] = True
+                            save_kwargs['compress_level'] = 6 if high_quality else 9
+                
+                elif original_format in ('JPEG', 'JPG'):
+                    save_kwargs['format'] = 'JPEG'
+                    save_kwargs['optimize'] = True
+                    
+                elif original_format == 'WEBP':
+                    save_kwargs['format'] = 'WEBP'
+                    save_kwargs['method'] = 6  # 压缩方法
+                    
                 else:
-                    # 普通质量模式
-                    save_kwargs['quality'] = 82
+                    # 其他格式（BMP、TIFF等）转为JPEG
+                    save_kwargs['format'] = 'JPEG'
+                    save_kwargs['optimize'] = True
+                    # 调整输出路径扩展名
+                    output_base, _ = os.path.splitext(output_path)
+                    output_path = output_base + '.jpg'
+                    logger.info(f"{original_format}格式将转换为JPEG")
                 
-                # 先尝试保存
+                # 为JPEG和WEBP设置质量参数
+                if save_kwargs['format'] in ('JPEG', 'WEBP'):
+                    # 根据原文件大小和像素比例智能调整质量
+                    if high_quality:
+                        # 估算合理的质量值
+                        if pixel_ratio > 0.8:  # 裁剪不多，保持较高质量
+                            base_quality = 92
+                        elif pixel_ratio > 0.5:  # 中等裁剪
+                            base_quality = 88
+                        else:  # 大幅裁剪
+                            base_quality = 85
+                            
+                        # 根据原文件大小调整
+                        if original_file_size < 500 * 1024:  # 小于500KB
+                            save_kwargs['quality'] = min(base_quality + 5, 95)
+                        elif original_file_size < 2 * 1024 * 1024:  # 小于2MB
+                            save_kwargs['quality'] = base_quality
+                        else:  # 大文件
+                            save_kwargs['quality'] = max(base_quality - 5, 80)
+                            
+                        # 对于高质量JPEG，保留色度采样设置
+                        if save_kwargs['format'] == 'JPEG':
+                            save_kwargs['subsampling'] = 0
+                    else:
+                        # 普通质量模式
+                        save_kwargs['quality'] = 82
+                
+                # 保持颜色模式一致（如果可能）
+                if save_kwargs['format'] == 'JPEG' and final_image.mode in ('RGBA', 'LA', 'P'):
+                    # JPEG不支持透明度，需要转换
+                    if final_image.mode == 'P':
+                        final_image = final_image.convert('RGB')
+                    elif final_image.mode in ('RGBA', 'LA'):
+                        # 创建白色背景
+                        bg = Image.new('RGB', final_image.size, (255, 255, 255))
+                        if final_image.mode == 'RGBA':
+                            bg.paste(final_image, mask=final_image.split()[-1])
+                        else:
+                            bg.paste(final_image, mask=final_image.split()[-1])
+                        final_image = bg
+                
+                # 保存图片
+                logger.info(f"保存格式: {save_kwargs['format']}, 参数: {save_kwargs}")
                 final_image.save(output_path, **save_kwargs)
                 
                 # 检查输出文件大小
                 output_file_size = os.path.getsize(output_path)
                 size_ratio = output_file_size / original_file_size
                 
-                # 如果输出文件比原文件大太多，降低质量重新保存
-                if size_ratio > 1.3 and pixel_ratio < 0.9:  # 文件变大30%以上且有实际裁剪
+                # 如果输出文件比原文件大太多且是压缩格式，降低质量重新保存
+                if (size_ratio > 1.3 and pixel_ratio < 0.9 and 
+                    save_kwargs['format'] in ('JPEG', 'WEBP') and 'quality' in save_kwargs):
+                    
                     logger.warning(f"输出文件过大 ({size_ratio:.1f}x)，降低质量重新保存")
                     
                     # 重新计算质量
@@ -618,6 +681,7 @@ class ShoeImageProcessor:
                 
                 # 记录文件大小信息
                 logger.info(f"文件大小: {original_file_size/1024:.1f}KB -> {output_file_size/1024:.1f}KB (比例: {size_ratio:.2f}x)")
+                logger.info(f"格式: {original_format} -> {save_kwargs['format']}")
                 
                 logger.info(f"处理完成: {output_path}")
                 return True
@@ -670,8 +734,9 @@ class ShoeImageProcessor:
         for i, image_file in enumerate(image_files, 1):
             logger.info(f"处理进度: {i}/{total_files}")
             
-            # 构建输出文件路径
-            output_file = output_path / f"{image_file.stem}_processed{image_file.suffix}"
+            # 构建输出文件路径 - 保持与源文件名一致
+            # 注意：如果process_single_image中发生格式转换，文件扩展名可能会改变
+            output_file = output_path / image_file.name  # 使用原文件名
             
             # 处理图片
             if self.process_single_image(str(image_file), str(output_file), target_ratio, 

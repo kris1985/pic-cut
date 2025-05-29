@@ -302,6 +302,7 @@ class ShoeProcessorGUI:
             self.log_message(f"裁剪比例: {ratio}")
             self.log_message(f"高质量模式: {'是' if high_quality else '否'}")
             self.log_message(f"高分辨率模式: {'是' if self.hires_var.get() else '否'}")
+            self.log_message(f"文件名保持: 与源文件一致")
             
             # 获取图片文件列表
             supported_formats = ['.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.webp']
@@ -331,8 +332,8 @@ class ShoeProcessorGUI:
                 progress_msg = f"处理进度: {i}/{total_files} - {image_file.name}"
                 self.root.after(0, lambda msg=progress_msg: self.progress_var.set(msg))
                 
-                # 构建输出文件路径
-                output_file = Path(output_dir) / f"{image_file.stem}_processed{image_file.suffix}"
+                # 构建输出文件路径 - 保持与源文件名一致
+                output_file = Path(output_dir) / image_file.name
                 
                 # 处理图片
                 success = self.processor.process_single_image(
