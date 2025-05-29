@@ -12,7 +12,7 @@ jobs:
     runs-on: windows-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -29,19 +29,20 @@ jobs:
       run: python build_simple.py
       
     - name: Upload Windows artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: windows-exe
         path: |
           dist/*.exe
-          dist/*.txt
-        if-no-files-found: error
+          dist/使用说明.txt
+          dist/版本信息.txt
+        if-no-files-found: warn
 
   build-macos:
     runs-on: macos-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -58,20 +59,19 @@ jobs:
       run: python build_simple.py
       
     - name: Upload macOS artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: macos-app
         path: |
           dist/*.app
-          dist/*
-          !dist/*.txt
-        if-no-files-found: error
+          dist/鞋子图片智能裁剪工具_v2.0_macOS
+        if-no-files-found: warn
 
   build-linux:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -84,19 +84,21 @@ jobs:
         pip install -r requirements.txt
         pip install pyinstaller
         sudo apt-get update
-        sudo apt-get install -y python3-tk
+        sudo apt-get install -y python3-tk xvfb
         
     - name: Build Linux Binary
-      run: python build_simple.py
+      run: |
+        export DISPLAY=:99
+        Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+        python build_simple.py
       
     - name: Upload Linux artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: linux-binary
         path: |
-          dist/*
-          !dist/*.txt
-        if-no-files-found: error
+          dist/鞋子图片智能裁剪工具_v2.0_linux
+        if-no-files-found: warn
 
   release:
     needs: [build-windows, build-macos, build-linux]
@@ -105,7 +107,7 @@ jobs:
     
     steps:
     - name: Download all artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       
     - name: Create Release
       uses: softprops/action-gh-release@v1
@@ -117,15 +119,21 @@ jobs:
         body: |
           ## 鞋子图片智能裁剪工具 v2.0
           
-          ### 下载说明
+          ### 📦 下载说明
           - **Windows用户**: 下载 `鞋子图片智能裁剪工具_v2.0_x64.exe`
           - **macOS用户**: 下载 `.app` 文件
-          - **Linux用户**: 下载无后缀的可执行文件
+          - **Linux用户**: 下载 `鞋子图片智能裁剪工具_v2.0_linux`
           
-          ### 功能特性
-          - ✨ 智能文件大小控制
-          - ✨ 动态质量调整
-          - ✨ 多策略对象检测
-          - ✨ 高分辨率模式优化
+          ### ✨ 功能特性
+          - 🔥 智能文件大小控制
+          - 🔥 动态质量调整
+          - 🔥 多策略对象检测
+          - 🔥 高分辨率模式优化
+          - 🔥 自动4:3/3:4比例选择
+          
+          ### 🖥️ 系统要求
+          - **Windows**: Windows 7/8/10/11 (64位)
+          - **macOS**: macOS 10.14+
+          - **Linux**: Ubuntu 18.04+ / CentOS 7+
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
