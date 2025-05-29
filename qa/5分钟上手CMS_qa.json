@@ -1,0 +1,42 @@
+[
+  {
+    "question": "如何启动CMS客户端 - 开发环境？",
+    "answer": "点击editor版本服务程序的【启动】按钮即可启动客户端 - 开发环境。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/5%E5%88%86%E9%92%9F%E4%B8%8A%E6%89%8BCMS"
+  },
+  {
+    "question": "创建第一个CMS工程后，如何进入工程配置环境？",
+    "answer": "创建第一个CMS工程后，点击对应工程记录，即可进入工程配置环境。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/5%E5%88%86%E9%92%9F%E4%B8%8A%E6%89%8BCMS"
+  },
+  {
+    "question": "在连接通讯设备时，如何创建通道？",
+    "answer": "在“IO通道”页签下，点击添加通道按钮，选择协议驱动，输入通道名及参数配置，点击确认成功创建。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/5%E5%88%86%E9%92%9F%E4%B8%8A%E6%89%8BCMS"
+  },
+  {
+    "question": "如何在通讯设备连接中创建变量组？",
+    "answer": "选中对应通道，点击添加变量组按钮，输入变量组名称，确认即完成变量组的创建。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/5%E5%88%86%E9%92%9F%E4%B8%8A%E6%89%8BCMS"
+  },
+  {
+    "question": "怎样在变量组中创建IO变量？",
+    "answer": "在对应变量组中，点击变量列表上方的新增变量按钮，变量列表末尾新增一条变量记录，直接配置以下IO变量属性，配置后点击保存，完成IO变量的创建。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/5%E5%88%86%E9%92%9F%E4%B8%8A%E6%89%8BCMS"
+  },
+  {
+    "question": "变量历史归档有哪两种方式？",
+    "answer": "变量历史归档有按组归档和独立归档两种方式。按组归档：点击历史库，新建历史组，添加变量，设置组内变量的定时归档或变化归档；独立归档：点击对应变量的历史归档属性配置，分组为默认分组，设定变量的定时归档或变化归档。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/5%E5%88%86%E9%92%9F%E4%B8%8A%E6%89%8BCMS"
+  },
+  {
+    "question": "简单产线监控分析系统页面的进入流程是怎样的？",
+    "answer": "进入系统，首先在登录页登录成功后，进入产线监控页面，监控产线各设备状态及核心参数，点击切至产线分析看板，查看产线能耗、产量、过程参数等业务统计分析，同时提供系统基础应用模块，对用户及其权限进行管控。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/5%E5%88%86%E9%92%9F%E4%B8%8A%E6%89%8BCMS"
+  },
+  {
+    "question": "制作工程页面的操作步骤在哪里查看？",
+    "answer": "点击[这里](/cms/tutorial/页面管理/页面应用案例)查看。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/5%E5%88%86%E9%92%9F%E4%B8%8A%E6%89%8BCMS"
+  },
+  {
+    "question": "如何配置报警应用中的报警级别、类别及组？",
+    "answer": "点击【报警管理】，分别创建报警级别、报警类别及报警组，配置报警点，设置报警触发的条件，选择报警所属级别和类别。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/5%E5%88%86%E9%92%9F%E4%B8%8A%E6%89%8BCMS"
+  },
+  {
+    "question": "报警触发和解除后，数据如何展示？",
+    "answer": "当符合条件既实时触发报警，将该条数据在数据管理模块的报警管理 - 实时表中展示；当报警不满足逻辑表达式时解除报警，实时表中的报警记录流转至历史表中。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/5%E5%88%86%E9%92%9F%E4%B8%8A%E6%89%8BCMS"
+  }
+]

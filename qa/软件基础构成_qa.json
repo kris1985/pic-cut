@@ -1,0 +1,42 @@
+[
+  {
+    "question": "CMS基本组成包括哪些部分？",
+    "answer": "CMS基本组成包括服务程序、开发环境、运行系统、以及工程文件、数据。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/%E8%BD%AF%E4%BB%B6%E5%9F%BA%E7%A1%80%E6%9E%84%E6%88%90"
+  },
+  {
+    "question": "服务端有什么作用？",
+    "answer": "服务端提供软件功能和服务，可设置应用参数、服务运行、软件授权等。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/%E8%BD%AF%E4%BB%B6%E5%9F%BA%E7%A1%80%E6%9E%84%E6%88%90"
+  },
+  {
+    "question": "如何打开服务端后台运行的监控界面？",
+    "answer": "点击任务栏的【CMS服务监控】托盘图标，即可打开。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/%E8%BD%AF%E4%BB%B6%E5%9F%BA%E7%A1%80%E6%9E%84%E6%88%90"
+  },
+  {
+    "question": "如何完全关闭软件？",
+    "answer": "需右键退出服务程序。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/%E8%BD%AF%E4%BB%B6%E5%9F%BA%E7%A1%80%E6%9E%84%E6%88%90"
+  },
+  {
+    "question": "工程编辑器的作用是什么？",
+    "answer": "工程编辑器用于开发或配置工程项目，建立项目所需要的功能项，使得这些功能按照要求运作，达到应用系统的目的，如工程师人员做设备变量点表、报警点、监控界面模块的管理和制作等。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/%E8%BD%AF%E4%BB%B6%E5%9F%BA%E7%A1%80%E6%9E%84%E6%88%90"
+  },
+  {
+    "question": "开发环境包含哪些功能模块？",
+    "answer": "开发环境包含工程管理、变量管理、历史库、页面管理、数据管理、报警管理、集成互联、多语言这8个功能模块。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/%E8%BD%AF%E4%BB%B6%E5%9F%BA%E7%A1%80%E6%9E%84%E6%88%90"
+  },
+  {
+    "question": "工程运行的目的是什么？",
+    "answer": "工程开发和配置完毕，将其运行，预览已组态好的画面，使工程的各项功能按照工程师开发时的配置要求工作起来，并互相配合形成一个有机的整体系统，取得预期的效果。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/%E8%BD%AF%E4%BB%B6%E5%9F%BA%E7%A1%80%E6%9E%84%E6%88%90"
+  },
+  {
+    "question": "一个具体项目与工程有什么关系？",
+    "answer": "一个具体项目对应一个工程，工程结合CMS软件，即是一个完整的项目应用系统。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/%E8%BD%AF%E4%BB%B6%E5%9F%BA%E7%A1%80%E6%9E%84%E6%88%90"
+  },
+  {
+    "question": "工程包含哪两部分？",
+    "answer": "工程包含工程文件和工程数据，工程文件为工程应用配置文件，工程数据为工程产生的运行数据。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/%E8%BD%AF%E4%BB%B6%E5%9F%BA%E7%A1%80%E6%9E%84%E6%88%90"
+  },
+  {
+    "question": "工程迁移时需要注意什么？",
+    "answer": "工程迁移时，注意在原主机对工程文件和数据进行备份，在新主机导入工程文件，并对其进行数据还原，保证工程配置和数据的完整性。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/%E8%BD%AF%E4%BB%B6%E5%9F%BA%E7%A1%80%E6%9E%84%E6%88%90"
+  }
+]

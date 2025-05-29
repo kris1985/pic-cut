@@ -1,0 +1,42 @@
+[
+  {
+    "question": "数据库交互在企业内部有什么作用？",
+    "answer": "企业内部可能有多个不同的应用系统，每个系统可能都有自己的数据库。为了实现数据的共享和整合，需要进行数据库交互。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%9B%86%E6%88%90%E4%BA%92%E8%81%94/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BA%A4%E4%BA%92/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BA%A4%E4%BA%92%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "在工业场景中，数据库交互有什么用途？",
+    "answer": "工业场景中的传感器和设备可能会产生大量的数据，数据库交互可以用于将传感器数据存储到数据库中，并允许其他应用程序或系统访问和分析这些数据。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%9B%86%E6%88%90%E4%BA%92%E8%81%94/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BA%A4%E4%BA%92/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BA%A4%E4%BA%92%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "应用程序与数据库交互的第一步是什么，需要提供哪些信息？",
+    "answer": "应用程序与数据库交互的第一步是连接数据库，连接时通常需要提供数据库服务器的地址、用户名、密码和数据库名称等信息。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%9B%86%E6%88%90%E4%BA%92%E8%81%94/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BA%A4%E4%BA%92/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BA%A4%E4%BA%92%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "CMS与数据库交互时能执行哪些操作？",
+    "answer": "CMS与数据库交互时能执行的操作有查询（获取数据并写入CMS变量）、插入（将CMS变量中的数据插入到数据库）、修改（用变量中的数据修改数据库中已有的数据）。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%9B%86%E6%88%90%E4%BA%92%E8%81%94/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BA%A4%E4%BA%92/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BA%A4%E4%BA%92%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "数据库接收到应用程序的动作后会如何响应？",
+    "answer": "对于查询语句，数据库会返回查询结果集；对于插入、更新动作，数据库会执行相应的数据操作并返回执行结果。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%9B%86%E6%88%90%E4%BA%92%E8%81%94/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BA%A4%E4%BA%92/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BA%A4%E4%BA%92%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "应用程序收到数据库返回的查询结果后要做什么？",
+    "answer": "对于查询，可能需要写入变量并展示给用户或用于后续的数据处理；对于插入和修改的工作，通常会检查执行结果以确保操作成功。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%9B%86%E6%88%90%E4%BA%92%E8%81%94/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BA%A4%E4%BA%92/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BA%A4%E4%BA%92%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "在数据库交互的配置界面中，动作下拉框提供了哪些选项？",
+    "answer": "动作下拉框提供查询、修改、插入的选项。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%9B%86%E6%88%90%E4%BA%92%E8%81%94/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BA%A4%E4%BA%92/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BA%A4%E4%BA%92%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "在配置界面的筛选条件设置中，条件下拉框有哪些选项？",
+    "answer": "条件下拉框提供等于、不等于、不为空选项。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%9B%86%E6%88%90%E4%BA%92%E8%81%94/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BA%A4%E4%BA%92/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BA%A4%E4%BA%92%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "在配置界面的排序设置中，顺序下拉框有哪些选项？",
+    "answer": "顺序下拉框提供升序和降序两个选项。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%9B%86%E6%88%90%E4%BA%92%E8%81%94/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BA%A4%E4%BA%92/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BA%A4%E4%BA%92%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "调试界面中的测试信息有什么作用？",
+    "answer": "点击测试按钮进行数据库的交互，返回数据库的执行结果，该窗口展示测试的结果，用户可根据该窗口查看配置是否正确。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%9B%86%E6%88%90%E4%BA%92%E8%81%94/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BA%A4%E4%BA%92/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BA%A4%E4%BA%92%E6%A6%82%E8%BF%B0"
+  }
+]

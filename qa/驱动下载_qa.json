@@ -1,0 +1,42 @@
+[
+  {
+    "question": "在哪里可以下载驱动？",
+    "answer": "点击文档中提供的链接，可跳转到对应页面下载驱动。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/%E9%A9%B1%E5%8A%A8%E4%B8%8B%E8%BD%BD"
+  },
+  {
+    "question": "标准协议驱动在哪里下载？",
+    "answer": "点击链接[/cms/download/驱动下载/标准协议]可下载标准协议驱动。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/%E9%A9%B1%E5%8A%A8%E4%B8%8B%E8%BD%BD"
+  },
+  {
+    "question": "PLC协议驱动的下载链接是什么？",
+    "answer": "PLC协议驱动的下载链接为[/cms/download/驱动下载/PLC协议驱动]。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/%E9%A9%B1%E5%8A%A8%E4%B8%8B%E8%BD%BD"
+  },
+  {
+    "question": "智能仪表驱动如何下载？",
+    "answer": "通过点击链接[/cms/download/驱动下载/智能仪表]可下载智能仪表驱动。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/%E9%A9%B1%E5%8A%A8%E4%B8%8B%E8%BD%BD"
+  },
+  {
+    "question": "智能模块驱动的下载页面链接是什么？",
+    "answer": "智能模块驱动的下载页面链接是[/cms/download/驱动下载/智能模块]。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/%E9%A9%B1%E5%8A%A8%E4%B8%8B%E8%BD%BD"
+  },
+  {
+    "question": "文档中提供了几种驱动的下载链接？",
+    "answer": "文档中提供了4种驱动的下载链接，分别是标准协议驱动、PLC协议驱动、智能仪表驱动、智能模块驱动。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/%E9%A9%B1%E5%8A%A8%E4%B8%8B%E8%BD%BD"
+  },
+  {
+    "question": "标准协议驱动下载链接对应的是什么驱动？",
+    "answer": "标准协议驱动下载链接对应的是标准协议驱动。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/%E9%A9%B1%E5%8A%A8%E4%B8%8B%E8%BD%BD"
+  },
+  {
+    "question": "要下载PLC协议驱动应点击哪个链接？",
+    "answer": "要下载PLC协议驱动应点击[/cms/download/驱动下载/PLC协议驱动]这个链接。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/%E9%A9%B1%E5%8A%A8%E4%B8%8B%E8%BD%BD"
+  },
+  {
+    "question": "智能仪表驱动下载链接和智能模块驱动下载链接有什么不同？",
+    "answer": "智能仪表驱动下载链接为[/cms/download/驱动下载/智能仪表]，智能模块驱动下载链接为[/cms/download/驱动下载/智能模块]，链接地址不同。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/%E9%A9%B1%E5%8A%A8%E4%B8%8B%E8%BD%BD"
+  },
+  {
+    "question": "从哪里获取文档中驱动下载的相关信息？",
+    "answer": "从文档https://cms-docs.shengyc.com/cms/tutorial/%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/%E9%A9%B1%E5%8A%A8%E4%B8%8B%E8%BD%BD获取驱动下载的相关信息。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/%E9%A9%B1%E5%8A%A8%E4%B8%8B%E8%BD%BD"
+  }
+]

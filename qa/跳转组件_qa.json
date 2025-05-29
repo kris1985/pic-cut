@@ -1,0 +1,42 @@
+[
+  {
+    "question": "水平菜单通常位于页面的什么位置？",
+    "answer": "水平菜单通常位于页面的顶部或底部。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E8%B7%B3%E8%BD%AC%E7%BB%84%E4%BB%B6(https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E8%B7%B3%E8%BD%AC%E7%BB%84%E4%BB%B6)"
+  },
+  {
+    "question": "如何添加主菜单？",
+    "answer": "点击列表右上角的【添加】按钮，添加主菜单；点击菜单项+操作图标，也可添加主菜单。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E8%B7%B3%E8%BD%AC%E7%BB%84%E4%BB%B6(https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E8%B7%B3%E8%BD%AC%E7%BB%84%E4%BB%B6)"
+  },
+  {
+    "question": "如何调整菜单顺序？",
+    "answer": "选中行，点击列表右上角的【上移】【下移】，可调整菜单顺序。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E8%B7%B3%E8%BD%AC%E7%BB%84%E4%BB%B6(https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E8%B7%B3%E8%BD%AC%E7%BB%84%E4%BB%B6)"
+  },
+  {
+    "question": "如何实现炫酷风格化的菜单效果？",
+    "answer": "设置填充颜色为透明，选择未选中效果图片作为菜单项填充背景，选择选中效果图片作为选中项填充背景。官方提供【菜单项】设计素材，也可自行设计后上传菜单项效果背景图。官方还提供炫酷【菜单项】套件资源，一键套用。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E8%B7%B3%E8%BD%AC%E7%BB%84%E4%BB%B6(https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E8%B7%B3%E8%BD%AC%E7%BB%84%E4%BB%B6)"
+  },
+  {
+    "question": "菜单项的权限控制如何操作？",
+    "answer": "若登录用户未分配菜单项的目标页面的权限，该菜单项将自动隐藏，需前往【权限管理】模块为其开放菜单页面的权限（参考[这里](/cms/tutorial/页面管理/使用运行模块/权限管理)）。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E8%B7%B3%E8%BD%AC%E7%BB%84%E4%BB%B6(https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E8%B7%B3%E8%BD%AC%E7%BB%84%E4%BB%B6)"
+  },
+  {
+    "question": "跳转按钮的功能是什么？",
+    "answer": "跳转按钮用于关联页面，实现页面点击跳转的效果，可自定义菜单项，关联跳转的目标画面。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E8%B7%B3%E8%BD%AC%E7%BB%84%E4%BB%B6(https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E8%B7%B3%E8%BD%AC%E7%BB%84%E4%BB%B6)"
+  },
+  {
+    "question": "弹窗按钮如何关联弹出的页面？",
+    "answer": "点击功能 - 弹窗画面 - 编辑按钮，可关联弹出的页面。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E8%B7%B3%E8%BD%AC%E7%BB%84%E4%BB%B6(https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E8%B7%B3%E8%BD%AC%E7%BB%84%E4%BB%B6)"
+  },
+  {
+    "question": "弹窗按钮自定义窗口大小有什么规则？",
+    "answer": "若未勾选尺寸固定尺寸，窗口大小自适应为目标画面的画布大小；若勾选固定尺寸，自定义的宽高生效，目标画面内容超出窗口大小时将出现滚动条。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E8%B7%B3%E8%BD%AC%E7%BB%84%E4%BB%B6(https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E8%B7%B3%E8%BD%AC%E7%BB%84%E4%BB%B6)"
+  },
+  {
+    "question": "登录控件如何关联登录成功后跳转的目标画面？",
+    "answer": "点击功能 - 跳转画面 - 编辑按钮，可关联登录成功后跳转切换的目标画面。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E8%B7%B3%E8%BD%AC%E7%BB%84%E4%BB%B6(https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E8%B7%B3%E8%BD%AC%E7%BB%84%E4%BB%B6)"
+  },
+  {
+    "question": "用户信息的退出登录类型有哪些？",
+    "answer": "用户信息的退出登录类型有回到工程首页、停留当前页面、跳转至目标页面。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E8%B7%B3%E8%BD%AC%E7%BB%84%E4%BB%B6(https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E8%B7%B3%E8%BD%AC%E7%BB%84%E4%BB%B6)"
+  }
+]

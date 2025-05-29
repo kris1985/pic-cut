@@ -1,0 +1,42 @@
+[
+  {
+    "question": "如果已经存在工程文件，想要打开工程并编辑，该怎么做？",
+    "answer": "点击【打开已有工程】，选择工程打开。若通过web远程访问，可选择本地的工程导入，点击确认后将工程上传服务器默认路径下，完成工程的添加 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%B7%A5%E7%A8%8B%E7%AE%A1%E7%90%86/%E5%B7%A5%E7%A8%8B%E4%BD%BF%E7%94%A8/%E6%89%93%E5%BC%80%E5%B7%B2%E6%9C%89%E5%B7%A5%E7%A8%8B"
+  },
+  {
+    "question": "打开已有工程时，若工程列表中已存在该工程，有哪些处理方式？",
+    "answer": "有三种处理方式，分别是：作为新工程记录添加，新打开的工程文件将创建为新的工程文件，列表中原工程文件将保留；替换（保留原工程运行数据），用新打开的工程文件替换已经存在工程列表的工程，并且保留原有工程的运行数据；替换（清除原工程运行数据），用新打开的工程文件替换已经存在工程列表的工程，并且清除原有工程的运行数据 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%B7%A5%E7%A8%8B%E7%AE%A1%E7%90%86/%E5%B7%A5%E7%A8%8B%E4%BD%BF%E7%94%A8/%E6%89%93%E5%BC%80%E5%B7%B2%E6%9C%89%E5%B7%A5%E7%A8%8B"
+  },
+  {
+    "question": "打开工程后，若工程文件所属产品版本低于当前使用的产品版本，该怎么办？",
+    "answer": "需要升级后才能使用。若选择保留原低版本工程文件，将自动为您备份工程文件，便于回退工程版本 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%B7%A5%E7%A8%8B%E7%AE%A1%E7%90%86/%E5%B7%A5%E7%A8%8B%E4%BD%BF%E7%94%A8/%E6%89%93%E5%BC%80%E5%B7%B2%E6%9C%89%E5%B7%A5%E7%A8%8B"
+  },
+  {
+    "question": "2.0.3之前的工程文件升级到2.0.3时，会出现什么问题？",
+    "answer": "变量点无法下发，数据管理、报警数据表无法归档 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%B7%A5%E7%A8%8B%E7%AE%A1%E7%90%86/%E5%B7%A5%E7%A8%8B%E4%BD%BF%E7%94%A8/%E6%89%93%E5%BC%80%E5%B7%B2%E6%9C%89%E5%B7%A5%E7%A8%8B"
+  },
+  {
+    "question": "2.0.3之前的工程文件升级到2.0.3时，有什么建议？",
+    "answer": "建议手动导出，使用新模版修改后导入使用，或者使用相应版本产品处理 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%B7%A5%E7%A8%8B%E7%AE%A1%E7%90%86/%E5%B7%A5%E7%A8%8B%E4%BD%BF%E7%94%A8/%E6%89%93%E5%BC%80%E5%B7%B2%E6%9C%89%E5%B7%A5%E7%A8%8B"
+  },
+  {
+    "question": "通过web远程访问打开已有工程时，具体操作是什么？",
+    "answer": "通过web远程访问打开已有工程时，可选择本地的工程导入，点击确认后将工程上传服务器默认路径下，完成工程的添加 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%B7%A5%E7%A8%8B%E7%AE%A1%E7%90%86/%E5%B7%A5%E7%A8%8B%E4%BD%BF%E7%94%A8/%E6%89%93%E5%BC%80%E5%B7%B2%E6%9C%89%E5%B7%A5%E7%A8%8B"
+  },
+  {
+    "question": "选择“作为新工程记录添加”处理方式，对原工程文件有什么影响？",
+    "answer": "原工程文件将保留，新打开的工程文件将创建为新的工程文件 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%B7%A5%E7%A8%8B%E7%AE%A1%E7%90%86/%E5%B7%A5%E7%A8%8B%E4%BD%BF%E7%94%A8/%E6%89%93%E5%BC%80%E5%B7%B2%E6%9C%89%E5%B7%A5%E7%A8%8B"
+  },
+  {
+    "question": "“替换（保留原工程运行数据）”处理方式有什么特点？",
+    "answer": "用新打开的工程文件替换已经存在工程列表的工程，并且保留原有工程的运行数据 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%B7%A5%E7%A8%8B%E7%AE%A1%E7%90%86/%E5%B7%A5%E7%A8%8B%E4%BD%BF%E7%94%A8/%E6%89%93%E5%BC%80%E5%B7%B2%E6%9C%89%E5%B7%A5%E7%A8%8B"
+  },
+  {
+    "question": "“替换（清除原工程运行数据）”处理方式有什么特点？",
+    "answer": "用新打开的工程文件替换已经存在工程列表的工程，并且清除原有工程的运行数据 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%B7%A5%E7%A8%8B%E7%AE%A1%E7%90%86/%E5%B7%A5%E7%A8%8B%E4%BD%BF%E7%94%A8/%E6%89%93%E5%BC%80%E5%B7%B2%E6%9C%89%E5%B7%A5%E7%A8%8B"
+  },
+  {
+    "question": "打开工程后选择保留原低版本工程文件，系统会做什么？",
+    "answer": "系统将自动为您备份工程文件，便于回退工程版本 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%B7%A5%E7%A8%8B%E7%AE%A1%E7%90%86/%E5%B7%A5%E7%A8%8B%E4%BD%BF%E7%94%A8/%E6%89%93%E5%BC%80%E5%B7%B2%E6%9C%89%E5%B7%A5%E7%A8%8B"
+  }
+]

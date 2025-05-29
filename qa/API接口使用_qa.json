@@ -1,0 +1,42 @@
+[
+  {
+    "question": "如何添加互联项？",
+    "answer": "添加互联项，选择互联类型为API接口，填写互联名称、服务地址、超时时长与重试次数。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%9B%86%E6%88%90%E4%BA%92%E8%81%94/API%E6%8E%A5%E5%8F%A3/API%E6%8E%A5%E5%8F%A3%E4%BD%BF%E7%94%A8"
+  },
+  {
+    "question": "API接口的作用是什么？",
+    "answer": "API接口支持接入外部系统，以及利用第三方资源进行现场管控业务的拓展。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%9B%86%E6%88%90%E4%BA%92%E8%81%94/API%E6%8E%A5%E5%8F%A3/API%E6%8E%A5%E5%8F%A3%E4%BD%BF%E7%94%A8"
+  },
+  {
+    "question": "接口列表有哪些操作？",
+    "answer": "新建接口后，所有接口存储在接口目录中，可在全部接口页面浏览所有接口文档信息，支持批量删除、导入导出接口操作；支持多选请求方法进行叠加筛选，通过查看引用功能检索当前接口在项目其他位置的引用情况。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%9B%86%E6%88%90%E4%BA%92%E8%81%94/API%E6%8E%A5%E5%8F%A3/API%E6%8E%A5%E5%8F%A3%E4%BD%BF%E7%94%A8"
+  },
+  {
+    "question": "全局参数如何设置？",
+    "answer": "基于当前连接服务的全局参数需要，可设置全局的Header、Query、Body参数，其中Body参数仅支持form-data、x-www-form-urlencoded两种类型下使用。在全局参数配置模块，通过启用、停用设置，可统一调整所有接口参数的全局参数，具体接口参数配置也可对全局参数应用状态独立设置，不影响其他接口应用状态。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%9B%86%E6%88%90%E4%BA%92%E8%81%94/API%E6%8E%A5%E5%8F%A3/API%E6%8E%A5%E5%8F%A3%E4%BD%BF%E7%94%A8"
+  },
+  {
+    "question": "接口配置的基础信息包括哪些？",
+    "answer": "包括接口名称、接口描述、请求方法、请求地址。接口名称和接口描述用于说明接口配置内容及调用业务，请求地址为第三方API的URL地址（可填相对地址，系统自动拼接服务地址前缀），请求方法可选GET，POST，PUT，DELETE，需根据第三方API文档选择。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%9B%86%E6%88%90%E4%BA%92%E8%81%94/API%E6%8E%A5%E5%8F%A3/API%E6%8E%A5%E5%8F%A3%E4%BD%BF%E7%94%A8"
+  },
+  {
+    "question": "请求参数中的header参数和body参数分别是什么？",
+    "answer": "header参数是请求头，需根据API文档填写，一些需鉴权验证的API通常要在请求头带上鉴权信息；body参数是请求主体，可额外指定参数类型，类型包括form-data，x-www-form-urlencoded，json、xml和raw类型，RAW类型即原始文本，若无需body参数，把body参数栏留空即可。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%9B%86%E6%88%90%E4%BA%92%E8%81%94/API%E6%8E%A5%E5%8F%A3/API%E6%8E%A5%E5%8F%A3%E4%BD%BF%E7%94%A8"
+  },
+  {
+    "question": "如何进行接口调试？",
+    "answer": "完成接口配置后，可在当前接口页面或接口列表快捷入口点击调试按钮，点击发送进行调试，调试中可修改请求参数或其他配置，调整后再次发送请求，调试结果可保存更新在当前接口上，接口调试内容修改与接口配置内容修改交互相同。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%9B%86%E6%88%90%E4%BA%92%E8%81%94/API%E6%8E%A5%E5%8F%A3/API%E6%8E%A5%E5%8F%A3%E4%BD%BF%E7%94%A8"
+  },
+  {
+    "question": "接口调试获取返回结果有哪些查看方式和信息？",
+    "answer": "可查看返回结果的Body内容，查看方式有美化后的结果Pretty类型、原始数据的Raw类型，Raw类型支持不同编码格式转换查看；返回结果同时提供当次请求的整体状态及耗时统计等信息，包括HTTP状态码，响应时间，响应大小；还可查看返回Header内容（为json格式的各种返回头信息），实际请求内容可按curl内容复制在第三方curl运行shell发起，用于交叉验证接口有效性。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%9B%86%E6%88%90%E4%BA%92%E8%81%94/API%E6%8E%A5%E5%8F%A3/API%E6%8E%A5%E5%8F%A3%E4%BD%BF%E7%94%A8"
+  },
+  {
+    "question": "如何配置接口调用的事件？",
+    "answer": "选中组件/页面，配置事件，目标为系统，动作为请求API，选择需要调用的API，支持在前端页面或后端服务位置对已定义接口进行调用。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%9B%86%E6%88%90%E4%BA%92%E8%81%94/API%E6%8E%A5%E5%8F%A3/API%E6%8E%A5%E5%8F%A3%E4%BD%BF%E7%94%A8"
+  },
+  {
+    "question": "接口调用时请求参数的值如何传入？",
+    "answer": "当接口发起请求时，根据参数面板的传入值关联项进行请求参数的值传入，传入值可为固定数值或字符串，也可以是变量（根据调用时变量当前值传入），还可以是变量表达式（根据实际需要进行变量值逻辑转换或运算处理）。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%9B%86%E6%88%90%E4%BA%92%E8%81%94/API%E6%8E%A5%E5%8F%A3/API%E6%8E%A5%E5%8F%A3%E4%BD%BF%E7%94%A8"
+  }
+]

@@ -1,0 +1,42 @@
+[
+  {
+    "question": "自动化适用于哪些场景？",
+    "answer": "自动化适用于满足一些标准SCADA系统无法满足的非常复杂且独特的需求，如复杂的跨系统集成需求、高度定制化的数据采集需求。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E8%87%AA%E5%8A%A8%E5%8C%96/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "自动化在功能方面支持什么脚本编写？",
+    "answer": "自动化支持C#脚本编写，可灵活编写脚本，处理复杂的逻辑和定制化的需求，还能搭配事件动作能力，实现与第三方系统对接。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E8%87%AA%E5%8A%A8%E5%8C%96/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "自动化的脚本可以在哪些位置调用？",
+    "answer": "自动化的脚本可以在按钮点击、定时任务、报警触发等不同位置进行调用，使自动化操作更加方便和高效。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E8%87%AA%E5%8A%A8%E5%8C%96/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "自动化的脚本具备什么调试功能？",
+    "answer": "自动化的脚本支持实时调试功能，用户可以即时查看脚本运行结果，并迅速进行调整，确保满足业务需求的实现。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E8%87%AA%E5%8A%A8%E5%8C%96/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "自动化通过什么方式满足复杂独特需求？",
+    "answer": "自动化通过编写脚本满足复杂独特需求，这些需求是标准SCADA系统无法满足的，例如复杂的跨系统集成需求、高度定制化的数据采集需求。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E8%87%AA%E5%8A%A8%E5%8C%96/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "使用C#脚本编写在自动化中有什么优势？",
+    "answer": "使用C#脚本编写在自动化中可灵活处理复杂逻辑和定制化需求，还能搭配事件动作能力实现与第三方系统对接。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E8%87%AA%E5%8A%A8%E5%8C%96/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "多位置调用脚本对自动化操作有什么影响？",
+    "answer": "多位置调用脚本使得自动化操作更加方便和高效，调用位置包括按钮点击、定时任务、报警触发等。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E8%87%AA%E5%8A%A8%E5%8C%96/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "实时调试与运行功能对用户有什么帮助？",
+    "answer": "实时调试与运行功能可让用户即时查看脚本运行结果，并迅速进行调整，确保满足业务需求的实现。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E8%87%AA%E5%8A%A8%E5%8C%96/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "文档中提到的自动化主要围绕哪几个方面介绍？",
+    "answer": "文档中提到的自动化主要围绕应用场景、功能介绍两个方面介绍（文档未对界面介绍展开阐述）。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E8%87%AA%E5%8A%A8%E5%8C%96/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "在自动化中，C#脚本与事件动作能力搭配能实现什么？",
+    "answer": "在自动化中，C#脚本与事件动作能力搭配能实现与第三方系统对接。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E8%87%AA%E5%8A%A8%E5%8C%96/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%A6%82%E8%BF%B0"
+  }
+]

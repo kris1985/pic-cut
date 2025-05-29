@@ -1,0 +1,42 @@
+[
+  {
+    "question": "CMS的多语言应用场景主要是为了满足什么需求？",
+    "answer": "CMS的多语言应用场景主要是为了满足不同地区、不同语言环境下用户的语言需求，提供更好的用户体验和适应性。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%A4%9A%E8%AF%AD%E8%A8%80/%E5%A4%9A%E8%AF%AD%E8%A8%80%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "请列举组态软件多语言应用场景的例子。",
+    "answer": "例子包括：国际化和本地化，用户可将软件界面切换成熟悉的本地语言；多语言界面，菜单、按钮等界面元素可随用户选择语言自动切换；文本翻译，支持将用户输入文本内容翻译成其他语言；多语言数据标签，将数据标签和描述翻译成用户选择语言；报警和通知多语言化，确保报警时用户能理解响应报警信息。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%A4%9A%E8%AF%AD%E8%A8%80/%E5%A4%9A%E8%AF%AD%E8%A8%80%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "多语言在CMS中具体指什么？",
+    "answer": "多语言是指页面中的文字可以以多种语言显示给操作人员，页面可以在不同语言之间切换，页面切换语言后，页面中的文字、系统提示等系统文本资源会按照选中的语言自动进行切换。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%A4%9A%E8%AF%AD%E8%A8%80/%E5%A4%9A%E8%AF%AD%E8%A8%80%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "什么是语言包？",
+    "answer": "语言包是指页面模块组件的静态文本、系统提示系统资源，由系统内置的语言包提供，用户不可编辑，语言包的数量决定了CMS有多少种可以选择使用的语言。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%A4%9A%E8%AF%AD%E8%A8%80/%E5%A4%9A%E8%AF%AD%E8%A8%80%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "什么是组态文本？",
+    "answer": "组态文本是指页面模块中的动态文本，这些文本由用户使用控件动态调整，手动输入，自动同步至多语言列表，在语言列表进行翻译。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%A4%9A%E8%AF%AD%E8%A8%80/%E5%A4%9A%E8%AF%AD%E8%A8%80%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "工程师翻译后有什么操作可以执行？",
+    "answer": "工程师翻译后可实时在开发板页面预览翻译效果，并实时调整位置及样式。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%A4%9A%E8%AF%AD%E8%A8%80/%E5%A4%9A%E8%AF%AD%E8%A8%80%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "标准控件中哪些部分可自定义翻译文本位置？",
+    "answer": "形状/文本、按钮（基础、控制、弹窗、跳转、关机）、状态（开关、点动、动态形状/文本）、基础输入框、下拉列表、单选、复选、菜单等控件部分可自定义翻译文本位置，具体如按钮的文本输入框内容、提示对话框文本，状态的状态文本等。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%A4%9A%E8%AF%AD%E8%A8%80/%E5%A4%9A%E8%AF%AD%E8%A8%80%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "运行模块中哪些内容可自定义翻译文本位置？",
+    "answer": "运行模块中趋势配置里的分组名、曲线名、标签名可自定义翻译文本位置。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%A4%9A%E8%AF%AD%E8%A8%80/%E5%A4%9A%E8%AF%AD%E8%A8%80%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "图标控件中柱状图可自定义翻译文本位置的有哪些？",
+    "answer": "图标控件中柱状图可自定义翻译文本位置的有X轴标题名称、Y轴标题名称、指标名称、指标字段别名名称。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%A4%9A%E8%AF%AD%E8%A8%80/%E5%A4%9A%E8%AF%AD%E8%A8%80%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "控制控件中哪些部分可自定义翻译文本位置？",
+    "answer": "控制控件中下拉列表的图表字段名称，筛选器的文本输入框内容、查询字段可自定义翻译文本位置。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%A4%9A%E8%AF%AD%E8%A8%80/%E5%A4%9A%E8%AF%AD%E8%A8%80%E6%A6%82%E8%BF%B0"
+  }
+]

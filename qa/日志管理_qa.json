@@ -1,0 +1,42 @@
+[
+  {
+    "question": "运行模块使用需要进行大量组态配置吗？",
+    "answer": "不需要，运行模块为标准业务模块，无须过多组态配置，直接添加至页面即可投入使用。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E6%97%A5%E5%BF%97%E7%AE%A1%E7%90%86"
+  },
+  {
+    "question": "日志模块有什么功能？",
+    "answer": "日志模块自动记录用户对系统的行为、动作，用户可以查看指定操作记录，追溯对应系统的变化。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E6%97%A5%E5%BF%90%E7%AE%A1%E7%90%86"
+  },
+  {
+    "question": "如何新建日志管理页面并使其运行？",
+    "answer": "新建日志管理页面，添加“日志管理”运行模块至页面画布中，保存页面，点击运行，跳转切换到日志管理页面。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E6%97%A5%E5%BF%90%E7%AE%A1%E7%90%86"
+  },
+  {
+    "question": "登录日志页签记录什么内容？",
+    "answer": "登录日志页签自动记录用户的登录、注销的操作。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E6%97%A5%E5%BF%90%E7%AE%A1%E7%90%86"
+  },
+  {
+    "question": "设备日志页签记录什么内容？",
+    "answer": "设备日志页签自动记录设备变量下发记录。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E6%97%A5%E5%BF%90%E7%AE%A1%E7%90%86"
+  },
+  {
+    "question": "模块日志页签记录什么内容？",
+    "answer": "模块日志页签自动记录运行模块的相关操作。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E6%97%A5%E5%BF%90%E7%AE%A1%E7%90%86"
+  },
+  {
+    "question": "日志管理中有几个主要页签？",
+    "answer": "日志管理中有3个主要页签，分别是登录日志、设备日志、模块日志。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E6%97%A5%E5%BF%90%E7%AE%A1%E7%90%86"
+  },
+  {
+    "question": "运行模块属于什么类型的业务模块？",
+    "answer": "运行模块属于标准业务模块。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E6%97%A5%E5%BF%90%E7%AE%A1%E7%90%86"
+  },
+  {
+    "question": "在日志管理页面运行前需要做什么？",
+    "answer": "在日志管理页面运行前需要新建日志管理页面，添加“日志管理”运行模块至页面画布中并保存页面。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E6%97%A5%E5%BF%90%E7%AE%A1%E7%90%86"
+  },
+  {
+    "question": "用户使用日志模块能做什么？",
+    "answer": "用户使用日志模块可以查看指定操作记录，追溯对应系统的变化。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E6%97%A5%E5%BF%90%E7%AE%A1%E7%90%86"
+  }
+]

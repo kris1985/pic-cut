@@ -1,0 +1,42 @@
+[
+  {
+    "question": "归档数据存储在哪里？",
+    "answer": "归档数据存储在部署环境的时序数据库中。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%8E%86%E5%8F%B2%E5%BA%93/%E5%AD%98%E5%82%A8%E8%AE%BE%E7%BD%AE"
+  },
+  {
+    "question": "数据管理的数据表有什么功能？",
+    "answer": "数据管理的数据表提供数据自动清除功能，只保留最近时间范围内的归档数据，将旧的数据进行清除，清除前可支持旧数据的自动备份。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%8E%86%E5%8F%B2%E5%BA%93/%E5%AD%98%E5%82%A8%E8%AE%BE%E7%BD%AE"
+  },
+  {
+    "question": "时序数据库的数据压缩比是多少？",
+    "answer": "时序数据库的数据压缩比可达到180:1。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%8E%86%E5%8F%B2%E5%BA%93/%E5%AD%98%E5%82%A8%E8%AE%BE%E7%BD%AE"
+  },
+  {
+    "question": "数据清除功能默认启用吗？",
+    "answer": "数据清除默认不启用，需要手动进行设置。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%8E%86%E5%8F%B2%E5%BA%93/%E5%AD%98%E5%82%A8%E8%AE%BE%E7%BD%AE"
+  },
+  {
+    "question": "保留范围如何设置？",
+    "answer": "设置时间范围，以工程运行时的当前时间为准，超出该时间范围外的最旧数据将会被清除。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%8E%86%E5%8F%B2%E5%BA%93/%E5%AD%98%E5%82%A8%E8%AE%BE%E7%BD%AE"
+  },
+  {
+    "question": "数据清除前自动备份默认勾选吗？",
+    "answer": "数据清除前自动备份默认不勾选，勾选后被清除的最旧数据将会先备份到对应路径，再执行清除。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%8E%86%E5%8F%B2%E5%BA%93/%E5%AD%98%E5%82%A8%E8%AE%BE%E7%BD%AE"
+  },
+  {
+    "question": "备份路径有什么要求？",
+    "answer": "备份路径是备份文件的存储路径，可保存在本地其他路径，也支持共享文件路径的异地备份。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%8E%86%E5%8F%B2%E5%BA%93/%E5%AD%98%E5%82%A8%E8%AE%BE%E7%BD%AE"
+  },
+  {
+    "question": "数据服务执行数据清除操作的频率是怎样的？",
+    "answer": "数据服务将会按照每天执行一次的频率，自动在系统资源充裕时进行该操作。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%8E%86%E5%8F%B2%E5%BA%93/%E5%AD%98%E5%82%A8%E8%AE%BE%E7%BD%AE"
+  },
+  {
+    "question": "如何根据归档数据频率设置合理的保留范围？",
+    "answer": "每秒频率归档的数据，数据量占用存储空间更多，建议保留最多6个月范围；每分钟频率归档的数据，可保留数年以上的时间范围。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%8E%86%E5%8F%B2%E5%BA%93/%E5%AD%98%E5%82%A8%E8%AE%BE%E7%BD%AE"
+  },
+  {
+    "question": "能否在系统内直接查看备份数据？",
+    "answer": "目前不支持备份数据在系统内的直接查看，可用对应的数据库查询工具进行查看。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%8E%86%E5%8F%B2%E5%BA%93/%E5%AD%98%E5%82%A8%E8%AE%BE%E7%BD%AE"
+  }
+]

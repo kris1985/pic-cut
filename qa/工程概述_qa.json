@@ -1,0 +1,42 @@
+[
+  {
+    "question": "在CMS中工程的作用是什么？",
+    "answer": "在CMS中，工程是每一个实际应用系统的载体，包含每个实际应用的功能配置，工程师通过配置工程来实现应用系统的搭建。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%B7%A5%E7%A8%8B%E7%AE%A1%E7%90%86/%E5%B7%A5%E7%A8%8B%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "工程管理支持对工程文件进行哪些操作？",
+    "answer": "工程管理支持用户对单个文件或多个文件进行相应操作，实现工程文件从创建到维护到最终废弃的全生命周期管理，还支持用户自主维护文件夹，方便对工程文件进行分类管理。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%B7%A5%E7%A8%8B%E7%AE%A1%E7%90%86/%E5%B7%A5%E7%A8%8B%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "工程管理的界面分为哪几个部分？",
+    "answer": "工程管理的界面主要分为三个部分，分别是顶部功能区、工程列表区和底部功能区。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%B7%A5%E7%A8%8B%E7%AE%A1%E7%90%86/%E5%B7%A5%E7%A8%8B%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "如何在顶部功能区新建空白工程？",
+    "answer": "点击新建空白工程，出现新建弹窗，填写工程名称即可创建空白工程，创建的空白工程存储在默认路径下。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%B7%A5%E7%A8%8B%E7%AE%A1%E7%90%86/%E5%B7%A5%E7%A8%8B%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "若本地已有工程文件，要使用cms客户端操作，怎么添加到工程列表？",
+    "answer": "通过【打开已有工程】的功能，点击【打开已有工程】，选择工程，点击确认后添加。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%B7%A5%E7%A8%8B%E7%AE%A1%E7%90%86/%E5%B7%A5%E7%A8%8B%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "工程列表区中文件夹操作区有哪些操作？",
+    "answer": "文件夹操作区有移动到、重命名、删除操作。移动到：在对应文件夹的操作区点击移动到，选择目标文件夹后确认；重命名：点击重命名输入新名称后确定；删除：点击删除，出现确认弹窗（可选是否删除本地文件），确认后完成删除。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%B7%A5%E7%A8%8B%E7%AE%A1%E7%90%86/%E5%B7%A5%E7%A8%8B%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "工程列表区中文件操作区的创建副本功能有什么特点？",
+    "answer": "创建副本可实现对工程配置的复制操作，副本与原工程的工程配置相同，但工程id改变，副本名称不可与工程列表以及服务器路径下其他工程文件重名，点击创建副本出现弹窗，系统自动命名，用户可修改，副本存储在默认路径下。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%B7%A5%E7%A8%8B%E7%AE%A1%E7%90%86/%E5%B7%A5%E7%A8%8B%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "如何在工程列表区对工程文件进行数据备份？",
+    "answer": "用户点击数据备份按钮，出现数据备份弹窗，输入备份文件名称即可在对应的存储路径生成数据备份文件（.cmsback文件）。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%B7%A5%E7%A8%8B%E7%AE%A1%E7%90%86/%E5%B7%A5%E7%A8%8B%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "底部功能区有什么功能，何时露出？",
+    "answer": "底部功能区包括批量移动和批量删除功能，在工程列表区选中文件或文件夹时露出，未选中时隐藏。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%B7%A5%E7%A8%8B%E7%AE%A1%E7%90%86/%E5%B7%A5%E7%A8%8B%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "工程列表的文件夹有什么特点？",
+    "answer": "工程列表的文件夹是虚拟文件夹，仅在工程列表作为分类依据使用，不存在本地，无实体意义。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%B7%A5%E7%A8%8B%E7%AE%A1%E7%90%86/%E5%B7%A5%E7%A8%8B%E6%A6%82%E8%BF%B0"
+  }
+]

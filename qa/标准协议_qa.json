@@ -1,0 +1,42 @@
+[
+  {
+    "question": "CAN_BUS驱动的详细介绍是什么？",
+    "answer": "CAN_BUS驱动的详细介绍是CAN总线技术协议 --- 文档来源: https://cms-docs.shengyc.com/cms/download/%E9%A9%B1%E5%8A%A8%E4%B8%8B%E8%BD%BD/%E6%A0%87%E5%87%86%E5%8D%8F%E8%AE%AE"
+  },
+  {
+    "question": "DLT645_1997驱动的发布日期是什么时候？",
+    "answer": "DLT645_1997驱动的发布日期是2023-12-06 --- 文档来源: https://cms-docs.shengyc.com/cms/download/%E9%A9%B1%E5%8A%A8%E4%B8%8B%E8%BD%BD/%E6%A0%87%E5%87%86%E5%8D%8F%E8%AE%AE"
+  },
+  {
+    "question": "DLT645_2007驱动的下载链接是什么？",
+    "answer": "DLT645_2007驱动的下载链接是[本地下载](https://list.syc-cms.com:8443/d/publish/SIOT%E9%A9%B1%E5%8A%A8/%E6%A0%87%E5%87%86%E5%8D%8F%E8%AE%AE/CMS.HotPlugs_SYC_DLT645-2007_V1.2.1.cmsplugs) --- 文档来源: https://cms-docs.shengyc.com/cms/download/%E9%A9%B1%E5%8A%A8%E4%B8%8B%E8%BD%BD/%E6%A0%87%E5%87%86%E5%8D%8F%E8%AE%AE"
+  },
+  {
+    "question": "Modbus_RTU_Over_TCP驱动适用于什么场景？",
+    "answer": "Modbus_RTU_Over_TCP驱动适用于Modbus串口协议转网口场景 --- 文档来源: https://cms-docs.shengyc.com/cms/download/%E9%A9%B1%E5%8A%A8%E4%B8%8B%E8%BD%BD/%E6%A0%87%E5%87%86%E5%8D%8F%E8%AE%AE"
+  },
+  {
+    "question": "CAN_BUS驱动的下载链接指向哪里？",
+    "answer": "CAN_BUS驱动的下载链接指向[本地下载](https://list.syc-cms.com:8443/d/publish/SIOT%E9%A9%B1%E5%8A%A8/%E6%A0%87%E5%87%86%E5%8D%8F%E8%AE%AE/CMS.HotPlugs_SYC_CAN_BUS_V1.2.1.cmsplugs) --- 文档来源: https://cms-docs.shengyc.com/cms/download/%E9%A9%B1%E5%8A%A8%E4%B8%8B%E8%BD%BD/%E6%A0%87%E5%87%86%E5%8D%8F%E8%AE%AE"
+  },
+  {
+    "question": "DLT645_1997驱动的详细介绍是什么？",
+    "answer": "DLT645_1997驱动的详细介绍是多功能电能表通信规约 --- 文档来源: https://cms-docs.shengyc.com/cms/download/%E9%A9%B1%E5%8A%A8%E4%B8%8B%E8%BD%BD/%E6%A0%87%E5%87%86%E5%8D%8F%E8%AE%AE"
+  },
+  {
+    "question": "Modbus_RTU_Over_TCP驱动的发布日期是？",
+    "answer": "Modbus_RTU_Over_TCP驱动的发布日期是2023-12-06 --- 文档来源: https://cms-docs.shengyc.com/cms/download/%E9%A9%B1%E5%8A%A8%E4%B8%8B%E8%BD%BD/%E6%A0%87%E5%87%86%E5%8D%8F%E8%AE%AE"
+  },
+  {
+    "question": "文档中提到了几种驱动？",
+    "answer": "文档中提到了4种驱动，分别是CAN_BUS、DLT645_1997、DLT645_2007、Modbus_RTU_Over_TCP --- 文档来源: https://cms-docs.shengyc.com/cms/download/%E9%A9%B1%E5%8A%A8%E4%B8%8B%E8%BD%BD/%E6%A0%87%E5%87%86%E5%8D%8F%E8%AE%AE"
+  },
+  {
+    "question": "DLT645_2007驱动的详细介绍是什么？",
+    "answer": "DLT645_2007驱动的详细介绍是多功能电能表通信规约 --- 文档来源: https://cms-docs.shengyc.com/cms/download/%E9%A9%B1%E5%8A%A8%E4%B8%8B%E8%BD%BD/%E6%A0%87%E5%87%86%E5%8D%8F%E8%AE%AE"
+  },
+  {
+    "question": "这些驱动的发布日期是否相同？",
+    "answer": "这些驱动的发布日期相同，均为2023-12-06 --- 文档来源: https://cms-docs.shengyc.com/cms/download/%E9%A9%B1%E5%8A%A8%E4%B8%8B%E8%BD%BD/%E6%A0%87%E5%87%86%E5%8D%8F%E8%AE%AE"
+  }
+]

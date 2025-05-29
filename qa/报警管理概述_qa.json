@@ -1,0 +1,42 @@
+[
+  {
+    "question": "工业自动化设备出现哪些故障时需要发出报警信息？",
+    "answer": "当设备出现温度过高、压力过大、功率超负荷等故障时，需要发出报警信息。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E6%8A%A5%E8%AD%A6%E7%AE%A1%E7%90%86/%E6%8A%A5%E8%AD%A6%E7%AE%A1%E7%90%86%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "报警管理在CMS中的关键应用场景有哪些？",
+    "answer": "主要应用场景有设备故障报警、工艺异常报警、安全事件报警、通信故障报警、设备健康状态监测、生产质量报警、安全合规性报警。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E6%8A%A5%E8%AD%A6%E7%AE%A1%E7%90%86/%E6%8A%A5%E8%AD%A6%E7%AE%A1%E7%90%86%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "设备故障报警的作用是什么？",
+    "answer": "用于监测设备的状态变量，如温度、压力、流量等，一旦设备出现故障或运行异常，系统会自动触发相应的报警，通知操作员或维护人员进行及时处理和维修。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E6%8A%A5%E8%AD%A6%E7%AE%A1%E7%90%86/%E6%8A%A5%E8%AD%A6%E7%AE%A1%E7%90%86%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "工艺异常报警主要监测什么？",
+    "answer": "在工业过程中，报警管理可以监测工艺参数和设备状态，检测工艺过程中的异常情况，如流程异常、过程超限等。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E6%8A%A5%E8%AD%A6%E7%AE%A1%E7%90%86/%E6%8A%A5%E8%AD%A6%E7%AE%A1%E7%90%86%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "安全事件报警通过什么进行监控？",
+    "answer": "可用于监控安全传感器和安全设备，例如烟雾传感器、火灾探测器等。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E6%8A%A5%E8%AD%A6%E7%AE%A1%E7%90%86/%E6%8A%A5%E8%AD%A6%E7%AE%A1%E7%90%86%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "通信故障报警主要针对什么系统？",
+    "answer": "对于涉及网络通信的系统，报警管理可以监控通信状态，检测通信故障或通信中断。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E6%8A%A5%E8%AD%A6%E7%AE%A1%E7%90%86/%E6%8A%A5%E8%AD%A6%E7%AE%A1%E7%90%86%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "设备健康状态监测主要监测设备的哪些方面？",
+    "answer": "可以监测设备的健康状态，例如设备的运行时间、维护周期等。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E6%8A%A5%E8%AD%A6%E7%AE%A1%E7%90%86/%E6%8A%A5%E8%AD%A6%E7%AE%A1%E7%90%86%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "生产质量报警在生产过程中监测什么？",
+    "answer": "对于生产过程，报警管理可以监测关键参数和产品质量，一旦发现产品质量异常或不合格，系统可以立即发出报警。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E6%8A%A5%E8%AD%A6%E7%AE%A1%E7%90%86/%E6%8A%A5%E8%AD%A6%E7%AE%A1%E7%90%86%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "安全合规性报警的作用是什么？",
+    "answer": "可以监测系统是否符合安全标准和法规要求，一旦系统发现不符合标准的情况，系统会发出合规性报警，提醒相关部门采取措施以确保合规性。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E6%8A%A5%E8%AD%A6%E7%AE%A1%E7%90%86/%E6%8A%A5%E8%AD%A6%E7%AE%A1%E7%90%86%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "报警管理涉及到哪些相关内容？",
+    "answer": "报警管理涉及到的相关内容包括报警组、报警级别、报警类别、报警配置、报警记录。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E6%8A%A5%E8%AD%A6%E7%AE%A1%E7%90%86/%E6%8A%A5%E8%AD%A6%E7%AE%A1%E7%90%86%E6%A6%82%E8%BF%B0"
+  }
+]

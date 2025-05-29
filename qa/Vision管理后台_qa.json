@@ -1,0 +1,42 @@
+[
+  {
+    "question": "CMS Editor的用途是什么？",
+    "answer": "CMS Editor是为工程师打造的开发环境，用于开发或配置工程项目，建立项目所需要的功能项，使得这些功能按照要求运作，达到应用系统的目的，例如工程师人员做设备变量点表、报警点、监控界面模块的管理和制作等。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/Vision%E7%AE%A1%E7%90%86%E5%90%8E%E5%8F%B0"
+  },
+  {
+    "question": "CMS Vision的用途是什么？",
+    "answer": "CMS Vision是为现场打造的运行环境，用于现场工程系统的运行。工程师通过Editor完成工程的配置，可将工程部署至现场运行。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/Vision%E7%AE%A1%E7%90%86%E5%90%8E%E5%8F%B0"
+  },
+  {
+    "question": "Vision管理后台有哪两种访问方式？",
+    "answer": "方式1：通过桌面托盘程序访问；方式2：通过web网址访问（http://127.0.0.1:5000）。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/Vision%E7%AE%A1%E7%90%86%E5%90%8E%E5%8F%B0"
+  },
+  {
+    "question": "Vision的主页包含哪些信息？",
+    "answer": "包含vision客户端及当前运行工程的基本信息。若工程部署至现场后，需调整工程，可通过访问web开发版，但注意工程加密以保护工程，避免非法访问修改。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/Vision%E7%AE%A1%E7%90%86%E5%90%8E%E5%8F%B0"
+  },
+  {
+    "question": "服务管理有哪些功能？",
+    "answer": "用于启停服务、修改服务端口、开启控制台窗口、及数据库参数配置。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/Vision%E7%AE%A1%E7%90%86%E5%90%8E%E5%8F%B0"
+  },
+  {
+    "question": "在工程管理中，如何添加工程？",
+    "answer": "点击【导入】从本机中添加工程，此外还支持在CMS Editor中的工程管理，通过网络直接下发工程。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/Vision%E7%AE%A1%E7%90%86%E5%90%8E%E5%8F%B0"
+  },
+  {
+    "question": "在工程管理中，如何设置运行工程？",
+    "answer": "选择工程，点击【设为运行工程】，后续将自动启动服务运行该工程。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/Vision%E7%AE%A1%E7%90%86%E5%90%8E%E5%8F%B0"
+  },
+  {
+    "question": "工程存储有哪些功能？",
+    "answer": "可查看工程运行产生的归档数据的存储大小，包含基础服务数据、插件数据等。1. 查询存储空间：点击刷新工程存储数据大小；2. 工程存储管理：支持备份、还原、清除工程数据功能，支持自定义选择所需备份/还原/清除的数据，若工程运行产生大量数据，可备份后进行清除；若工程产生大量调试数据，在正式投入生产使用前可清除工程的运行数据；若现场出现问题需排除，可用过备份还原获取现场运行数据，无需远程进行排除。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/Vision%E7%AE%A1%E7%90%86%E5%90%8E%E5%8F%B0"
+  },
+  {
+    "question": "授权管理和插件管理在哪里查看？",
+    "answer": "授权管理和插件管理同editor，点击[查看](/cms/tutorial/快速入门/软件授权)和[查看](/cms/tutorial/插件管理)。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/Vision%E7%AE%A1%E7%90%86%E5%90%8E%E5%8F%B0"
+  },
+  {
+    "question": "系统设置中的常规设置包含哪些内容？",
+    "answer": "1. 语言：选择服务程序语音；2. 启动：服务自启动（在计算机启动时，服务自动运行）、崩溃自启动（在服务崩溃异常时，服务将自动重启）、启动桌面客户（在桌面方便快捷地启动服务）；3. 分析与改进：开启后应用程序将帮助我们软件进行分析改进。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/Vision%E7%AE%A1%E7%90%86%E5%90%8E%E5%8F%B0"
+  }
+]

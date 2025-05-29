@@ -1,0 +1,42 @@
+[
+  {
+    "question": "趋势分析在CMS中有哪些作用？",
+    "answer": "通过趋势曲线，可帮助定义和管理趋势参数，将其实时/历史数据以曲线可视化形式展示，更直观地监测数据的变化趋势；通过业务标签，可帮助快速回溯至对应业务发生时间，进行分析诊断，如查询某产品码的趋势数据；通过曲线分析，可帮助设定趋势参考标准，检测故障和预警。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E8%B6%8B%E5%8A%BF%E9%85%8D%E7%BD%AE(https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E8%B6%8B%E5%8A%BF%E9%85%8D%E7%BD%AE)"
+  },
+  {
+    "question": "如何在CMS中进行趋势配置？",
+    "answer": "新建趋势配置页面，添加“趋势配置”运行模块至页面画布中，保存页面。在模块中配置趋势数据，可直接在开发环境配置，或运行/预览后，在运行环境进行配置。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E8%B6%8B%E5%8A%BF%E9%85%8D%E7%BD%AE(https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E8%B6%8B%E5%8A%BF%E9%85%8D%E7%BD%AE)"
+  },
+  {
+    "question": "在曲线管理的曲线组中，如何进行管理操作？",
+    "answer": "点击[+]图标，新增趋势曲线组；选中组；点击[...]图标可编辑、复制、删除组，拖拽组可调整组顺序。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E8%B6%8B%E5%8A%BF%E9%85%8D%E7%BD%AE(https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E8%B6%8B%E5%8A%BF%E9%85%8D%E7%BD%AE)"
+  },
+  {
+    "question": "曲线组配置中的实时曲线绘制频率默认是多少？能否修改？",
+    "answer": "实时模式下，默认每1秒更新绘制1个实时数值点，该频率可按需修改，最快频率为50ms。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E8%B6%8B%E5%8A%BF%E9%85%8D%E7%BD%AE(https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E8%B6%8B%E5%8A%BF%E9%85%8D%E7%BD%AE)"
+  },
+  {
+    "question": "业务标签在实时曲线绘制中有什么作用？",
+    "answer": "勾选后，可通过已有业务标签动态绘制实时曲线，实时模式下默认绘制最新一个业务标签的发生时间到当前时间的历史数据，随着实时采集不断暂存数据及绘制曲线，当最新业务标签更新，结束绘制，默认自动清空数据重新开始实时绘制。如“批次号”勾选，则取最新的ASC005，其发生时间为2023/3/30 11:40:00，绘制其至当前时刻的数据，当ASC006标记出现，重新开始绘制，以通实现绘制当前批次的实时趋势曲线功能。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E8%B6%8B%E5%8A%BF%E9%85%8D%E7%BD%AE(https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E8%B6%8B%E5%8A%BF%E9%85%8D%E7%BD%AE)"
+  },
+  {
+    "question": "在曲线配置中，如何对参数进行管理？",
+    "answer": "选中对应趋势曲线组，点击【添加按钮】，选择对应的参数变量进行关联；选中参数，点击【删除按钮】，将删除该参数，点击【移动至按钮】，可选择移至其他分组，对参数进行分组重定义。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E8%B6%8B%E5%8A%BF%E9%85%8D%E7%BD%AE(https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E8%B6%8B%E5%8A%BF%E9%85%8D%E7%BD%AE)"
+  },
+  {
+    "question": "曲线分析功能在哪个页签？主要有什么作用？",
+    "answer": "曲线分析功能在“曲线分析”页签，可设定趋势参考标准（如参考曲线等），检测故障和预警。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E8%B6%8B%E5%8A%BF%E9%85%8D%E7%BD%AE(https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E8%B6%8B%E5%8A%BF%E9%85%8D%E7%BD%AE)"
+  },
+  {
+    "question": "在参考分析的参考线配置中，参考值有哪些设置方式？",
+    "answer": "有固定值和变量值两种设置方式。固定值即输入一个固定值；变量值是点击[...]，弹窗选择关联变量。注：不能为空，空时输入框标红，且认为该分析配置无效。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E8%B6%8B%E5%8A%BF%E9%85%8D%E7%BD%AE(https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E8%B6%8B%E5%8A%BF%E9%85%8D%E7%BD%AE)"
+  },
+  {
+    "question": "参考曲线的模式有哪些？",
+    "answer": "有自定义和查询历史两种模式。自定义模式下可末尾新增、选中删除；时间偏移量和值可直接输入，偏移量为正整数，值为数值，非法记录行标红且默认为无效；偏移量时间单位可选择；可按顺序导入导出excel，导入为全量覆盖。查询历史模式不直接配置，从趋势监控组件中查询后转为参考曲线，转换后本处提示对应的查询条件。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E8%B6%8B%E5%8A%BF%E9%85%8D%E7%BD%AE(https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E8%B6%8B%E5%8A%BF%E9%85%8D%E7%BD%AE)"
+  },
+  {
+    "question": "趋势分析的数据可视化如何实现？",
+    "answer": "通过[趋势监控组件](/cms/tutorial/页面管理/搭建分析看板/应用可视化组件/趋势监控)关联趋势组进行数据呈现。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E8%B6%8B%E5%8A%BF%E9%85%8D%E7%BD%AE(https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E8%B6%8B%E5%8A%BF%E9%85%8D%E7%BD%AE)"
+  }
+]

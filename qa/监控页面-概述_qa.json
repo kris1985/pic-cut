@@ -1,0 +1,42 @@
+[
+  {
+    "question": "通过什么方式可以构建工业自动控制系统的监控页面？",
+    "answer": "通过自由组态方式，简单拖拽式操作来构建 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "监控页面能满足什么需求？",
+    "answer": "能很好满足各用户的客制化的监控需求，如流程行业过程监控、离散行业设备加工监控等场景 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "如何新建监控页面？",
+    "answer": "在页面列表点击“新建”按钮，输入页面名，即完成页面的创建。创建的页面画布尺寸默认为网页1980x1080，支持自定义调整，或点击预设尺寸选择其他常规的画布尺寸，还支持背景的自定义，或使用官方提供的背景设计图 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "新建的监控页面画布尺寸有什么特点？",
+    "answer": "新建页面画布尺寸默认为网页1980x1080，支持自定义调整，或点击预设尺寸选择其他常规的画布尺寸 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "新建监控页面的背景有哪些设置方式？",
+    "answer": "支持背景的自定义，或使用官方提供的背景设计图 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "编辑监控页面的页面布局有哪些方式？",
+    "answer": "可使用系统提供页面的ui设计素材（图库素材），进行页面设计，或直接使用布局框架（应用资源），一键生成页面内容框架 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "编辑监控页面的页面组态如何操作？",
+    "answer": "拖拽组件至页面对应的监控区域，配置监控数据，美化样式（各组件的配置详见下面章节介绍）。亦可使用系统提供页面的常用内容套件，如状态、单信息、多信息、菜单、设备产线等主视觉内容。该内容套件经过效果设计及功能配置，无需关注样式配置，一键即可使用，配置对应数据即可 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "系统提供的常用内容套件有哪些？",
+    "answer": "系统提供页面的常用内容套件有状态、单信息、多信息、菜单、设备产线等主视觉内容 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "如何查看监控页面效果？",
+    "answer": "编辑窗口可实时预览监控效果，交互操作效果需运行该监控页面 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "文档介绍的是关于什么的内容？",
+    "answer": "文档介绍的是创建监控页面的相关内容，包括应用场景、流程步骤（新建、编辑、查看页面效果）等 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E6%A6%82%E8%BF%B0"
+  }
+]

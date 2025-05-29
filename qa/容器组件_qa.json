@@ -1,0 +1,42 @@
+[
+  {
+    "question": "画面容器的作用是什么？",
+    "answer": "画面容器是为了方便使用者做内容切换，所提供的一个容器组件。在容器中可嵌套画面内容，配合下拉菜单或事件动作功能，控制容器中页面的切换。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E5%AE%B9%E5%99%A8%E7%BB%84%E4%BB%B6"
+  },
+  {
+    "question": "画面容器如何配置目标画面？",
+    "answer": "目标画面非必选，可直接关联画面，进行运行初始化展示，也可后续配合下拉菜单或事件动作功能，动态控制容器内展示的画面。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E5%AE%B9%E5%99%A8%E7%BB%84%E4%BB%B6"
+  },
+  {
+    "question": "画面轮播有哪些功能？",
+    "answer": "画面轮播功能包括：自动轮播，支持预定义页面顺序，运行后按一定时间间隔自动切换至下一个页面；手动上下切换页面；整体/局部区域轮播，支持窗口整个区域或部分区域作为轮播区域。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E5%AE%B9%E5%99%A8%E7%BB%84%E4%BB%B6"
+  },
+  {
+    "question": "html组件的概述是什么？",
+    "answer": "html组件允许用户输入或粘贴HTML代码，直接控制内容的显示方式。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E5%AE%B9%E5%99%A8%E7%BB%84%E4%BB%B6"
+  },
+  {
+    "question": "如何在html组件中插入图片？",
+    "answer": "将代码 <img src=\"C:\\Users\\11274\\Desktop\\img1.png\"> 修改路径后复制到html配置，src处填入图片路径。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E5%AE%B9%E5%99%A8%E7%BB%84%E4%BB%B6"
+  },
+  {
+    "question": "网页容器的概述是什么？",
+    "answer": "网页容器支持嵌套URL，集成第三方web内容。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E5%AE%B9%E5%99%A8%E7%BB%84%E4%BB%B6"
+  },
+  {
+    "question": "网页容器如何配置？",
+    "answer": "配置网址，需输入URL（部分网址出于安全策略考虑不支持嵌套，若无法嵌套显示请联系对应网址的负责人）；全屏默认不勾选，勾选后组件右上角显示全屏icon，点击可全屏查看网页内容。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E5%AE%B9%E5%99%A8%E7%BB%84%E4%BB%B6"
+  },
+  {
+    "question": "画面平铺的作用是什么？",
+    "answer": "画面平铺可关联不同的画面并配置显隐规则，当某个画面隐藏时，其他画面会自动往前补充。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E5%AE%B9%E5%99%A8%E7%BB%84%E4%BB%B6"
+  },
+  {
+    "question": "搭建系统导航时，菜单项如何配置？",
+    "answer": "点击菜单项[编辑]按钮，输入菜单项名称，选择跳转至对应的目标页面，选择下方的容器作为目标；选中对应记录，点击目标列上的操作图标，可将目标快速同步至所有菜单项，实现批量操作。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E5%AE%B9%E5%99%A8%E7%BB%84%E4%BB%B6"
+  },
+  {
+    "question": "画面容器在运行时嵌套层数有什么限制？",
+    "answer": "系统支持画面容器多层嵌套，如主页面里嵌子页面，子页面嵌次子页面，限制最多4层，运行时检测达到嵌套层数上限，后续的容器页面将不加载。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E5%AE%B9%E5%99%A8%E7%BB%84%E4%BB%B6"
+  }
+]

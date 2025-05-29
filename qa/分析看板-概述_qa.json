@@ -1,0 +1,42 @@
+[
+  {
+    "question": "自助分析模式替代了哪种传统数据分析模式？",
+    "answer": "自助分析模式替代了IT和业务的传统数据分析模式。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E6%90%AD%E5%BB%BA%E5%88%86%E6%9E%90%E7%9C%8B%E6%9D%BF/%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "自助分析模式如何满足驾驶舱/业务大屏等场景？",
+    "answer": "业务人员通过自助分析，只需简单拖拽便能制作出丰富多样的数据可视化分析信息，自由地对数据进行分析和探索，从而满足驾驶舱/业务大屏等场景。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E6%90%AD%E5%BB%BA%E5%88%86%E6%9E%90%E7%9C%8B%E6%9D%BF/%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "自助分析模式适用于哪些核心指标场景的统计分析？",
+    "answer": "适用于产量、OEE、报警等核心指标场景的统计分析。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E6%90%AD%E5%BB%BA%E5%88%86%E6%9E%90%E7%9C%8B%E6%9D%BF/%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "搭建分析看板的第一步是什么？",
+    "answer": "搭建分析看板的第一步是新建分析看板，即新建空白页面，自定义设计业务看板的布局，具体操作可参考[新建分析看板](/cms/tutorial/页面管理/搭建分析看板/新建分析看板)。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E6%90%AD%E5%BB%BA%E5%88%86%E6%9E%90%E7%9C%8B%E6%9D%BF/%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "搭建分析看板时应用可视化组件需要做什么？",
+    "answer": "需要拖拽组件至看板对应的业务区域，配置图表数据，美化图表样式，详细内容可查看[应用可视化组件](/cms/tutorial/页面管理/搭建分析看板/应用可视化组件/可视化组件概述)。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E6%90%AD%E5%BB%BA%E5%88%86%E6%9E%90%E7%9C%8B%E6%9D%BF/%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "搭建分析看板中添加控制组件有哪些方式？",
+    "answer": "一种是新建关联控制器，实现图表的控制交互，可设定查询条件；另一种是拖拽组件至看板对应的控制区域，关联图表，设置查询条件，具体见[添加控制组件](/cms/tutorial/页面管理/搭建分析看板/添加控制组件/控制组件概述)。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E6%90%AD%E5%BB%BA%E5%88%86%E6%9E%90%E7%9C%8B%E6%9D%BF/%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "搭建分析看板的最后一步是什么？",
+    "answer": "搭建分析看板的最后一步是运行分析看板，编辑页面窗口的画布区域可实时预览监控效果，交互操作效果需运行该监控页面。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E6%90%AD%E5%BB%BA%E5%88%86%E6%9E%90%E7%9C%8B%E6%9D%BF/%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "新建分析看板主要是做什么？",
+    "answer": "新建分析看板主要是新建空白页面，自定义设计业务看板的布局。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E6%90%AD%E5%BB%BA%E5%88%86%E6%9E%90%E7%9C%8B%E6%9D%BF/%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "应用可视化组件中拖拽组件后要配置什么？",
+    "answer": "应用可视化组件中拖拽组件至看板对应的业务区域后要配置图表数据并美化图表样式。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E6%90%AD%E5%BB%BA%E5%88%86%E6%9E%90%E7%9C%8B%E6%9D%BF/%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "运行分析看板时，不同效果如何查看？",
+    "answer": "编辑页面窗口的画布区域可实时预览监控效果，交互操作效果需运行该监控页面。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E6%90%AD%E5%BB%BA%E5%88%86%E6%9E%90%E7%9C%8B%E6%9D%BF/%E6%A6%82%E8%BF%B0"
+  }
+]

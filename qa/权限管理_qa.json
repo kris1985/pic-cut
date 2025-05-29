@@ -1,0 +1,42 @@
+[
+  {
+    "question": "运行模块使用前需要进行大量组态配置吗？",
+    "answer": "运行模块为标准业务模块，无须过多组态配置，直接添加至页面即可投入使用。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E6%9D%83%E9%99%90%E7%AE%A1%E7%90%86"
+  },
+  {
+    "question": "权限管理模块提供哪些管理功能？",
+    "answer": "权限管理模块提供角色、用户管理功能，可通过管理角色来管理分配用户的权限。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E6%9D%83%E9%99%90%E7%AE%A1%E7%90%86"
+  },
+  {
+    "question": "如何新建权限管理页面并进入该页面？",
+    "answer": "新建权限管理页面，添加“权限管理”运行模块至页面画布中，保存页面，点击运行，跳转切换到权限管理页面。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E6%9D%83%E9%99%90%E7%AE%A1%E7%90%86"
+  },
+  {
+    "question": "在权限管理模块中，如何添加角色？",
+    "answer": "点击右上角“添加”按钮即可添加角色。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E6%9D%83%E9%99%90%E7%AE%A1%E7%90%86"
+  },
+  {
+    "question": "怎样进行角色权限分配？",
+    "answer": "点击对应角色的“权限设置”按钮，进行该角色的权限分配。权限包括页面权限、页面组件权限、以及运行模块中其按钮权限。画面名称：勾选该角色允许访问的画面或二级菜单，未勾选的将隐藏不展示；操作内容：显示对应画面中操作权限，勾选该角色允许操作的按钮，未勾选的内容禁用操作事件（注：页面组件权限，需要在开发版控件的属性栏，勾选权限控制功能）。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E6%9D%83%E9%99%90%E7%AE%A1%E7%90%86"
+  },
+  {
+    "question": "在权限管理模块的角色管理中，如何修改角色？",
+    "answer": "点击操作列 - “删除”按钮（文档此处疑似有误，推测修改应点击操作列“修改”按钮更合理，按文档原文为点击操作列 - “删除”按钮）。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E6%9D%83%E9%99%90%E7%AE%A1%E7%90%86"
+  },
+  {
+    "question": "如何删除角色？",
+    "answer": "点击操作列 - “删除”按钮删除角色。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E6%9D%83%E9%99%90%E7%AE%A1%E7%90%86"
+  },
+  {
+    "question": "在权限管理模块的用户管理中，怎样添加用户？",
+    "answer": "点击右上角“添加”按钮，定义用户姓名、用户名、密码，绑定角色分发权限，可绑定多个角色权限。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E6%9D%83%E9%99%90%E7%AE%A1%E7%90%86"
+  },
+  {
+    "question": "如何查看用户权限？",
+    "answer": "点击操作列 - “权限查看”按钮，可查看该用户具体权限。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E6%9D%83%E9%99%90%E7%AE%A1%E7%90%86"
+  },
+  {
+    "question": "在权限管理模块的用户管理中，如何导入/导出用户列表？",
+    "answer": "点击右上角导入/导出按钮，在导入过程中，某条数据在系统中未存在则新增，存在则自动覆盖更新。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E4%BD%BF%E7%94%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9D%97/%E6%9D%83%E9%99%90%E7%AE%A1%E7%90%86"
+  }
+]

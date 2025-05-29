@@ -1,0 +1,42 @@
+[
+  {
+    "question": "配方功能通常用于什么场景？",
+    "answer": "配方功能通常用于存储和管理生产过程中设定值等配方信息，以便在需要时能够快速切换和应用不同的配置到PLC或执行设备中。例如在涂料生产中，不同阶段原料比重不同，可通过配方功能快速切换配方实现对料塔不同开度控制，实现精准原料投放。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%85%8D%E6%96%B9%E7%AE%A1%E7%90%86/%E9%85%8D%E6%96%B9%E5%8A%9F%E8%83%BD%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "配方功能操作包含哪两部分？",
+    "answer": "配方功能操作中包括配方配置与配方应用两部分。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%85%8D%E6%96%B9%E7%AE%A1%E7%90%86/%E9%85%8D%E6%96%B9%E5%8A%9F%E8%83%BD%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "配方配置在什么地方操作，具体能进行哪些操作？",
+    "answer": "配方配置在开发版操作，工程师可预设配方集、配置配方参数、添加配方、修改配方参数值。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%85%8D%E6%96%B9%E7%AE%A1%E7%90%86/%E9%85%8D%E6%96%B9%E5%8A%9F%E8%83%BD%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "配方应用在哪些版本进行相关操作？",
+    "answer": "配方应用在开发版配置，运行版（工程现场）使用。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%85%8D%E6%96%B9%E7%AE%A1%E7%90%86/%E9%85%8D%E6%96%B9%E5%8A%9F%E8%83%BD%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "配方应用有哪两种方式？",
+    "answer": "配方应用有两种方式，一是通过系统提供的配方管理组件对配方进行操作；二是若不想使用系统自带配方组件，可通过事件动作自定义组态配方交互界面，自行选择所需配方操作。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%85%8D%E6%96%B9%E7%AE%A1%E7%90%86/%E9%85%8D%E6%96%B9%E5%8A%9F%E8%83%BD%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "通过什么组件可以对配方进行操作？",
+    "answer": "通过系统提供的配方管理组件可以对配方进行操作。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%85%8D%E6%96%B9%E7%AE%A1%E7%90%86/%E9%85%8D%E6%96%B9%E5%8A%9F%E8%83%BD%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "如果不想使用系统自带配方组件，该如何操作？",
+    "answer": "若不想使用系统自带配方组件，可通过事件动作自定义组态配方交互界面，自行选择所需配方操作。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%85%8D%E6%96%B9%E7%AE%A1%E7%90%86/%E9%85%8D%E6%96%B9%E5%8A%9F%E8%83%BD%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "配方日志在哪里查看？",
+    "answer": "配方日志在日志管理-模块日志中查看。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%85%8D%E6%96%B9%E7%AE%A1%E7%90%86/%E9%85%8D%E6%96%B9%E5%8A%9F%E8%83%BD%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "开发版的配方管理参数值何时同步？",
+    "answer": "开发版的配方管理参数值只在工程第一次运行时同步，后续运行不同步。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%85%8D%E6%96%B9%E7%AE%A1%E7%90%86/%E9%85%8D%E6%96%B9%E5%8A%9F%E8%83%BD%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "在涂料生产场景中，配方功能如何实现精准原料投放？",
+    "answer": "在涂料生产中，不同阶段原料比重不同，通过配方功能快速切换配方，实现对料塔的不同开度控制，从而实现精准原料投放。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%85%8D%E6%96%B9%E7%AE%A1%E7%90%86/%E9%85%8D%E6%96%B9%E5%8A%9F%E8%83%BD%E6%A6%82%E8%BF%B0"
+  }
+]

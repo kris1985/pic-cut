@@ -1,0 +1,42 @@
+[
+  {
+    "question": "MQTT是什么？",
+    "answer": "MQTT是一种轻量级的消息传输协议，设计用于在低带宽、不稳定的网络环境中连接物联网设备和应用程序。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%9B%86%E6%88%90%E4%BA%92%E8%81%94/MQTT_Client/MQTT_Client%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "MQTT_Client是什么？",
+    "answer": "MQTT_Client是使用MQTT协议与MQTT_Broker（也称为MQTT代理或MQTT中间件）进行通信的应用程序或设备，可帮助用户快速实现设备与云端之间的通信，将设备数据传输到云端，同时从云端接收指令控制设备运行。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%9B%86%E6%88%90%E4%BA%92%E8%81%94/MQTT_Client/MQTT_Client%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "CMS通过MQTT_Client实现数据上云有哪些重要作用？",
+    "answer": "主要有以下作用：1. 数据集中管理和存储，实现数据集中管理与统一存储，便于备份、恢复和共享，提高可用性和安全性；2. 弹性计算和资源扩展，利用云服务器高性能计算资源处理大规模数据；3. 协同和合作，方便多地用户或团队共享与协同处理数据，提高工作效率和创新能力；4. 机器学习和人工智能应用，为其提供大规模数据集以得到更准确模型结果；5. 实时监控和分析，即时监控分析实时数据，生成报告或警报辅助决策；6. 数据洞察和业务优化，深入挖掘分析数据，发现隐藏模式等，助力企业优化业务等。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%9B%86%E6%88%90%E4%BA%92%E8%81%94/MQTT_Client/MQTT_Client%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "MQTT_Client目前支持哪些类型？",
+    "answer": "目前支持的MQTT_Client类型有SLM平台和华为MQTT_V5。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%9B%86%E6%88%90%E4%BA%92%E8%81%94/MQTT_Client/MQTT_Client%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "MQTT_Client连接MQTT服务端需要提供哪些信息？",
+    "answer": "通常需要提供MQTT服务端的地址、端口号、用户名、密码等信息。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%9B%86%E6%88%90%E4%BA%92%E8%81%94/MQTT_Client/MQTT_Client%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "MQTT_Client设置数据推送规则时常见的topic分类有哪些？",
+    "answer": "常见的topic分类有发布设备数据上传、订阅云端数据下发。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%9B%86%E6%88%90%E4%BA%92%E8%81%94/MQTT_Client/MQTT_Client%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "MQTT_Client发布客户端数据常见的推送规则有哪些？",
+    "answer": "常见的推送规则有定时推送、变化推送、混合推送三种方式。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%9B%86%E6%88%90%E4%BA%92%E8%81%94/MQTT_Client/MQTT_Client%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "用户使用MQTT_Client时，对数据上云变量有什么操作？",
+    "answer": "用户可根据实际的业务需求选择需要上云的变量，未被选择的变量点则不会与云端产生数据交互。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%9B%86%E6%88%90%E4%BA%92%E8%81%94/MQTT_Client/MQTT_Client%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "MQTT_Client中，上云变量如何处理数据？",
+    "answer": "上云变量会根据预设的数据推送规则向MQTT服务端发布数据，该消息可以转发给应用服务器或其他云服务上进行存储和处理。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%9B%86%E6%88%90%E4%BA%92%E8%81%94/MQTT_Client/MQTT_Client%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "MQTT_Client订阅云端数据下发后如何处理数据？",
+    "answer": "应用程序对订阅数据进行处理后，将处理后数据写入对应变量。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%9B%86%E6%88%90%E4%BA%92%E8%81%94/MQTT_Client/MQTT_Client%E6%A6%82%E8%BF%B0"
+  }
+]

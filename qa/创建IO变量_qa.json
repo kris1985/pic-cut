@@ -1,0 +1,42 @@
+[
+  {
+    "question": "CMS通过什么与其建立设备通讯？",
+    "answer": "CMS通过自研的数据采集和实时控制平台，与现场采用不同协议通信的I/O设备建立高效可靠的设备通讯 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/IO%E9%80%9A%E9%81%93/%E5%88%9B%E5%BB%BAIO%E5%8F%98%E9%87%8F"
+  },
+  {
+    "question": "CMS支持连接哪些下位设备？",
+    "answer": "CMS支持连接的下位设备包括PLC、CNC、传感器、仪表、运动控制器等各种各样的硬件设备，也包括OPC服务器等软件设备 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/IO%E9%80%9A%E9%81%93/%E5%88%9B%E5%BB%BAIO%E5%8F%98%E9%87%8F"
+  },
+  {
+    "question": "本手册以什么协议为例介绍创建IO变量？",
+    "answer": "本用户手册将以通用的Modbus_TCP协议为例介绍创建IO变量 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/IO%E9%80%9A%E9%81%93/%E5%88%9B%E5%BB%BAIO%E5%8F%98%E9%87%8F"
+  },
+  {
+    "question": "如何在“IO通道”中连接通讯设备？",
+    "answer": "在“IO通道”页签下，点击变量通道功能区的添加设备按钮，选择通道对应的通讯协议，输入通道名称，配置通讯参数，点击确认成功创建 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/IO%E9%80%9A%E9%81%93/%E5%88%9B%E5%BB%BAIO%E5%8F%98%E9%87%8F"
+  },
+  {
+    "question": "Modbus_TCP通讯参数中的通道名称和通道描述有什么要求？",
+    "answer": "通道名称必填，需手动输入；通道描述选填，可手动输入 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/IO%E9%80%9A%E9%81%93/%E5%88%9B%E5%BB%BAIO%E5%8F%98%E9%87%8F"
+  },
+  {
+    "question": "Modbus_TCP通讯参数的基础配置中有哪些内容？",
+    "answer": "基础配置包括设备IP（与PLC设置保持一致）、设备ID（与PLC设置保持一致）、端口号（默认为502，可修改，与PLC设置保持一致）、首地址（默认为1，可通过下拉选择首地址为0）、超时时间（默认为3秒，可手动修改） --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/IO%E9%80%9A%E9%81%93/%E5%88%9B%E5%BB%BAIO%E5%8F%98%E9%87%8F"
+  },
+  {
+    "question": "如何创建IO通道变量组？",
+    "answer": "选中对应通道，点击通道节点的添加变量组按钮，在添加变量组弹窗中，输入变量组名称，确认即完成变量组的创建 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/IO%E9%80%9A%E9%81%93/%E5%88%9B%E5%BB%BAIO%E5%8F%98%E9%87%8F"
+  },
+  {
+    "question": "创建IO变量支持哪两种方式？",
+    "answer": "创建IO变量支持手动创建或加载标签两种方式 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/IO%E9%80%9A%E9%81%93/%E5%88%9B%E5%BB%BAIO%E5%8F%98%E9%87%8F"
+  },
+  {
+    "question": "手动创建IO变量时，变量名有什么要求？",
+    "answer": "变量名仅能输入中文、字母、数字、下划线、点，且必须以字母或下划线开头，是系统全局变量的唯一标识，区分大小写 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/IO%E9%80%9A%E9%81%93/%E5%88%9B%E5%BB%BAIO%E5%8F%98%E9%87%8F"
+  },
+  {
+    "question": "变量配置检查支持哪些优化类型？",
+    "answer": "变量配置检查支持地址重叠校验、PDU长度校验两种优化类型 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86/IO%E9%80%9A%E9%81%93/%E5%88%9B%E5%BB%BAIO%E5%8F%98%E9%87%8F"
+  }
+]

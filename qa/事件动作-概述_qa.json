@@ -1,0 +1,42 @@
+[
+  {
+    "question": "全新的可视化事件动作编辑器有什么特点？",
+    "answer": "全新的可视化事件动作编辑器具有多样的事件触发动作组合，能灵活串联多场景多页面的互动操作。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E9%A1%B5%E9%9D%A2%E4%BD%BF%E7%94%A8%E8%BF%9B%E9%98%B6/%E4%BA%8B%E4%BB%B6%E5%8A%A8%E4%BD%9C/%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "通过什么来配置交互事件？",
+    "answer": "通过属性面板的“事件”页签来配置交互事件。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E9%A1%B5%E9%9D%A2%E4%BD%BF%E7%94%A8%E8%BF%9B%E9%98%B6/%E4%BA%8B%E4%BB%B6%E5%8A%A8%E4%BD%9C/%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "交互事件能实现什么？",
+    "answer": "交互事件可以实现资源本身及资源之间的业务联动。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E9%A1%B5%E9%9D%A2%E4%BD%BF%E7%94%A8%E8%BF%9B%E9%98%B6/%E4%BA%8B%E4%BB%B6%E5%8A%A8%E4%BD%9C/%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "一个完整的交互事件由哪几个部分组成？",
+    "answer": "一个完整的交互事件由“事件类型+条件+动作”3个部分组成，即某事件发生时，满足某条件情形，资源执行动作。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E9%A1%B5%E9%9D%A2%E4%BD%BF%E7%94%A8%E8%BF%9B%E9%98%B6/%E4%BA%8B%E4%BB%B6%E5%8A%A8%E4%BD%9C/%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "在哪里可以参考支持的事件类型触发？",
+    "answer": "可参考[这里](/cms/tutorial/页面管理/页面使用进阶/事件动作/配置说明/事件)。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E9%A1%B5%E9%9D%A2%E4%BD%BF%E7%94%A8%E8%BF%9B%E9%98%B6/%E4%BA%8B%E4%BB%B6%E5%8A%A8%E4%BD%9C/%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "在哪里可以参考支持的条件判断？",
+    "answer": "可参考[这里](/cms/tutorial/页面管理/页面使用进阶/事件动作/配置说明/条件)。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E9%A1%B5%E9%9D%A2%E4%BD%BF%E7%94%A8%E8%BF%9B%E9%98%B6/%E4%BA%8B%E4%BB%B6%E5%8A%A8%E4%BD%9C/%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "在哪里可以参考支持的控制动作？",
+    "answer": "可参考[这里](/cms/tutorial/页面管理/页面使用进阶/事件动作/配置说明/动作)。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E9%A1%B5%E9%9D%A2%E4%BD%BF%E7%94%A8%E8%BF%9B%E9%98%B6/%E4%BA%8B%E4%BB%B6%E5%8A%A8%E4%BD%9C/%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "文档主要介绍的是什么内容？",
+    "answer": "文档主要介绍了可视化事件动作编辑器的应用场景，以及通过属性面板“事件”页签配置交互事件的相关内容，包括交互事件的组成部分和各部分的参考位置。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E9%A1%B5%E9%9D%A2%E4%BD%BF%E7%94%A8%E8%BF%9B%E9%98%B6/%E4%BA%8B%E4%BB%B6%E5%8A%A8%E4%BD%9C/%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "交互事件的组成部分中，条件起到什么作用？",
+    "answer": "交互事件中，条件是指在某事件发生时，资源执行动作所需要满足的情形。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E9%A1%B5%E9%9D%A2%E4%BD%BF%E7%94%A8%E8%BF%9B%E9%98%B6/%E4%BA%8B%E4%BB%B6%E5%8A%A8%E4%BD%9C/%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "从文档可知，可视化事件动作编辑器在页面管理中有什么重要性？",
+    "answer": "可视化事件动作编辑器通过多样的事件触发动作组合，能灵活串联多场景多页面的互动操作，还可通过配置交互事件实现资源本身及资源之间的业务联动，在页面管理中对于实现页面间交互及业务逻辑有重要作用。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E9%A1%B5%E9%9D%A2%E4%BD%BF%E7%94%A8%E8%BF%9B%E9%98%B6/%E4%BA%8B%E4%BB%B6%E5%8A%A8%E4%BD%9C/%E6%A6%82%E8%BF%B0"
+  }
+]

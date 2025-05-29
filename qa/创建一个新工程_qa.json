@@ -1,0 +1,42 @@
+[
+  {
+    "question": "如何创建空白工程？",
+    "answer": "点击新建空白工程，出现新建弹窗，填写工程名称即可创建空白工程。创建的空白工程存储在默认路径下，用户可以通过点击存储路径后的按钮来改变本地存储路径。注意：通过WEB端远程访问时，创建工程时，存储在服务器默认路径，不可更改。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%B7%A5%E7%A8%8B%E7%AE%A1%E7%90%86/%E5%B7%A5%E7%A8%8B%E4%BD%BF%E7%94%A8/%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E6%96%B0%E5%B7%A5%E7%A8%8B"
+  },
+  {
+    "question": "创建的空白工程默认存储在哪里？",
+    "answer": "创建的空白工程默认存储在默认路径下，本地路径可通过点击存储路径后的按钮改变；通过WEB端远程访问时，存储在服务器默认路径，不可更改。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%B7%A5%E7%A8%8B%E7%AE%A1%E7%90%86/%E5%B7%A5%E7%A8%8B%E4%BD%BF%E7%94%A8/%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E6%96%B0%E5%B7%A5%E7%A8%8B"
+  },
+  {
+    "question": "如何进入工程编辑页面？",
+    "answer": "在工程列表单击需要编辑的工程文件，打开弹窗进入编辑页面。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%B7%A5%E7%A8%8B%E7%AE%A1%E7%90%86/%E5%B7%A5%E7%A8%8B%E4%BD%BF%E7%94%A8/%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E6%96%B0%E5%B7%A5%E7%A8%8B"
+  },
+  {
+    "question": "是否支持同时编辑多个工程？",
+    "answer": "支持同时编辑多个不同工程，相同工程仅支持打开一个编辑页面。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%B7%A5%E7%A8%8B%E7%AE%A1%E7%90%86/%E5%B7%A5%E7%A8%8B%E4%BD%BF%E7%94%A8/%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E6%96%B0%E5%B7%A5%E7%A8%8B"
+  },
+  {
+    "question": "完成工程编辑操作后，如何设置相关内容？",
+    "answer": "用户在完成对工程的编辑操作后，可以通过editor版工程运行设置服务管理、运行显示和系统安全。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%B7%A5%E7%A8%8B%E7%AE%A1%E7%90%86/%E5%B7%A5%E7%A8%8B%E4%BD%BF%E7%94%A8/%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E6%96%B0%E5%B7%A5%E7%A8%8B"
+  },
+  {
+    "question": "工程调试完成后，如何运行工程？",
+    "answer": "工程调试完成后，用户可以通过vision版设置对应的工程文件运行。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%B7%A5%E7%A8%8B%E7%AE%A1%E7%90%86/%E5%B7%A5%E7%A8%8B%E4%BD%BF%E7%94%A8/%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E6%96%B0%E5%B7%A5%E7%A8%8B"
+  },
+  {
+    "question": "现场工程配置优化后，如何更新工程配置？",
+    "answer": "在现场使用过程中，若工程配置有优化，工程师可将更新配置后将工程文件发送到现场，现场可以通过更新操作，将最新的工程配置覆盖到现场：在CMS服务监控点击更新，选择最新的工程文件，即可覆盖更新。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%B7%A5%E7%A8%8B%E7%AE%A1%E7%90%86/%E5%B7%A5%E7%A8%8B%E4%BD%BF%E7%94%A8/%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E6%96%B0%E5%B7%A5%E7%A8%8B"
+  },
+  {
+    "question": "工程文件更新有什么要求？",
+    "answer": "工程文件版本需与软件版本一致，否则不支持设置或更新操作。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%B7%A5%E7%A8%8B%E7%AE%A1%E7%90%86/%E5%B7%A5%E7%A8%8B%E4%BD%BF%E7%94%A8/%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E6%96%B0%E5%B7%A5%E7%A8%8B"
+  },
+  {
+    "question": "在远程访问创建工程时，存储路径有什么特点？",
+    "answer": "通过WEB端远程访问时，创建工程存储在服务器默认路径，不可更改。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%B7%A5%E7%A8%8B%E7%AE%A1%E7%90%86/%E5%B7%A5%E7%A8%8B%E4%BD%BF%E7%94%A8/%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E6%96%B0%E5%B7%A5%E7%A8%8B"
+  },
+  {
+    "question": "在本地创建空白工程时，存储路径可以更改吗？",
+    "answer": "在本地创建空白工程时，存储路径可以更改，用户可以通过点击存储路径后的按钮来改变本地存储路径。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E5%B7%A5%E7%A8%8B%E7%AE%A1%E7%90%86/%E5%B7%A5%E7%A8%8B%E4%BD%BF%E7%94%A8/%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E6%96%B0%E5%B7%A5%E7%A8%8B"
+  }
+]

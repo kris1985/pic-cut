@@ -1,0 +1,42 @@
+[
+  {
+    "question": "报警记录的常见场景有哪些？",
+    "answer": "常见场景有故障排查与维护、性能分析与改进、合规性审查、报告和统计分析、持续改进、追溯历史事件、报警优先级确定 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E6%8A%A5%E8%AD%A6%E7%AE%A1%E7%90%86/%E6%8A%A5%E8%AD%A6%E8%AE%B0%E5%BD%95%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "报警记录如何助力故障排查与维护？",
+    "answer": "通过记录报警事件的详细信息，维护人员可以了解设备或系统何时发生故障，以及导致故障的原因，从而更有效地进行维修和保养 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E6%8A%A5%E8%AD%A6%E7%AE%A1%E7%90%86/%E6%8A%A5%E8%AD%A6%E8%AE%B0%E5%BD%95%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "怎样利用报警记录进行性能分析与改进？",
+    "answer": "通过对报警记录进行数据分析，统计报警频率、报警类型等信息，找到系统中的瓶颈和问题，并进行改进和优化 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E6%8A%A5%E8%AD%A6%E7%AE%A1%E7%90%86/%E6%8A%A5%E8%AD%A6%E8%AE%B0%E5%BD%95%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "报警记录在合规性审查中有什么作用？",
+    "answer": "报警记录可以作为合规性审查的重要依据，证明系统是否符合安全要求和法规标准 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E6%8A%A5%E8%AD%A6%E7%AE%A1%E7%90%86/%E6%8A%A5%E8%AD%A6%E8%AE%B0%E5%BD%95%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "报警记录怎样用于报告和统计分析？",
+    "answer": "通过整理和汇总报警事件的数据，可以制作故障报告、设备使用率报告等，为管理决策提供支持 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E6%8A%A5%E8%AD%A6%E7%AE%A1%E7%90%86/%E6%8A%A5%E8%AD%A6%E8%AE%B0%E5%BD%95%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "报警记录对持续改进有什么帮助？",
+    "answer": "报警记录可以帮助系统管理人员了解系统的稳定性和可靠性，通过不断改进和优化，可以减少系统的报警次数，提高系统的稳定性和可靠性 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E6%8A%A5%E8%AD%A6%E7%AE%A1%E7%90%86/%E6%8A%A5%E8%AD%A6%E8%AE%B0%E5%BD%95%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "报警记录如何实现追溯历史事件？",
+    "answer": "报警记录为系统操作历史提供了可追溯的记录，当发生问题时，可以回溯报警记录，了解事件的发生和处理过程 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E6%8A%A5%E8%AD%A6%E7%AE%A1%E7%90%86/%E6%8A%A5%E8%AD%A6%E8%AE%B0%E5%BD%95%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "怎样通过报警记录确定报警优先级？",
+    "answer": "通过对报警记录进行分析，可以确定报警事件的优先级，有助于确保紧急事件得到及时响应，减少不必要的干扰和误报 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E6%8A%A5%E8%AD%A6%E7%AE%A1%E7%90%86/%E6%8A%A5%E8%AD%A6%E8%AE%B0%E5%BD%95%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "CMS数据模块内置的报警管理列表有哪些？",
+    "answer": "CMS数据模块内置报警管理列表，包括实时表和历史表，且当前两个列表不可删除、编辑 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E6%8A%A5%E8%AD%A6%E7%AE%A1%E7%90%86/%E6%8A%A5%E8%AD%A6%E8%AE%B0%E5%BD%95%E6%A6%82%E8%BF%B0"
+  },
+  {
+    "question": "报警管理实时表和历史表分别有什么作用？",
+    "answer": "报警管理 - 实时表实时记录正在发生的报警，若报警恢复则实时报警记录流转至历史报警记录；报警管理 - 历史表记录发生过的报警，当发生的报警恢复后记录在历史表，可对历史数据进行存储设置 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E6%8A%A5%E8%AD%A6%E7%AE%A1%E7%90%86/%E6%8A%A5%E8%AD%A6%E8%AE%B0%E5%BD%95%E6%A6%82%E8%BF%B0"
+  }
+]

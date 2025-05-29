@@ -1,0 +1,42 @@
+[
+  {
+    "question": "插件管理在CMS中有哪些应用场景？",
+    "answer": "插件管理在CMS中的应用场景有：数据源扩展，可添加插件支持不同设备通信协议以扩展数据采集能力；自定义可视化元素，用户能创建或下载可视化插件满足特定界面需求；数据处理和计算，添加自定义数据处理和计算插件满足特定分析需求；第三方集成，用于集成第三方软件或服务实现更强大功能；用户认证和安全，添加不同认证插件适应不同认证方式和安全需求。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E6%8F%92%E4%BB%B6%E7%AE%A1%E7%90%86"
+  },
+  {
+    "question": "插件管理对CMS的发展有什么作用？",
+    "answer": "插件管理促进了CMS的发展，通过用户之间的共享和交流，不断丰富CMS的功能和应用范围。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E6%8F%92%E4%BB%B6%E7%AE%A1%E7%90%86"
+  },
+  {
+    "question": "插件主要分为哪几类？",
+    "answer": "插件主要分为三类，分别是通道协议、后台服务、页面组件。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E6%8F%92%E4%BB%B6%E7%AE%A1%E7%90%86"
+  },
+  {
+    "question": "什么是通道协议？",
+    "answer": "通道协议在CMS中是指用于在通信系统中传输数据和控制信息的一系列规则和约定。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E6%8F%92%E4%BB%B6%E7%AE%A1%E7%90%86"
+  },
+  {
+    "question": "后台服务的特点和作用是什么？",
+    "answer": "后台服务通常在用户不直接与其交互的情况下持续运行，不显示图形界面。主要用于在后台执行某些任务、提供持续性的功能或处理与用户交互无关的事务，某些页面组件需要依赖后台服务。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E6%8F%92%E4%BB%B6%E7%AE%A1%E7%90%86"
+  },
+  {
+    "question": "什么是页面组件？",
+    "answer": "页面组件是指独立功能模块或元素，是组态页面的基本构建块，每个页面组件通常负责特定的功能，样式和行为，并且可以在一个或多个页面中复用。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E6%8F%92%E4%BB%B6%E7%AE%A1%E7%90%86"
+  },
+  {
+    "question": "当插件处于禁用状态，用户想重新使用该怎么做？",
+    "answer": "用户想要重新使用状态为禁用的插件，可以使用启用按钮对禁用的插件进行操作。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E6%8F%92%E4%BB%B6%E7%AE%A1%E7%90%86"
+  },
+  {
+    "question": "用户暂时不需要使用某个插件时该如何操作？",
+    "answer": "当用户暂时不需要使用到某个插件时，可使用禁用功能将该插件禁用，该插件将会被禁止使用。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E6%8F%92%E4%BB%B6%E7%AE%A1%E7%90%86"
+  },
+  {
+    "question": "如何进行插件安装操作？",
+    "answer": "点击插件安装，进入插件安装弹窗，在插件安装弹窗，点击安装选择选择路径下的安装包，解析安装包内的插件内容，选择需要的插件进行安装，确认后将选择的插件加入CMS。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E6%8F%92%E4%BB%B6%E7%AE%A1%E7%90%86"
+  },
+  {
+    "question": "在哪里可以打开插件管理页面？",
+    "answer": "在后台运行，点击任务栏的【CMS服务监控】托盘图标，左侧选中插件菜单，即可展示插件管理页面。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E6%8F%92%E4%BB%B6%E7%AE%A1%E7%90%86"
+  }
+]

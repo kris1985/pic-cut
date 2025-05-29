@@ -1,0 +1,42 @@
+[
+  {
+    "question": "读写组件的功能是什么？",
+    "answer": "读写组件是功能性组件，用于实现变量读写的核心功能，例如变量值显示、控制及状态反馈，此外支持以图形化方式展示，更直观便于监控。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E8%AF%BB%E5%86%99%E7%BB%84%E4%BB%B6"
+  },
+  {
+    "question": "数值显示组件的只读功能是什么？",
+    "answer": "用于关联变量，实现变量内容的展示。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E8%AF%BB%E5%86%99%E7%BB%84%E4%BB%B6"
+  },
+  {
+    "question": "数值显示组件如何自定义展示精度？",
+    "answer": "支持控制数据的显示精度，若在定义变量的过程中已设置精度，组件处本身无需再定义精度，展示即为变量定义精度，若有修改需求可开启自定义显示精度。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E8%AF%BB%E5%86%99%E7%BB%84%E4%BB%B6"
+  },
+  {
+    "question": "数值输入组件的只写功能是什么？",
+    "answer": "用于关联变量，运行时，输入值后回车，实现对指定变量的内容下发。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E8%AF%BB%E5%86%99%E7%BB%84%E4%BB%B6"
+  },
+  {
+    "question": "数值输入组件如何自定义输入范围？",
+    "answer": "支持控制数据的输入量程，若输入超出范围，将反馈提示。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E8%AF%BB%E5%86%99%E7%BB%84%E4%BB%B6"
+  },
+  {
+    "question": "读写框组件的用法是什么？",
+    "answer": "用法同数值输入和数值显示的集合（读写）。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E8%AF%BB%E5%86%99%E7%BB%84%E4%BB%B6"
+  },
+  {
+    "question": "开关按钮组件有哪些样式选择？",
+    "answer": "支持开关左右切换和按钮原位切换样式。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E8%AF%BB%E5%86%99%E7%BB%84%E4%BB%B6"
+  },
+  {
+    "question": "点动按钮组件的控制状态如何设置？",
+    "answer": "按下松开控制的状态可设置，如“按下开，松开关”或“按下关，松开开”。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E8%AF%BB%E5%86%99%E7%BB%84%E4%BB%B6"
+  },
+  {
+    "question": "下拉控制组件如何进行选项编辑？",
+    "answer": "选项、值支持列表直接输入，或点击“设置”进行快捷配置（每行1组，选项和值用英文逗号分隔）。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E8%AF%BB%E5%86%99%E7%BB%84%E4%BB%B6"
+  },
+  {
+    "question": "写组件在变量下发方面有什么特殊之处？",
+    "answer": "写组件支持变量下发的权限控制（权限控制请参考[这里](/cms/tutorial/页面管理/使用运行模块/权限管理)）。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E5%88%9B%E5%BB%BA%E7%9B%91%E6%8E%A7%E9%A1%B5%E9%9D%A2/%E8%AF%BB%E5%86%99%E7%BB%84%E4%BB%B6"
+  }
+]

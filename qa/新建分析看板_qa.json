@@ -1,0 +1,42 @@
+[
+  {
+    "question": "本章节主要介绍什么内容？",
+    "answer": "本章节主要介绍如何新建一个分析看板，并进行看板的自定义设计制作。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E6%90%AD%E5%BB%BA%E5%88%86%E6%9E%90%E7%9C%8B%E6%9D%BF/%E6%96%B0%E5%BB%BA%E5%88%86%E6%9E%90%E7%9C%8B%E6%9D%BF"
+  },
+  {
+    "question": "新建分析看板的入口在哪里？",
+    "answer": "进入“页面管理”后，在页面列表点击“新建”按钮，输入页面名，即完成页面的创建。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E6%90%AD%E5%BB%BA%E5%88%86%E6%9E%90%E7%9C%8B%E6%9D%BF/%E6%96%B0%E5%BB%BA%E5%88%86%E6%9E%90%E7%9C%8B%E6%9D%BF"
+  },
+  {
+    "question": "新建页面画布的默认尺寸是多少？",
+    "answer": "新建的页面画布尺寸默认为网页1980x1080。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E6%90%AD%E5%BB%BA%E5%88%86%E6%9E%90%E7%9C%8B%E6%9D%BF/%E6%96%B0%E5%BB%BA%E5%88%86%E6%9E%90%E7%9C%8B%E6%9D%BF"
+  },
+  {
+    "question": "能否自定义调整新建页面画布的尺寸？",
+    "answer": "可以，新建的页面画布尺寸支持自定义调整，也可点击预设尺寸选择其他常规的画布尺寸。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E6%90%AD%E5%BB%BA%E5%88%86%E6%9E%90%E7%9C%8B%E6%9D%BF/%E6%96%B0%E5%BB%BA%E5%88%86%E6%9E%90%E7%9C%8B%E6%9D%BF"
+  },
+  {
+    "question": "能否调整页面画布的背景颜色？",
+    "answer": "支持背景颜色调整。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E6%90%AD%E5%BB%BA%E5%88%86%E6%9E%90%E7%9C%8B%E6%9D%BF/%E6%96%B0%E5%BB%BA%E5%88%86%E6%9E%90%E7%9C%8B%E6%9D%BF"
+  },
+  {
+    "question": "如果要自定义页面背景图，该怎么做？",
+    "answer": "若需自定义页面背景图，可应用图库素材。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E6%90%AD%E5%BB%BA%E5%88%86%E6%9E%90%E7%9C%8B%E6%9D%BF/%E6%96%B0%E5%BB%BA%E5%88%86%E6%9E%90%E7%9C%8B%E6%9D%BF"
+  },
+  {
+    "question": "在设计布局方面，可以如何操作？",
+    "answer": "可以应用素材图片作为背景，进行看板的布局及美化；还能应用“静态文本”基础组件，自定义标题内容。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E6%90%AD%E5%BB%BA%E5%88%86%E6%9E%90%E7%9C%8B%E6%9D%BF/%E6%96%B0%E5%BB%BA%E5%88%86%E6%9E%90%E7%9C%8B%E6%9D%BF"
+  },
+  {
+    "question": "新建分析看板过程中，对画布尺寸有几种操作方式？",
+    "answer": "有三种操作方式，一是默认尺寸为1980x1080，二是支持自定义调整，三是点击预设尺寸选择其他常规尺寸。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E6%90%AD%E5%BB%BA%E5%88%86%E6%9E%90%E7%9C%8B%E6%9D%BF/%E6%96%B0%E5%BB%BA%E5%88%86%E6%9E%90%E7%9C%8B%E6%9D%BF"
+  },
+  {
+    "question": "在设计布局时，“静态文本”基础组件用于什么？",
+    "answer": "在设计布局时，“静态文本”基础组件用于自定义标题内容。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E6%90%AD%E5%BB%BA%E5%88%86%E6%9E%90%E7%9C%8B%E6%9D%BF/%E6%96%B0%E5%BB%BA%E5%88%86%E6%9E%90%E7%9C%8B%E6%9D%BF"
+  },
+  {
+    "question": "新建分析看板的页面创建完成的标志是什么？",
+    "answer": "进入“页面管理”后，在页面列表点击“新建”按钮并输入页面名，即完成页面创建，此时页面创建完成。 --- 文档来源: https://cms-docs.shengyc.com/cms/tutorial/%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86/%E6%90%AD%E5%BB%BA%E5%88%86%E6%9E%90%E7%9C%8B%E6%9D%BF/%E6%96%B0%E5%BB%BA%E5%88%86%E6%9E%90%E7%9C%8B%E6%9D%BF"
+  }
+]
