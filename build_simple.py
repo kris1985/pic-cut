@@ -12,25 +12,41 @@ import shutil
 import platform
 from pathlib import Path
 
+# Windows编码修复
+if platform.system() == 'Windows':
+    import codecs
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+    sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
+    # 设置环境变量
+    os.environ['PYTHONIOENCODING'] = 'utf-8'
+
+def safe_print(text):
+    """安全的打印函数，处理编码问题"""
+    try:
+        print(text)
+    except UnicodeEncodeError:
+        # 如果遇到编码错误，使用ASCII安全的输出
+        print(text.encode('ascii', 'replace').decode('ascii'))
+
 def check_requirements():
     """检查打包环境和依赖"""
-    print("🔍 检查打包环境...")
+    safe_print("Checking build environment...")
     
     # 检查操作系统
     if platform.system() != 'Windows':
-        print("⚠️  警告: 当前系统不是Windows，生成的exe仅可在当前系统运行")
+        safe_print("Warning: Current system is not Windows, generated exe will only run on current system")
     
-    print(f"📊 系统信息: {platform.system()} {platform.machine()}")
-    print(f"🐍 Python版本: {sys.version}")
+    safe_print(f"System info: {platform.system()} {platform.machine()}")
+    safe_print(f"Python version: {sys.version}")
     
     # 检查PyInstaller
     try:
         import PyInstaller
-        print(f"✅ PyInstaller版本: {PyInstaller.__version__}")
+        safe_print(f"PyInstaller version: {PyInstaller.__version__}")
     except ImportError:
-        print("❌ PyInstaller未安装，正在安装...")
+        safe_print("PyInstaller not installed, installing...")
         subprocess.run([sys.executable, '-m', 'pip', 'install', 'pyinstaller'], check=True)
-        print("✅ PyInstaller安装完成")
+        safe_print("PyInstaller installation completed")
     
     # 检查关键依赖
     required_packages = ['cv2', 'numpy', 'PIL', 'tkinter']
@@ -40,21 +56,21 @@ def check_requirements():
         try:
             if package == 'cv2':
                 import cv2
-                print(f"✅ OpenCV版本: {cv2.__version__}")
+                safe_print(f"OpenCV version: {cv2.__version__}")
             elif package == 'numpy':
                 import numpy
-                print(f"✅ NumPy版本: {numpy.__version__}")
+                safe_print(f"NumPy version: {numpy.__version__}")
             elif package == 'PIL':
                 import PIL
-                print(f"✅ Pillow版本: {PIL.__version__}")
+                safe_print(f"Pillow version: {PIL.__version__}")
             elif package == 'tkinter':
                 import tkinter
-                print("✅ Tkinter可用")
+                safe_print("Tkinter available")
         except ImportError:
             missing_packages.append(package)
     
     if missing_packages:
-        print(f"❌ 缺少依赖包: {', '.join(missing_packages)}")
+        safe_print(f"Missing packages: {', '.join(missing_packages)}")
         return False
     
     return True
@@ -62,25 +78,25 @@ def check_requirements():
 def build_exe():
     """构建Windows 64位exe文件"""
     
-    print("🚀 开始构建鞋子图片智能裁剪工具 (Windows x64)...")
+    safe_print("Starting Shoe Image Cropper build (cross-platform)...")
     
     # 检查环境
     if not check_requirements():
-        print("❌ 环境检查失败，无法继续打包")
+        safe_print("Environment check failed, cannot proceed with build")
         return False
     
     # 清理之前的构建
     cleanup_dirs = ['build', 'dist', '__pycache__']
     for dir_name in cleanup_dirs:
         if os.path.exists(dir_name):
-            print(f"🧹 清理目录: {dir_name}")
+            safe_print(f"Cleaning directory: {dir_name}")
             shutil.rmtree(dir_name)
     
     # 删除旧的spec文件
     spec_files = [f for f in os.listdir('.') if f.endswith('.spec')]
     for spec_file in spec_files:
         os.remove(spec_file)
-        print(f"🧹 清理spec文件: {spec_file}")
+        safe_print(f"Cleaning spec file: {spec_file}")
     
     # 优化的构建命令 - 跨平台支持
     system = platform.system().lower()
@@ -88,13 +104,13 @@ def build_exe():
     
     # 根据系统确定文件名和后缀
     if system == 'windows':
-        app_name = '鞋子图片智能裁剪工具_v2.0_x64'
+        app_name = 'ShoeImageCropper_v2.0_x64'  # Windows使用英文名避免编码问题
         expected_ext = '.exe'
     elif system == 'darwin':  # macOS
-        app_name = '鞋子图片智能裁剪工具_v2.0_macOS'
+        app_name = 'ShoeImageCropper_v2.0_macOS'
         expected_ext = '.app'  # PyInstaller在macOS上可能生成.app或无后缀
     else:  # Linux
-        app_name = '鞋子图片智能裁剪工具_v2.0_linux'
+        app_name = 'ShoeImageCropper_v2.0_linux'
         expected_ext = ''  # Linux通常无后缀
     
     cmd = [
@@ -142,14 +158,14 @@ def build_exe():
     ]
     
     try:
-        print("📦 开始PyInstaller打包...")
-        print("⏰ 这可能需要几分钟时间，请耐心等待...")
+        safe_print("Starting PyInstaller build...")
+        safe_print("This may take several minutes, please wait...")
         
         # 运行命令
         result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8')
         
         if result.returncode == 0:
-            print("✅ 构建完成!")
+            safe_print("Build completed!")
             
             # 检查生成的文件 - 跨平台支持
             possible_files = [
@@ -166,18 +182,18 @@ def build_exe():
             
             if found_file:
                 file_size = found_file.stat().st_size / (1024 * 1024)  # MB
-                print(f"📦 文件大小: {file_size:.1f} MB")
-                print(f"📂 文件位置: {found_file.absolute()}")
+                safe_print(f"File size: {file_size:.1f} MB")
+                safe_print(f"File location: {found_file.absolute()}")
                 
                 # 系统特定提示
                 if system == 'windows':
-                    print("🎯 Windows exe文件已生成，可在任何Windows 64位系统运行")
+                    safe_print("Windows exe generated, can run on any Windows 64-bit system")
                 elif system == 'darwin':
-                    print("🍎 macOS应用已生成，可在macOS系统运行")
-                    print("💡 如需Windows exe文件，请在Windows系统上运行此脚本")
+                    safe_print("macOS app generated, can run on macOS systems")
+                    safe_print("To generate Windows exe, run this script on Windows system")
                 else:
-                    print("🐧 Linux可执行文件已生成")
-                    print("💡 如需Windows exe文件，请在Windows系统上运行此脚本")
+                    safe_print("Linux executable generated")
+                    safe_print("To generate Windows exe, run this script on Windows system")
                 
                 # 创建使用说明和依赖信息
                 create_readme(system, app_name)
@@ -185,166 +201,169 @@ def build_exe():
                 
                 return True
             else:
-                print("❌ 可执行文件未找到")
-                print(f"💡 预期文件名: {app_name}{expected_ext}")
+                safe_print("Executable file not found")
+                safe_print(f"Expected filename: {app_name}{expected_ext}")
                 return False
         else:
-            print("❌ 构建失败:")
-            print("标准输出:", result.stdout)
-            print("错误输出:", result.stderr)
+            safe_print("Build failed:")
+            safe_print(f"stdout: {result.stdout}")
+            safe_print(f"stderr: {result.stderr}")
             return False
             
     except Exception as e:
-        print(f"❌ 构建失败: {e}")
+        safe_print(f"Build failed: {e}")
         return False
 
 def create_readme(system, app_name):
     """创建详细的使用说明文件"""
-    readme_content = f"""# 鞋子图片智能裁剪工具 v2.0 ({system.capitalize()})
+    readme_content = f"""# Shoe Image Cropper v2.0 ({system.capitalize()})
 
-🎯 专为鞋子商品图片设计的智能裁剪工具
+Intelligent cropping tool designed for shoe product images
 
-## 💻 系统要求
-- Windows 7/8/10/11 (64位)
-- 至少 4GB 内存
-- 至少 100MB 可用磁盘空间
+## System Requirements
+- Windows 7/8/10/11 (64-bit)
+- At least 4GB RAM
+- At least 100MB available disk space
 
-## 🚀 快速使用
-1. 双击运行 "{app_name}.exe"
-2. 选择输入文件夹（包含鞋子图片）
-3. 选择输出文件夹
-4. 调整处理参数（可选）
-5. 点击"开始裁剪"
+## Quick Start
+1. Run "{app_name}.exe"
+2. Select input folder (containing shoe images)
+3. Select output folder
+4. Adjust processing parameters (optional)
+5. Click "Start Cropping"
 
-## ✨ 功能特点
-✨ 智能检测鞋子位置
-✨ 自动居中裁剪
-✨ 支持4:3和3:4比例自动选择
-✨ 智能文件大小控制（新功能）
-✨ 高图片质量保持
-✨ 批量处理
-✨ 实时处理进度显示
+## Features
+- Smart shoe detection and positioning
+- Auto-centered cropping
+- Support for 4:3 and 3:4 aspect ratio auto-selection
+- Intelligent file size control (new feature)
+- High image quality preservation
+- Batch processing
+- Real-time progress display
 
-## 📸 支持格式
-- 输入: JPG, JPEG, PNG, BMP, TIFF, WebP
-- 输出: 高质量 JPEG
+## Supported Formats
+- Input: JPG, JPEG, PNG, BMP, TIFF, WebP
+- Output: High-quality JPEG
 
-## 🔧 处理参数说明
-- **裁剪比例**: 自动选择/4:3横向/3:4竖向
-- **图片质量**: 高质量(推荐)/普通质量
-- **高分辨率模式**: 适用于大图片，保持更多像素
+## Parameters
+- **Aspect Ratio**: Auto-select/4:3 landscape/3:4 portrait
+- **Image Quality**: High quality (recommended)/Normal quality
+- **High Resolution Mode**: For large images, preserves more pixels
 
-## 📊 新版本特性 (v2.0)
-🔥 智能文件大小控制 - 防止输出文件过大
-🔥 动态质量调整 - 根据原图智能优化
-🔥 实时大小监控 - 自动重新优化超标文件
-🔥 多策略检测 - 更准确的鞋子识别
+## v2.0 New Features
+- Smart file size control - prevents oversized output files
+- Dynamic quality adjustment - intelligent optimization based on source
+- Real-time size monitoring - auto re-optimization for oversized files
+- Multi-strategy detection - more accurate shoe recognition
 
-## 🔍 使用提示
-1. 输入图片建议分辨率不低于800x600
-2. 确保鞋子在图片中清晰可见
-3. 背景越简单，检测效果越好
-4. 大图片建议开启"高分辨率模式"
+## Usage Tips
+1. Input images recommended resolution not less than 800x600
+2. Ensure shoes are clearly visible in the image
+3. Simpler backgrounds work better for detection
+4. For large images, enable "High Resolution Mode"
 
-## 🆘 故障排除
-- 如果程序无法启动，请检查Windows系统版本是否为64位
-- 如果处理失败，请检查图片文件是否损坏
-- 如果结果不理想，可以尝试不同的处理参数
+## Troubleshooting
+- If program won't start, check Windows system version is 64-bit
+- If processing fails, check if image files are corrupted
+- If results are unsatisfactory, try different parameters
 
-## 📞 技术支持
-- 版本: v2.0
-- 架构: {system.capitalize()} x64
-- 开发语言: Python + OpenCV + AI算法
+## Technical Support
+- Version: v2.0
+- Architecture: {system.capitalize()} x64
+- Technology: Python + OpenCV + AI algorithms
 """
     
     os.makedirs('dist', exist_ok=True)
-    with open('dist/使用说明.txt', 'w', encoding='utf-8') as f:
+    with open('dist/README.txt', 'w', encoding='utf-8') as f:
         f.write(readme_content)
     
-    print("📝 使用说明已创建")
+    safe_print("README created")
 
 def create_version_info(system, app_name):
     """创建版本信息文件"""
     import datetime
     
-    version_info = f"""# 版本信息
+    version_info = f"""# Version Information
 
-程序名称: 鞋子图片智能裁剪工具
-版本号: v2.0
-目标平台: {system.capitalize()} x64
-构建时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-Python版本: {sys.version}
-系统平台: {platform.platform()}
+Program Name: Shoe Image Cropper
+Version: v2.0
+Target Platform: {system.capitalize()} x64
+Build Time: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+Python Version: {sys.version}
+System Platform: {platform.platform()}
 
-## 更新日志
+## Changelog
 
-### v2.0 (当前版本)
-- ✨ 新增智能文件大小控制系统
-- ✨ 动态质量调整算法
-- ✨ 实时文件大小监控
-- ✨ 多策略对象检测
-- ✨ 高分辨率模式优化
-- 🐛 修复文件变大问题
-- 🐛 优化内存使用
-- 🎨 改进用户界面
+### v2.0 (Current)
+- NEW: Smart file size control system
+- NEW: Dynamic quality adjustment algorithm
+- NEW: Real-time file size monitoring
+- NEW: Multi-strategy object detection
+- NEW: High resolution mode optimization
+- FIX: File size increase issue
+- FIX: Memory usage optimization
+- UI: Improved user interface
 
 ### v1.0
-- 基础智能裁剪功能
-- GUI界面
-- 批量处理
+- Basic smart cropping functionality
+- GUI interface
+- Batch processing
 """
     
-    with open('dist/版本信息.txt', 'w', encoding='utf-8') as f:
+    with open('dist/VERSION.txt', 'w', encoding='utf-8') as f:
         f.write(version_info)
     
-    print("📋 版本信息已创建")
+    safe_print("Version info created")
 
 def main():
     """主函数"""
     system_name = platform.system()
-    print("=" * 60)
-    print(f"  鞋子图片智能裁剪工具 - {system_name} 打包程序")
-    print("=" * 60)
+    safe_print("=" * 60)
+    safe_print(f"  Shoe Image Cropper - {system_name} Build Tool")
+    safe_print("=" * 60)
     
     success = build_exe()
     
     if success:
-        print("\n" + "=" * 60)
-        print("🎉 打包成功！")
+        safe_print("\n" + "=" * 60)
+        safe_print("SUCCESS: Build completed!")
         
         # 根据系统显示不同的成功信息
         if system_name.lower() == 'windows':
-            print("📁 exe文件位置: dist/鞋子图片智能裁剪工具_v2.0_x64.exe")
-            print("💡 提示:")
-            print("   - 生成的exe文件可以在任何Windows 64位系统上运行")
-            print("   - 不需要安装Python或其他依赖")
+            safe_print("File location: dist/ShoeImageCropper_v2.0_x64.exe")
+            safe_print("Tips:")
+            safe_print("   - Generated exe can run on any Windows 64-bit system")
+            safe_print("   - No need to install Python or other dependencies")
         elif system_name.lower() == 'darwin':
-            print("📁 应用位置: dist/鞋子图片智能裁剪工具_v2.0_macOS.app")
-            print("💡 提示:")
-            print("   - 生成的app文件可以在macOS系统上运行")
-            print("   - 要生成Windows exe文件，需要在Windows系统上运行")
-            print("   - 或使用GitHub Actions自动化构建多平台版本")
+            safe_print("App location: dist/ShoeImageCropper_v2.0_macOS.app")
+            safe_print("Tips:")
+            safe_print("   - Generated app can run on macOS systems")
+            safe_print("   - To generate Windows exe, run on Windows system")
+            safe_print("   - Or use GitHub Actions for multi-platform builds")
         else:
-            print("📁 可执行文件位置: dist/鞋子图片智能裁剪工具_v2.0_linux")
-            print("💡 提示:")
-            print("   - 生成的文件可以在Linux系统上运行")
-            print("   - 要生成Windows exe文件，需要在Windows系统上运行")
+            safe_print("Executable location: dist/ShoeImageCropper_v2.0_linux")
+            safe_print("Tips:")
+            safe_print("   - Generated file can run on Linux systems")
+            safe_print("   - To generate Windows exe, run on Windows system")
             
-        print("📖 使用说明: dist/使用说明.txt")
-        print("📋 版本信息: dist/版本信息.txt")
-        print("=" * 60)
-        print("\n🌟 跨平台打包提示:")
-        print("   - Windows exe: 在Windows系统运行此脚本")
-        print("   - macOS app: 在macOS系统运行此脚本")  
-        print("   - Linux binary: 在Linux系统运行此脚本")
-        print("   - 或使用GitHub Actions同时构建所有平台版本")
+        safe_print("README: dist/README.txt")
+        safe_print("Version info: dist/VERSION.txt")
+        safe_print("=" * 60)
+        safe_print("\nCross-platform build tips:")
+        safe_print("   - Windows exe: Run this script on Windows")
+        safe_print("   - macOS app: Run this script on macOS")  
+        safe_print("   - Linux binary: Run this script on Linux")
+        safe_print("   - Or use GitHub Actions for all platforms")
     else:
-        print("\n" + "=" * 60)
-        print("❌ 打包失败！")
-        print("💡 请检查上面的错误信息并重试")
-        print("=" * 60)
+        safe_print("\n" + "=" * 60)
+        safe_print("ERROR: Build failed!")
+        safe_print("Please check the error messages above")
+        safe_print("=" * 60)
     
-    input("\n按任意键退出...")
+    try:
+        input("\nPress any key to exit...")
+    except:
+        pass  # 在CI环境中可能没有输入
 
 if __name__ == "__main__":
     main() 
