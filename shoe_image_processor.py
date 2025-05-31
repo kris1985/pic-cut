@@ -590,7 +590,7 @@ class ShoeImageProcessor:
     
     def smart_crop_with_margins(self, image: Image.Image, left_right_margin_ratio: float = 0.1, 
                                top_bottom_margin_ratio: float = 0.15, target_ratio: str = 'auto',
-                               min_resolution: int = 1200, fast_mode: bool = True) -> Image.Image:
+                               min_resolution: int = 800, fast_mode: bool = True) -> Image.Image:
         """
         智能裁剪/扩展图片，确保鞋子居中显示且左右边距各占指定比例
         
@@ -692,9 +692,30 @@ class ShoeImageProcessor:
         ideal_canvas_width = object_width / (1 - 2 * left_right_margin_ratio)
         ideal_canvas_height = ideal_canvas_width * ratio_h / ratio_w
         
-        # 检查是否满足最小分辨率要求
-        min_width = min_resolution if ratio_w >= ratio_h else min_resolution * ratio_w / ratio_h
-        min_height = min_resolution if ratio_h >= ratio_w else min_resolution * ratio_h / ratio_w
+        # 边距合理性检查：防止画布过大导致边距过大
+        original_width, original_height = image.size
+        
+        # 如果理想画布比原图大太多，进行调整
+        max_scale_factor = 2.0  # 最大允许放大2倍
+        if ideal_canvas_width > original_width * max_scale_factor:
+            logger.warning(f"理想画布过大 ({ideal_canvas_width:.0f}px > {original_width * max_scale_factor:.0f}px)，进行缩放调整")
+            scale_down = original_width * max_scale_factor / ideal_canvas_width
+            ideal_canvas_width = original_width * max_scale_factor
+            ideal_canvas_height = ideal_canvas_width * ratio_h / ratio_w
+            logger.info(f"调整后理想画布: {ideal_canvas_width:.0f}x{ideal_canvas_height:.0f}")
+        
+        logger.info(f"理想画布计算: 鞋子{object_width}x{object_height} -> 画布{ideal_canvas_width:.0f}x{ideal_canvas_height:.0f}")
+        
+        # 检查是否满足最小分辨率要求 - 增加自适应逻辑
+        # original_width, original_height 已在上面定义
+        original_min_size = min(original_width, original_height)
+        
+        # 自适应最小分辨率：不应超过原图的80%
+        adaptive_min_resolution = min(min_resolution, int(original_min_size * 0.8))
+        logger.info(f"最小分辨率: 设定{min_resolution} -> 自适应{adaptive_min_resolution} (原图最小边: {original_min_size})")
+        
+        min_width = adaptive_min_resolution if ratio_w >= ratio_h else adaptive_min_resolution * ratio_w / ratio_h
+        min_height = adaptive_min_resolution if ratio_h >= ratio_w else adaptive_min_resolution * ratio_h / ratio_w
         
         # 优先使用理想尺寸来确保边距准确
         final_canvas_width = max(ideal_canvas_width, min_width)
@@ -920,7 +941,7 @@ class ShoeImageProcessor:
             logger.warning("未能生成有效结果，返回最后一次尝试的结果")
             return new_canvas
     
-    def smart_crop(self, image: Image.Image, target_ratio: str = 'auto', min_resolution: int = 1200, 
+    def smart_crop(self, image: Image.Image, target_ratio: str = 'auto', min_resolution: int = 800, 
                    preserve_resolution: bool = False, use_margin_mode: bool = True, fast_mode: bool = True) -> Image.Image:
         """
         智能裁剪图片，确保主体居中显示并保持高分辨率
@@ -1026,8 +1047,12 @@ class ShoeImageProcessor:
                 target_width = needed_height * ratio_w / ratio_h
             
             # 确保目标尺寸满足最小分辨率要求
-            min_width = min_resolution if ratio_w >= ratio_h else min_resolution * ratio_w / ratio_h
-            min_height = min_resolution if ratio_h >= ratio_w else min_resolution * ratio_h / ratio_w
+            # 使用与边距模式相同的自适应最小分辨率逻辑
+            original_min_size = min(original_width, original_height)
+            adaptive_min_resolution = min(min_resolution, int(original_min_size * 0.8))
+            
+            min_width = adaptive_min_resolution if ratio_w >= ratio_h else adaptive_min_resolution * ratio_w / ratio_h
+            min_height = adaptive_min_resolution if ratio_h >= ratio_w else adaptive_min_resolution * ratio_h / ratio_w
             
             target_width = max(target_width, min_width)
             target_height = max(target_height, min_height)
