@@ -241,7 +241,7 @@ Intelligent cropping tool designed for shoe product images - Performance Optimiz
 
 ## ✨ Core Features
 - 🔥 **NEW** Fast Mode (3x+ speed boost)
-- 🔥 Smart margin control (12.5% left/right margins)
+- 🔥 Smart margin control (10% left/right margins)
 - 🔥 5.5:4.5 vertical positioning (better visual effect)
 - 🔥 Intelligent background color detection and fill
 - 🔥 True contour-based margin control
@@ -260,7 +260,7 @@ Intelligent cropping tool designed for shoe product images - Performance Optimiz
 - **Aspect Ratio**: Auto-select/4:3 landscape/3:4 portrait
 - **Image Quality**: High quality (recommended)/Normal quality
 - **High Resolution Mode**: For large images, preserves more pixels
-- **Margin Mode**: Ensures 12.5% left/right margins (recommended)
+- **Margin Mode**: Ensures 10% left/right margins (recommended)
 - **Fast Mode**: Speed priority vs quality priority (NEW)
 
 ## Supported Formats
@@ -324,7 +324,7 @@ System Platform: {platform.platform()}
 - NEW: 实时文件大小监控
 - NEW: 多策略对象检测
 - NEW: 高分辨率模式优化
-- NEW: 边距模式 - 确保12.5%左右边距
+- NEW: 边距模式 - 确保10%左右边距
 - NEW: 5.5:4.5上下比例定位
 - NEW: 智能背景颜色检测和填充
 - FIX: 文件大小增大问题

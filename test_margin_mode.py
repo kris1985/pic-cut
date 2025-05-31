@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 测试边距模式功能
-确保鞋子左右边距各占12.5%，必要时扩展白色画布
+确保鞋子左右边距各占10%，必要时扩展白色画布
 """
 
 import os
@@ -82,10 +82,10 @@ def test_margin_mode():
                     print(f"   📏 画布尺寸: {result_img.width}x{result_img.height}")
                     print(f"   📐 鞋子边界: 左{left}, 右{right}")
                     print(f"   📊 左边距: {left_margin_ratio:.1%}, 右边距: {right_margin_ratio:.1%}")
-                    print(f"   🎯 目标边距: 12.5%")
+                    print(f"   🎯 目标边距: 10%")
                     
                     # 检查边距是否接近目标值
-                    target_margin = 0.125
+                    target_margin = 0.1
                     left_diff = abs(left_margin_ratio - target_margin)
                     right_diff = abs(right_margin_ratio - target_margin)
                     
@@ -103,7 +103,7 @@ def test_margin_mode():
     print(f"📁 结果保存在: {test_output_dir}")
     print("\n💡 使用说明:")
     print("1. 检查输出图片是否鞋子居中")
-    print("2. 验证左右边距是否接近12.5%")
+    print("2. 验证左右边距是否接近10%")
     print("3. 观察是否正确扩展了白色画布")
 
 def test_comparison():

@@ -31,8 +31,8 @@ def analyze_margin_accuracy(image_path: str, processor: ShoeImageProcessor):
         left_margin = left / width
         right_margin = (width - right) / width
         
-        # 计算精确度分数（与12.5%的偏差）
-        target_margin = 0.125
+        # 计算精确度分数（与10%的偏差）
+        target_margin = 0.1
         left_error = abs(left_margin - target_margin)
         right_error = abs(right_margin - target_margin)
         balance_error = abs(left_margin - right_margin)
@@ -73,16 +73,16 @@ def main():
     print(f"\n📊 边距分析结果:")
     print(f"  左边距: {left_margin:.1%}")
     print(f"  右边距: {right_margin:.1%}")
-    print(f"  目标边距: 12.5%")
-    print(f"  左偏差: {abs(left_margin - 0.125):.1%}")
-    print(f"  右偏差: {abs(right_margin - 0.125):.1%}")
+    print(f"  目标边距: 10%")
+    print(f"  左偏差: {abs(left_margin - 0.1):.1%}")
+    print(f"  右偏差: {abs(right_margin - 0.1):.1%}")
     print(f"  左右差异: {abs(left_margin - right_margin):.1%}")
     print(f"  精确度分数: {accuracy:.1%}")
     
     # 判断结果
-    if abs(left_margin - 0.125) < 0.02 and abs(right_margin - 0.125) < 0.02:
+    if abs(left_margin - 0.1) < 0.02 and abs(right_margin - 0.1) < 0.02:
         print("✅ 边距精确度: 优秀")
-    elif abs(left_margin - 0.125) < 0.03 and abs(right_margin - 0.125) < 0.03:
+    elif abs(left_margin - 0.1) < 0.03 and abs(right_margin - 0.1) < 0.03:
         print("✅ 边距精确度: 良好")
     else:
         print("⚠️ 边距精确度: 需要改进")

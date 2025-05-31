@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 边距模式演示脚本
-展示如何确保鞋子左右边距各占12.5%，必要时扩展白色画布
+展示如何确保鞋子左右边距各占10%，必要时扩展白色画布
 """
 
 import os
@@ -15,7 +15,7 @@ def demo_margin_mode():
     """演示边距模式功能"""
     print("🎯 边距模式演示")
     print("=" * 60)
-    print("功能：确保鞋子居中显示，左右边距各占12.5%")
+    print("功能：确保鞋子居中显示，左右边距各占10%")
     print("必要时自动扩展白色画布")
     print()
     
@@ -43,7 +43,7 @@ def demo_margin_mode():
     output_image = f"demo_result_{input_image.name}"
     
     print(f"📊 处理参数:")
-    print(f"  • 左右边距: 12.5%")
+    print(f"  • 左右边距: 10%")
     print(f"  • 鞋子居中显示")
     print(f"  • 自动扩展白色画布")
     print(f"  • 目标比例: 自动选择")
@@ -74,7 +74,7 @@ def demo_margin_mode():
         print("\n🎉 演示完成！")
         print("请查看输出文件以验证:")
         print("  ✓ 鞋子是否居中显示")
-        print("  ✓ 左右边距是否接近12.5%")
+        print("  ✓ 左右边距是否接近10%")
         print("  ✓ 是否正确扩展了白色画布")
         
     else:
@@ -125,7 +125,7 @@ def demo_comparison():
     print(f"📁 边距模式结果: {margin_output}")
     print("\n🔍 对比要点:")
     print("  • 传统模式: 基于现有内容裁剪，边距不固定")
-    print("  • 边距模式: 确保12.5%边距，必要时扩展画布")
+    print("  • 边距模式: 确保10%边距，必要时扩展画布")
     print("  • 边距模式更适合商品展示的标准化需求")
 
 if __name__ == "__main__":

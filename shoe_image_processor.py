@@ -588,7 +588,7 @@ class ShoeImageProcessor:
         logger.warning("轮廓检测失败，使用矩形边界框作为替代")
         return self.find_object_bounds(image)
     
-    def smart_crop_with_margins(self, image: Image.Image, left_right_margin_ratio: float = 0.125, 
+    def smart_crop_with_margins(self, image: Image.Image, left_right_margin_ratio: float = 0.1, 
                                top_bottom_margin_ratio: float = 0.15, target_ratio: str = 'auto',
                                min_resolution: int = 1200, fast_mode: bool = True) -> Image.Image:
         """
@@ -596,7 +596,7 @@ class ShoeImageProcessor:
         
         Args:
             image: PIL Image对象
-            left_right_margin_ratio: 左右边距各占图片宽度的比例 (默认12.5%)
+            left_right_margin_ratio: 左右边距各占图片宽度的比例 (默认10%)
             top_bottom_margin_ratio: 上下最小边距比例 (默认15%)
             target_ratio: 目标比例 '4:3', '3:4', 'auto'
             min_resolution: 最小分辨率（短边）
@@ -687,8 +687,8 @@ class ShoeImageProcessor:
         else:
             raise ValueError(f"不支持的比例: {target_ratio}")
         
-        # 计算理想画布尺寸，确保12.5%边距
-        # 鞋子宽度占总宽度的75%，所以总宽度 = 鞋子宽度 / 0.75
+        # 计算理想画布尺寸，确保10%边距
+        # 鞋子宽度占总宽度的80%，所以总宽度 = 鞋子宽度 / 0.8
         ideal_canvas_width = object_width / (1 - 2 * left_right_margin_ratio)
         ideal_canvas_height = ideal_canvas_width * ratio_h / ratio_w
         
@@ -1126,7 +1126,7 @@ class ShoeImageProcessor:
             target_ratio: 目标比例
             high_quality: 是否使用高质量保存
             preserve_resolution: 是否优先保持分辨率（适合高分辨率图片）
-            use_margin_mode: 是否使用边距模式（确保12.5%左右边距）
+            use_margin_mode: 是否使用边距模式（确保10%左右边距）
             fast_mode: 是否使用快速模式（默认True，大幅提升性能）
             
         Returns:
@@ -1295,7 +1295,7 @@ class ShoeImageProcessor:
             supported_formats: 支持的图片格式
             high_quality: 是否使用高质量保存
             preserve_resolution: 是否优先保持分辨率
-            use_margin_mode: 是否使用边距模式（确保12.5%左右边距）
+            use_margin_mode: 是否使用边距模式（确保10%左右边距）
             fast_mode: 是否使用快速模式（默认True，大幅提升性能）
             
         Returns:
@@ -1601,7 +1601,7 @@ def main():
     parser.add_argument('--quality', choices=['normal', 'high'], default='high',
                        help='保存质量 (默认: high)')
     parser.add_argument('--margin-mode', action='store_true', default=True,
-                       help='使用边距模式，确保鞋子左右边距各占12.5% (默认启用)')
+                       help='使用边距模式，确保鞋子左右边距各占10% (默认启用)')
     parser.add_argument('--no-margin-mode', action='store_true',
                        help='禁用边距模式，使用传统裁剪方式')
     

@@ -124,7 +124,7 @@ class ShoeProcessorGUI:
                        variable=self.hires_var).grid(row=2, column=0, columnspan=2, sticky=tk.W, pady=10)
         
         # 边距模式
-        margin_info = ttk.Label(params_frame, text="边距模式: 确保鞋子左右边距各占12.5%，必要时扩展白色画布", 
+        margin_info = ttk.Label(params_frame, text="边距模式: 确保鞋子左右边距各占10%，必要时扩展白色画布", 
                                style='Info.TLabel', wraplength=500)
         margin_info.grid(row=3, column=0, columnspan=2, sticky=tk.W, pady=(0, 5))
         
@@ -177,7 +177,7 @@ class ShoeProcessorGUI:
         self.log_text.insert(tk.END, "5. 支持jpg、png、bmp等常见图片格式\n\n")
         self.log_text.insert(tk.END, "✨ 功能特点:\n")
         self.log_text.insert(tk.END, "• 智能检测鞋子位置，自动居中裁剪\n")
-        self.log_text.insert(tk.END, "• 🆕 边距模式：确保鞋子左右边距各占12.5%\n")
+        self.log_text.insert(tk.END, "• 🆕 边距模式：确保鞋子左右边距各占10%\n")
         self.log_text.insert(tk.END, "• 必要时自动扩展白色画布（鞋子太靠边或太小）\n")
         self.log_text.insert(tk.END, "• 支持各种背景色和鞋子颜色\n")
         self.log_text.insert(tk.END, "• 保持高分辨率和图片质量\n")
