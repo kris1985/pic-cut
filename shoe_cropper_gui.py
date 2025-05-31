@@ -37,6 +37,8 @@ class ShoeProcessorGUI:
         self.ratio_var = tk.StringVar(value="auto")
         self.quality_var = tk.StringVar(value="high")
         self.hires_var = tk.BooleanVar(value=False)
+        self.margin_mode_var = tk.BooleanVar(value=True)  # 新增：默认使用边距模式
+        self.fast_mode_var = tk.BooleanVar(value=True)  # 新增：默认使用快速模式
         
         # 处理器和队列
         self.processor = None
@@ -121,6 +123,18 @@ class ShoeProcessorGUI:
         ttk.Checkbutton(params_frame, text="高分辨率模式 (适用于大图，保持更多像素)", 
                        variable=self.hires_var).grid(row=2, column=0, columnspan=2, sticky=tk.W, pady=10)
         
+        # 边距模式
+        margin_info = ttk.Label(params_frame, text="边距模式: 确保鞋子左右边距各占12.5%，必要时扩展白色画布", 
+                               style='Info.TLabel', wraplength=500)
+        margin_info.grid(row=3, column=0, columnspan=2, sticky=tk.W, pady=(0, 5))
+        
+        ttk.Checkbutton(params_frame, text="启用边距模式 (推荐，确保鞋子居中且边距标准化)", 
+                       variable=self.margin_mode_var).grid(row=4, column=0, columnspan=2, sticky=tk.W, pady=5)
+        
+        # 快速模式
+        ttk.Checkbutton(params_frame, text="快速模式 (大幅提升处理速度，轻微降低检测精度)", 
+                       variable=self.fast_mode_var).grid(row=5, column=0, columnspan=2, sticky=tk.W, pady=5)
+        
         # 控制按钮框架
         control_frame = ttk.Frame(main_frame)
         control_frame.grid(row=row, column=0, columnspan=3, pady=20)
@@ -163,6 +177,8 @@ class ShoeProcessorGUI:
         self.log_text.insert(tk.END, "5. 支持jpg、png、bmp等常见图片格式\n\n")
         self.log_text.insert(tk.END, "✨ 功能特点:\n")
         self.log_text.insert(tk.END, "• 智能检测鞋子位置，自动居中裁剪\n")
+        self.log_text.insert(tk.END, "• 🆕 边距模式：确保鞋子左右边距各占12.5%\n")
+        self.log_text.insert(tk.END, "• 必要时自动扩展白色画布（鞋子太靠边或太小）\n")
         self.log_text.insert(tk.END, "• 支持各种背景色和鞋子颜色\n")
         self.log_text.insert(tk.END, "• 保持高分辨率和图片质量\n")
         self.log_text.insert(tk.END, "• 自动适应最佳裁剪比例\n\n")
@@ -302,6 +318,8 @@ class ShoeProcessorGUI:
             self.log_message(f"裁剪比例: {ratio}")
             self.log_message(f"高质量模式: {'是' if high_quality else '否'}")
             self.log_message(f"高分辨率模式: {'是' if self.hires_var.get() else '否'}")
+            self.log_message(f"边距模式: {'是' if self.margin_mode_var.get() else '否'}")
+            self.log_message(f"快速模式: {'是' if self.fast_mode_var.get() else '否'}")
             self.log_message(f"文件名保持: 与源文件一致")
             
             # 获取图片文件列表
@@ -341,7 +359,9 @@ class ShoeProcessorGUI:
                     str(output_file), 
                     ratio, 
                     high_quality, 
-                    self.hires_var.get()
+                    self.hires_var.get(),
+                    self.margin_mode_var.get(),
+                    self.fast_mode_var.get()
                 )
                 
                 if success:

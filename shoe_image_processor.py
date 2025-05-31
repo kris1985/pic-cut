@@ -51,7 +51,7 @@ class ShoeImageProcessor:
     
     def find_object_bounds(self, image: Image.Image) -> Tuple[int, int, int, int]:
         """
-        寻找图片中主体对象的边界框
+        寻找图片中主体对象的边界框（优化性能版本）
         
         Args:
             image: PIL Image对象
@@ -73,17 +73,18 @@ class ShoeImageProcessor:
         best_area = 0
         best_bounds = None
         
-        # 策略1: 商品图片专用 - 基于亮度差异检测
+        # 策略1: 商品图片专用 - 基于亮度差异检测（最高效的方法）
         try:
             # 计算图片边缘的平均亮度（通常是背景色）
             edge_samples = []
-            edge_thickness = min(50, min(width, height) // 20)  # 边缘采样厚度
+            edge_thickness = min(40, min(width, height) // 20)  # 减少边缘采样厚度
             
-            # 采样四条边
-            edge_samples.extend(gray[:edge_thickness, :].flatten())  # 上边
-            edge_samples.extend(gray[-edge_thickness:, :].flatten())  # 下边
-            edge_samples.extend(gray[:, :edge_thickness].flatten())  # 左边
-            edge_samples.extend(gray[:, -edge_thickness:].flatten())  # 右边
+            # 采样四条边 - 使用跳步采样减少计算量
+            step = max(1, min(width, height) // 200)  # 跳步采样
+            edge_samples.extend(gray[:edge_thickness, ::step].flatten())  # 上边
+            edge_samples.extend(gray[-edge_thickness:, ::step].flatten())  # 下边
+            edge_samples.extend(gray[::step, :edge_thickness].flatten())  # 左边
+            edge_samples.extend(gray[::step, -edge_thickness:].flatten())  # 右边
             
             bg_brightness = np.median(edge_samples)
             logger.info(f"检测到背景亮度: {bg_brightness:.1f}")
@@ -91,17 +92,16 @@ class ShoeImageProcessor:
             # 根据背景亮度动态调整阈值
             if bg_brightness > 200:  # 白色背景
                 # 寻找比背景暗的区域
-                threshold_offset = 30
+                threshold_offset = 25  # 降低阈值偏移以提高检测速度
                 _, binary = cv2.threshold(gray, bg_brightness - threshold_offset, 255, cv2.THRESH_BINARY_INV)
             else:  # 暗色背景
                 # 寻找比背景亮的区域
-                threshold_offset = 30
+                threshold_offset = 25
                 _, binary = cv2.threshold(gray, bg_brightness + threshold_offset, 255, cv2.THRESH_BINARY)
             
-            # 形态学处理，连接断开的区域
-            kernel = np.ones((7, 7), np.uint8)
-            binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel, iterations=2)
-            binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel, iterations=1)
+            # 简化形态学处理
+            kernel = np.ones((5, 5), np.uint8)  # 减小核大小
+            binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel, iterations=1)  # 减少迭代次数
             
             # 去除边缘噪声
             border_size = max(5, min(width, height) // 100)
@@ -127,87 +127,36 @@ class ShoeImageProcessor:
                                 best_bounds = (x, y, x + w, y + h)
                                 
         except Exception as e:
-            logger.warning(f"商品检测策略失败: {e}")
+            logger.warning(f"亮度差异检测失败: {e}")
         
-        # 策略2: 增强的边缘检测
+        # 策略2: 边缘检测（只在第一种方法失败时使用）
         if best_contour is None:
             try:
-                # 多尺度边缘检测
+                # 简化的边缘检测
                 blurred = cv2.GaussianBlur(gray, (3, 3), 0)
+                edges = cv2.Canny(blurred, 50, 150)  # 使用中等参数，只检测一次
                 
-                # 尝试多个Canny参数
-                edge_params = [(30, 100), (50, 150), (70, 200)]
-                for low, high in edge_params:
-                    edges = cv2.Canny(blurred, low, high)
-                    
-                    # 膨胀以连接边缘
-                    kernel = np.ones((5, 5), np.uint8)
-                    edges = cv2.dilate(edges, kernel, iterations=2)
-                    edges = cv2.erode(edges, kernel, iterations=1)
-                    
-                    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-                    if contours:
-                        for contour in contours:
-                            area = cv2.contourArea(contour)
-                            if area > height * width * 0.03:
-                                x, y, w, h = cv2.boundingRect(contour)
-                                aspect_ratio = w / h
-                                if 0.2 <= aspect_ratio <= 8.0:
-                                    if area > best_area:
-                                        best_area = area
-                                        best_contour = contour
-                                        best_bounds = (x, y, x + w, y + h)
-                                        
-            except Exception as e:
-                logger.warning(f"边缘检测策略失败: {e}")
-        
-        # 策略3: 基于颜色聚类的检测（适合复杂背景）
-        if best_contour is None:
-            try:
-                # 将图片转换为LAB颜色空间进行更好的颜色分离
-                lab = cv2.cvtColor(img_array, cv2.COLOR_RGB2LAB)
+                # 膨胀以连接边缘
+                kernel = np.ones((3, 3), np.uint8)  # 减小核大小
+                edges = cv2.dilate(edges, kernel, iterations=1)  # 减少迭代
                 
-                # 重塑为像素列表
-                pixel_values = lab.reshape((-1, 3))
-                pixel_values = np.float32(pixel_values)
-                
-                # K-means聚类分离前景和背景
-                criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 20, 1.0)
-                k = 3  # 分为3个聚类：背景、主体、阴影
-                _, labels, centers = cv2.kmeans(pixel_values, k, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
-                
-                # 重塑标签为图片形状
-                labels = labels.reshape((height, width))
-                
-                # 寻找最可能是主体的聚类（不在边缘的最大聚类）
-                for label in range(k):
-                    mask = (labels == label).astype(np.uint8) * 255
-                    
-                    # 排除主要在边缘的聚类
-                    edge_mask = np.zeros_like(mask)
-                    edge_width = min(20, min(width, height) // 20)
-                    edge_mask[:edge_width, :] = 1
-                    edge_mask[-edge_width:, :] = 1
-                    edge_mask[:, :edge_width] = 1
-                    edge_mask[:, -edge_width:] = 1
-                    
-                    edge_pixels = np.sum(mask * edge_mask)
-                    total_pixels = np.sum(mask)
-                    
-                    if total_pixels > 0 and edge_pixels / total_pixels < 0.7:  # 不超过70%在边缘
-                        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-                        if contours:
-                            largest = max(contours, key=cv2.contourArea)
-                            area = cv2.contourArea(largest)
-                            if area > height * width * 0.05:
-                                x, y, w, h = cv2.boundingRect(largest)
+                contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                if contours:
+                    for contour in contours:
+                        area = cv2.contourArea(contour)
+                        if area > height * width * 0.03:
+                            x, y, w, h = cv2.boundingRect(contour)
+                            aspect_ratio = w / h
+                            if 0.2 <= aspect_ratio <= 8.0:
                                 if area > best_area:
                                     best_area = area
-                                    best_contour = largest
+                                    best_contour = contour
                                     best_bounds = (x, y, x + w, y + h)
                                     
             except Exception as e:
-                logger.warning(f"颜色聚类策略失败: {e}")
+                logger.warning(f"边缘检测失败: {e}")
+        
+        # 移除了复杂的颜色聚类策略以提升性能
         
         if best_bounds is not None:
             left, top, right, bottom = best_bounds
@@ -217,8 +166,8 @@ class ShoeImageProcessor:
             obj_height = bottom - top
             
             # 根据对象大小动态调整边距
-            margin_x = max(10, int(obj_width * 0.1))
-            margin_y = max(10, int(obj_height * 0.15))  # 垂直边距稍大
+            margin_x = max(10, int(obj_width * 0.08))  # 减少边距系数
+            margin_y = max(10, int(obj_height * 0.12))  # 减少边距系数
             
             left = max(0, left - margin_x)
             top = max(0, top - margin_y)
@@ -242,7 +191,7 @@ class ShoeImageProcessor:
                 logger.warning(f"检测到的边界面积占比异常: {area_ratio:.1%}, 使用保守策略")
         
         # 如果所有策略都失败，使用保守策略
-        logger.warning("所有对象检测策略都失败，使用保守裁剪策略")
+        logger.warning("对象检测失败，使用保守裁剪策略")
         return self._conservative_bounds(image)
     
     def _conservative_bounds(self, image: Image.Image) -> Tuple[int, int, int, int]:
@@ -339,8 +288,640 @@ class ShoeImageProcessor:
         
         return left, top, right, bottom
     
+    def find_object_bounds_on_white_bg(self, image: Image.Image) -> Tuple[int, int, int, int]:
+        """
+        在白色背景上寻找对象轮廓边界（专用于最终验证）
+        使用更严格的检测确保找到真实的鞋子轮廓
+        
+        Args:
+            image: PIL Image对象（白色背景）
+            
+        Returns:
+            (left, top, right, bottom) 轮廓边界坐标
+        """
+        # 转换为numpy数组
+        img_array = np.array(image)
+        
+        # 转换为灰度图
+        if len(img_array.shape) == 3:
+            gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
+        else:
+            gray = img_array
+        
+        width, height = image.size
+        
+        # 使用多种方法找到最准确的轮廓
+        best_contour = None
+        best_area = 0
+        best_bounds = None
+        
+        # 方法1: 非常严格的阈值检测
+        try:
+            # 使用更严格的阈值序列，确保只检测到真正的非白色区域
+            strict_thresholds = [254, 252, 250, 248, 245]  # 从最严格开始
+            
+            for white_threshold in strict_thresholds:
+                # 创建二值图像
+                _, binary = cv2.threshold(gray, white_threshold, 255, cv2.THRESH_BINARY_INV)
+                
+                # 去除边缘噪声
+                border_size = max(3, min(width, height) // 200)
+                binary[:border_size, :] = 0
+                binary[-border_size:, :] = 0
+                binary[:, :border_size] = 0
+                binary[:, -border_size:] = 0
+                
+                # 形态学操作 - 先开运算去除小噪点
+                kernel_small = np.ones((2, 2), np.uint8)
+                kernel_medium = np.ones((3, 3), np.uint8)
+                
+                binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel_small, iterations=1)
+                binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel_medium, iterations=1)
+                
+                # 查找轮廓
+                contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                
+                if not contours:
+                    continue
+                
+                # 找到最大的轮廓
+                largest_contour = max(contours, key=cv2.contourArea)
+                largest_area = cv2.contourArea(largest_contour)
+                
+                # 验证面积和形状
+                image_area = width * height
+                area_ratio = largest_area / image_area
+                
+                if 0.15 <= area_ratio <= 0.60:
+                    x, y, w, h = cv2.boundingRect(largest_contour)
+                    aspect_ratio = w / h
+                    
+                    if 0.5 <= aspect_ratio <= 3.0:
+                        bbox_area = w * h
+                        fill_ratio = largest_area / bbox_area
+                        
+                        if 0.40 <= fill_ratio <= 0.85:
+                            if largest_area > best_area:
+                                best_area = largest_area
+                                best_contour = largest_contour
+                                logger.info(f"严格检测找到轮廓 (阈值{white_threshold}): 面积{area_ratio:.1%}, 宽高比{aspect_ratio:.2f}, 填充{fill_ratio:.1%}")
+                                break
+                                
+        except Exception as e:
+            logger.warning(f"严格阈值检测失败: {e}")
+        
+        # 方法2: 基于边缘的精确检测（如果严格阈值失败）
+        if best_contour is None:
+            try:
+                logger.info("尝试基于边缘的精确检测")
+                
+                # 使用Canny边缘检测
+                blurred = cv2.GaussianBlur(gray, (3, 3), 0)
+                edges = cv2.Canny(blurred, 30, 100)
+                
+                # 膨胀边缘以连接断开的部分
+                kernel = np.ones((3, 3), np.uint8)
+                edges = cv2.dilate(edges, kernel, iterations=1)
+                
+                # 查找轮廓
+                contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                
+                if contours:
+                    for contour in contours:
+                        area = cv2.contourArea(contour)
+                        if area > width * height * 0.1:  # 至少10%面积
+                            x, y, w, h = cv2.boundingRect(contour)
+                            aspect_ratio = w / h
+                            if 0.5 <= aspect_ratio <= 3.0:
+                                if area > best_area:
+                                    best_area = area
+                                    best_contour = contour
+                                    logger.info(f"边缘检测找到轮廓: 面积{area/(width*height):.1%}")
+                                    
+            except Exception as e:
+                logger.warning(f"边缘检测失败: {e}")
+        
+        if best_contour is not None:
+            # 从轮廓中获取极值点，并进行额外的精确化处理
+            contour_points = best_contour.reshape(-1, 2)
+            
+            # 基础边界
+            left = np.min(contour_points[:, 0])
+            right = np.max(contour_points[:, 0])
+            top = np.min(contour_points[:, 1])
+            bottom = np.max(contour_points[:, 1])
+            
+            # 精确化边界检测：在边界附近寻找真正的非白色像素
+            # 这可以避免轮廓检测时包含过多白色区域
+            
+            # 左边界精确化：从left开始向右扫描，找到第一个明显非白色的列
+            for x in range(max(0, left), min(width, left + 50)):
+                col = gray[:, x]
+                non_white_pixels = np.sum(col < 245)  # 非白色像素数量
+                if non_white_pixels > height * 0.1:  # 至少10%的列是非白色
+                    left = x
+                    break
+            
+            # 右边界精确化：从right开始向左扫描
+            for x in range(min(width - 1, right), max(0, right - 50), -1):
+                col = gray[:, x]
+                non_white_pixels = np.sum(col < 245)
+                if non_white_pixels > height * 0.1:
+                    right = x
+                    break
+            
+            # 上边界精确化：从top开始向下扫描
+            for y in range(max(0, top), min(height, top + 30)):
+                row = gray[y, :]
+                non_white_pixels = np.sum(row < 245)
+                if non_white_pixels > width * 0.1:
+                    top = y
+                    break
+            
+            # 下边界精确化：从bottom开始向上扫描
+            for y in range(min(height - 1, bottom), max(0, bottom - 30), -1):
+                row = gray[y, :]
+                non_white_pixels = np.sum(row < 245)
+                if non_white_pixels > width * 0.1:
+                    bottom = y
+                    break
+            
+            # 验证精确化结果
+            refined_width = right - left
+            refined_height = bottom - top
+            
+            if refined_width >= 100 and refined_height >= 100:
+                logger.info(f"精确轮廓边界: 左{left}, 上{top}, 右{right}, 下{bottom}")
+                logger.info(f"精确轮廓尺寸: {refined_width}x{refined_height}")
+                return left, top, right, bottom
+            else:
+                logger.warning(f"精确化后轮廓太小: {refined_width}x{refined_height}")
+        
+        # 如果所有方法都失败，使用像素级分析
+        logger.warning("轮廓检测失败，使用像素级精确分析")
+        
+        # 使用最严格的阈值找到所有明显非白色的像素
+        _, ultra_strict = cv2.threshold(gray, 252, 255, cv2.THRESH_BINARY_INV)
+        
+        # 找到所有非白色像素的坐标
+        nonzero_coords = np.where(ultra_strict > 0)
+        
+        if len(nonzero_coords[0]) > 0:
+            top = np.min(nonzero_coords[0])
+            bottom = np.max(nonzero_coords[0])
+            left = np.min(nonzero_coords[1])
+            right = np.max(nonzero_coords[1])
+            
+            # 应用小幅收缩，确保不包含边缘白色像素
+            margin = 2
+            left = min(width - 50, left + margin)
+            right = max(50, right - margin)
+            top = min(height - 50, top + margin)
+            bottom = max(50, bottom - margin)
+            
+            logger.info(f"像素级边界: 左{left}, 上{top}, 右{right}, 下{bottom}")
+            return left, top, right, bottom
+        
+        # 最后的保守估计
+        logger.warning("所有检测方法都失败，返回保守估计")
+        margin_w = int(width * 0.25)
+        margin_h = int(height * 0.25)
+        return margin_w, margin_h, width - margin_w, height - margin_h
+    
+    def find_object_contour_bounds(self, image: Image.Image) -> Tuple[int, int, int, int]:
+        """
+        寻找图片中主体对象的实际轮廓边界（非矩形边界框）
+        返回轮廓上最左、最右、最上、最下的像素点坐标
+        
+        Args:
+            image: PIL Image对象
+            
+        Returns:
+            (left, top, right, bottom) 轮廓边界坐标
+        """
+        # 转换为numpy数组
+        img_array = np.array(image)
+        
+        # 转换为灰度图
+        if len(img_array.shape) == 3:
+            gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
+        else:
+            gray = img_array
+        
+        width, height = image.size
+        best_contour = None
+        best_area = 0
+        
+        # 策略1: 基于亮度差异检测（适合商品图片）
+        try:
+            # 计算图片边缘的平均亮度（通常是背景色）
+            edge_samples = []
+            edge_thickness = min(50, min(width, height) // 20)
+            
+            # 采样四条边
+            edge_samples.extend(gray[:edge_thickness, :].flatten())
+            edge_samples.extend(gray[-edge_thickness:, :].flatten())
+            edge_samples.extend(gray[:, :edge_thickness].flatten())
+            edge_samples.extend(gray[:, -edge_thickness:].flatten())
+            
+            bg_brightness = np.median(edge_samples)
+            logger.info(f"检测到背景亮度: {bg_brightness:.1f}")
+            
+            # 根据背景亮度动态调整阈值
+            if bg_brightness > 200:  # 白色背景
+                threshold_offset = 25
+                _, binary = cv2.threshold(gray, bg_brightness - threshold_offset, 255, cv2.THRESH_BINARY_INV)
+            else:  # 暗色背景
+                threshold_offset = 25
+                _, binary = cv2.threshold(gray, bg_brightness + threshold_offset, 255, cv2.THRESH_BINARY)
+            
+            # 形态学处理
+            kernel = np.ones((5, 5), np.uint8)
+            binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel, iterations=2)
+            binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel, iterations=1)
+            
+            # 去除边缘噪声
+            border_size = max(3, min(width, height) // 150)
+            binary[:border_size, :] = 0
+            binary[-border_size:, :] = 0
+            binary[:, :border_size] = 0
+            binary[:, -border_size:] = 0
+            
+            contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            if contours:
+                for contour in contours:
+                    area = cv2.contourArea(contour)
+                    if area > height * width * 0.05:  # 面积至少占图片的5%
+                        if area > best_area:
+                            best_area = area
+                            best_contour = contour
+                            
+        except Exception as e:
+            logger.warning(f"轮廓检测策略失败: {e}")
+        
+        if best_contour is not None:
+            # 从轮廓中找到极值点
+            contour_points = best_contour.reshape(-1, 2)
+            
+            left = np.min(contour_points[:, 0])    # 最左边的x坐标
+            right = np.max(contour_points[:, 0])   # 最右边的x坐标
+            top = np.min(contour_points[:, 1])     # 最上边的y坐标
+            bottom = np.max(contour_points[:, 1])  # 最下边的y坐标
+            
+            # 验证检测结果的合理性
+            contour_width = right - left
+            contour_height = bottom - top
+            contour_area = cv2.contourArea(best_contour)
+            image_area = width * height
+            
+            area_ratio = contour_area / image_area
+            logger.info(f"检测到轮廓边界: 左{left}, 上{top}, 右{right}, 下{bottom}")
+            logger.info(f"轮廓尺寸: {contour_width}x{contour_height}, 轮廓面积占比: {area_ratio:.1%}")
+            
+            # 如果检测结果合理，返回轮廓边界
+            if 0.05 <= area_ratio <= 0.9:
+                return left, top, right, bottom
+            else:
+                logger.warning(f"检测到的轮廓面积占比异常: {area_ratio:.1%}, 使用保守策略")
+        
+        # 如果轮廓检测失败，回退到矩形边界框检测
+        logger.warning("轮廓检测失败，使用矩形边界框作为替代")
+        return self.find_object_bounds(image)
+    
+    def smart_crop_with_margins(self, image: Image.Image, left_right_margin_ratio: float = 0.125, 
+                               top_bottom_margin_ratio: float = 0.15, target_ratio: str = 'auto',
+                               min_resolution: int = 1200, fast_mode: bool = True) -> Image.Image:
+        """
+        智能裁剪/扩展图片，确保鞋子居中显示且左右边距各占指定比例
+        
+        Args:
+            image: PIL Image对象
+            left_right_margin_ratio: 左右边距各占图片宽度的比例 (默认12.5%)
+            top_bottom_margin_ratio: 上下最小边距比例 (默认15%)
+            target_ratio: 目标比例 '4:3', '3:4', 'auto'
+            min_resolution: 最小分辨率（短边）
+            fast_mode: 是否使用快速模式（默认True，大幅提升性能）
+            
+        Returns:
+            处理后的PIL Image对象
+        """
+        # 先找到鞋子边界 - 使用轮廓检测
+        left, top, right, bottom = self.find_object_contour_bounds(image)
+        object_width = right - left
+        object_height = bottom - top
+        
+        logger.info(f"检测到鞋子轮廓边界: 左{left}, 上{top}, 右{right}, 下{bottom}")
+        logger.info(f"鞋子轮廓尺寸: {object_width}x{object_height}")
+        
+        # 检查鞋子轮廓是否太靠近原图边界，如果是则需要扩展画布
+        original_width, original_height = image.size
+        
+        # 检查鞋子是否贴边
+        margin_threshold = 50  # 如果鞋子距离边界小于50像素，认为是贴边
+        is_touching_left = left < margin_threshold
+        is_touching_right = (original_width - right) < margin_threshold
+        is_touching_top = top < margin_threshold
+        is_touching_bottom = (original_height - bottom) < margin_threshold
+        
+        if is_touching_left or is_touching_right or is_touching_top or is_touching_bottom:
+            logger.info(f"检测到鞋子贴边: 左{is_touching_left}, 右{is_touching_right}, 上{is_touching_top}, 下{is_touching_bottom}")
+            logger.info("将扩展原图画布以确保完整的鞋子轮廓边距")
+            
+            # 检测原图的背景颜色 - 传递快速模式参数
+            background_color = self.detect_background_color(image, fast_mode=fast_mode)
+            logger.info(f"将使用背景颜色 RGB{background_color} 填充扩展区域")
+            
+            # 计算需要扩展的边距
+            # 基于鞋子尺寸计算合理的边距
+            min_margin_x = max(object_width * 0.2, 100)  # 至少是鞋子宽度的20%或100像素
+            min_margin_y = max(object_height * 0.2, 100)  # 至少是鞋子高度的20%或100像素
+            
+            # 计算新的画布尺寸
+            expand_left = max(0, min_margin_x - left) if is_touching_left else 0
+            expand_right = max(0, min_margin_x - (original_width - right)) if is_touching_right else 0
+            expand_top = max(0, min_margin_y - top) if is_touching_top else 0
+            expand_bottom = max(0, min_margin_y - (original_height - bottom)) if is_touching_bottom else 0
+            
+            new_canvas_width = int(original_width + expand_left + expand_right)
+            new_canvas_height = int(original_height + expand_top + expand_bottom)
+            
+            logger.info(f"扩展画布: {original_width}x{original_height} -> {new_canvas_width}x{new_canvas_height}")
+            logger.info(f"扩展边距: 左{expand_left}, 右{expand_right}, 上{expand_top}, 下{expand_bottom}")
+            
+            # 创建扩展的背景色画布
+            expanded_canvas = Image.new('RGB', (new_canvas_width, new_canvas_height), background_color)
+            
+            # 将原图粘贴到扩展画布上
+            paste_x = int(expand_left)
+            paste_y = int(expand_top)
+            expanded_canvas.paste(image, (paste_x, paste_y))
+            
+            # 更新鞋子在新画布中的坐标
+            left += expand_left
+            right += expand_left
+            top += expand_top
+            bottom += expand_top
+            object_width = right - left  # 宽度不变
+            object_height = bottom - top  # 高度不变
+            
+            # 使用扩展后的画布作为输入
+            image = expanded_canvas
+            logger.info(f"更新后的鞋子坐标: 左{left}, 上{top}, 右{right}, 下{bottom}")
+        else:
+            # 即使不需要扩展，也检测背景颜色以供后续使用 - 传递快速模式参数
+            background_color = self.detect_background_color(image, fast_mode=fast_mode)
+            logger.info(f"检测到原图背景颜色: RGB{background_color}")
+        
+        # 确定目标比例
+        if target_ratio == 'auto':
+            if object_width > object_height:
+                target_ratio = '4:3'
+            else:
+                target_ratio = '3:4'
+        
+        # 解析目标比例
+        if target_ratio == '4:3':
+            ratio_w, ratio_h = 4, 3
+        elif target_ratio == '3:4':
+            ratio_w, ratio_h = 3, 4
+        else:
+            raise ValueError(f"不支持的比例: {target_ratio}")
+        
+        # 计算理想画布尺寸，确保12.5%边距
+        # 鞋子宽度占总宽度的75%，所以总宽度 = 鞋子宽度 / 0.75
+        ideal_canvas_width = object_width / (1 - 2 * left_right_margin_ratio)
+        ideal_canvas_height = ideal_canvas_width * ratio_h / ratio_w
+        
+        # 检查是否满足最小分辨率要求
+        min_width = min_resolution if ratio_w >= ratio_h else min_resolution * ratio_w / ratio_h
+        min_height = min_resolution if ratio_h >= ratio_w else min_resolution * ratio_h / ratio_w
+        
+        # 优先使用理想尺寸来确保边距准确
+        final_canvas_width = max(ideal_canvas_width, min_width)
+        final_canvas_height = final_canvas_width * ratio_h / ratio_w
+        
+        # 如果需要调整到最小分辨率，重新计算以保持比例
+        if final_canvas_height < min_height:
+            final_canvas_height = min_height
+            final_canvas_width = final_canvas_height * ratio_w / ratio_h
+        
+        final_canvas_width = int(final_canvas_width)
+        final_canvas_height = int(final_canvas_height)
+        
+        logger.info(f"目标画布尺寸: {final_canvas_width}x{final_canvas_height} (比例: {target_ratio})")
+        
+        # 迭代调整优化：减少不必要的多次调整
+        max_iterations = 2  # 减少迭代次数以提升性能（从3改为2）
+        best_result = None
+        best_margin_error = float('inf')
+        
+        for iteration in range(max_iterations):
+            logger.info(f"第 {iteration + 1} 次调整")
+            
+            # 计算鞋子在画布中的目标中心位置
+            target_shoe_center_x = final_canvas_width / 2
+            
+            # 使用5.5:4.5的上下比例定位，让鞋子稍微靠下
+            # 上边距:下边距 = 5.5:4.5，所以鞋子中心应该在画布的特定位置
+            target_top_ratio = 5.5 / (5.5 + 4.5)  # = 0.55 = 55%
+            target_bottom_ratio = 4.5 / (5.5 + 4.5)  # = 0.45 = 45%
+            
+            # 根据鞋子高度和目标比例计算理想的中心位置
+            # 如果上边距应该占55%，下边距占45%，那么鞋子中心应该在：
+            # 中心位置 = 上边距 + 鞋子高度/2
+            # 上边距 = (画布高度 - 鞋子高度) * 0.55 / (0.55 + 0.45)
+            ideal_total_margin = final_canvas_height - object_height
+            ideal_top_margin = ideal_total_margin * target_top_ratio
+            target_shoe_center_y = ideal_top_margin + object_height / 2
+            
+            # 原图中鞋子的中心位置
+            original_shoe_center_x = (left + right) / 2
+            original_shoe_center_y = (top + bottom) / 2
+            
+            # 计算粘贴位置，使鞋子中心对齐到画布中心
+            paste_x = int(target_shoe_center_x - original_shoe_center_x)
+            paste_y = int(target_shoe_center_y - original_shoe_center_y)
+            
+            logger.info(f"  鞋子原图中心: ({original_shoe_center_x:.0f}, {original_shoe_center_y:.0f})")
+            logger.info(f"  画布目标中心: ({target_shoe_center_x:.0f}, {target_shoe_center_y:.0f}) [5.5:4.5比例定位]")
+            logger.info(f"  粘贴位置: ({paste_x}, {paste_y})")
+            
+            # 创建背景色的新画布
+            new_canvas = Image.new('RGB', (final_canvas_width, final_canvas_height), background_color)
+            
+            # 处理原图的粘贴和裁剪
+            source_image = image
+            source_width, source_height = source_image.size
+            
+            # 计算需要从原图中提取的区域
+            src_left = max(0, -paste_x)
+            src_top = max(0, -paste_y)
+            src_right = min(source_width, src_left + final_canvas_width - max(0, paste_x))
+            src_bottom = min(source_height, src_top + final_canvas_height - max(0, paste_y))
+            
+            # 计算在新画布上的粘贴位置
+            canvas_paste_x = max(0, paste_x)
+            canvas_paste_y = max(0, paste_y)
+            
+            # 提取原图需要的部分
+            if src_left < src_right and src_top < src_bottom:
+                cropped_source = source_image.crop((src_left, src_top, src_right, src_bottom))
+                
+                # 确保格式正确
+                if cropped_source.mode != 'RGB':
+                    if cropped_source.mode in ('RGBA', 'LA'):
+                        temp_bg = Image.new('RGB', cropped_source.size, background_color)
+                        temp_bg.paste(cropped_source, mask=cropped_source.split()[-1] if cropped_source.mode == 'RGBA' else None)
+                        cropped_source = temp_bg
+                    else:
+                        cropped_source = cropped_source.convert('RGB')
+                
+                # 粘贴到新画布
+                new_canvas.paste(cropped_source, (canvas_paste_x, canvas_paste_y))
+            
+            # 重新检测最终图片中的鞋子边界以验证结果
+            try:
+                # 使用专门的白色背景检测方法
+                final_left, final_top, final_right, final_bottom = self.find_object_bounds_on_white_bg(new_canvas)
+                
+                # 计算实际边距比例
+                actual_left_margin = final_left / final_canvas_width
+                actual_right_margin = (final_canvas_width - final_right) / final_canvas_width
+                actual_top_margin = final_top / final_canvas_height
+                actual_bottom_margin = (final_canvas_height - final_bottom) / final_canvas_height
+                
+                # 检查垂直比例情况 - 目标是5.5:4.5的上下比例
+                target_top_ratio = 5.5 / (5.5 + 4.5)  # = 0.55 = 55%
+                target_bottom_ratio = 4.5 / (5.5 + 4.5)  # = 0.45 = 45%
+                
+                # 计算理想的上下边距比例
+                vertical_position_error = abs(actual_top_margin / (actual_top_margin + actual_bottom_margin) - target_top_ratio)
+                
+                logger.info(f"  最终检测结果:")
+                logger.info(f"    画布尺寸: {final_canvas_width}x{final_canvas_height}")
+                logger.info(f"    鞋子边界: 左{final_left}, 上{final_top}, 右{final_right}, 下{final_bottom}")
+                logger.info(f"    实际边距: 左{actual_left_margin:.1%}, 右{actual_right_margin:.1%}, 上{actual_top_margin:.1%}, 下{actual_bottom_margin:.1%}")
+                logger.info(f"    目标左右边距: {left_right_margin_ratio:.1%}")
+                logger.info(f"    目标上下比例: {target_top_ratio:.1%}:{target_bottom_ratio:.1%}")
+                logger.info(f"    实际上下比例: {actual_top_margin/(actual_top_margin + actual_bottom_margin):.1%}:{actual_bottom_margin/(actual_top_margin + actual_bottom_margin):.1%}")
+                logger.info(f"    垂直比例误差: {vertical_position_error:.1%}")
+                
+                # 检查边距是否符合要求
+                left_diff = abs(actual_left_margin - left_right_margin_ratio)
+                right_diff = abs(actual_right_margin - left_right_margin_ratio)
+                margin_error = max(left_diff, right_diff)
+                
+                # 检查左右是否均衡
+                left_right_balance_error = abs(actual_left_margin - actual_right_margin)
+                
+                # 保存最佳结果
+                total_error = margin_error + left_right_balance_error + vertical_position_error * 2  # 垂直比例权重更高
+                if total_error < best_margin_error:
+                    best_margin_error = total_error
+                    best_result = new_canvas.copy()
+                
+                # 检查是否满足所有要求
+                margin_ok = left_diff < 0.02 and right_diff < 0.02  # 边距误差小于2%
+                balance_ok = left_right_balance_error < 0.02  # 左右均衡误差小于2%
+                vertical_ok = vertical_position_error < 0.03  # 垂直比例误差小于3%
+                
+                if margin_ok and balance_ok and vertical_ok:
+                    logger.info("✅ 边距、均衡和垂直比例都符合要求！")
+                    return new_canvas
+                else:
+                    issues = []
+                    if not margin_ok:
+                        issues.append(f"边距偏差(左{left_diff:.1%}, 右{right_diff:.1%})")
+                    if not balance_ok:
+                        issues.append(f"左右不均衡({left_right_balance_error:.1%})")
+                    if not vertical_ok:
+                        issues.append(f"垂直比例偏差({vertical_position_error:.1%})")
+                    
+                    logger.warning(f"⚠️ {', '.join(issues)}")
+                    
+                    # 如果不是最后一次迭代，尝试调整
+                    if iteration < max_iterations - 1:
+                        logger.info("  基于检测结果重新计算理想定位...")
+                        
+                        # 基于实际检测到的鞋子边界，重新计算理想的画布尺寸和定位
+                        detected_object_width = final_right - final_left
+                        detected_object_height = final_bottom - final_top
+                        
+                        # 检验检测结果的合理性
+                        if (detected_object_width > object_width * 0.7 and 
+                            detected_object_width < object_width * 1.5):
+                            
+                            # 基于检测到的鞋子尺寸重新计算理想画布
+                            new_ideal_width = detected_object_width / (1 - 2 * left_right_margin_ratio)
+                            new_ideal_height = new_ideal_width * ratio_h / ratio_w
+                            
+                            # 限制画布尺寸变化幅度，避免过度调整
+                            width_change = new_ideal_width - final_canvas_width
+                            if abs(width_change) < final_canvas_width * 0.2:  # 限制在20%以内
+                                final_canvas_width = int(new_ideal_width)
+                                final_canvas_height = int(new_ideal_height)
+                                logger.info(f"    调整画布尺寸: {final_canvas_width}x{final_canvas_height}")
+                            
+                            # 重新计算鞋子的理想中心位置
+                            # 基于检测到的鞋子中心，而不是原始的left/right
+                            detected_center_x = (final_left + final_right) / 2
+                            detected_center_y = (final_top + final_bottom) / 2
+                            
+                            # 计算鞋子在原图中的对应中心（反向推算）
+                            # 当前detected_center在画布中，需要映射回原图坐标
+                            current_paste_x = max(0, paste_x)
+                            current_paste_y = max(0, paste_y)
+                            
+                            # 反推原图中的鞋子中心
+                            original_center_x = detected_center_x - current_paste_x + max(0, -paste_x)
+                            original_center_y = detected_center_y - current_paste_y + max(0, -paste_y)
+                            
+                            # 如果垂直比例误差太大，特别调整垂直位置
+                            if not vertical_ok:
+                                # 计算当前的上下比例
+                                current_top_ratio = actual_top_margin / (actual_top_margin + actual_bottom_margin)
+                                ratio_offset = target_top_ratio - current_top_ratio
+                                
+                                # 使用保守的修正策略，避免过度修正
+                                if iteration == 0:
+                                    # 第一次修正：修正50%的偏差
+                                    correction_factor = 0.5
+                                else:
+                                    # 后续修正：更保守，修正30%的偏差
+                                    correction_factor = 0.3
+                                
+                                # 计算需要向下移动的像素（正值向下，负值向上）
+                                correction_offset = ratio_offset * final_canvas_height * correction_factor
+                                original_center_y += correction_offset
+                                logger.info(f"    垂直比例修正 (第{iteration+1}次): 偏移 {correction_offset:.0f} 像素 (比例偏差: {ratio_offset:.1%}, 修正率: {correction_factor:.0%})")
+                            
+                            # 基于原图中心更新left, right, top, bottom（保持尺寸不变）
+                            half_width = object_width / 2
+                            half_height = object_height / 2
+                            left = original_center_x - half_width
+                            right = original_center_x + half_width
+                            top = original_center_y - half_height
+                            bottom = original_center_y + half_height
+                            
+                            logger.info(f"    更新原图鞋子坐标: 中心({original_center_x:.0f}, {original_center_y:.0f})")
+                            logger.info(f"    新边界: 左{left:.0f}, 上{top:.0f}, 右{right:.0f}, 下{bottom:.0f}")
+                        else:
+                            logger.warning(f"检测结果异常，跳过调整 (检测宽度: {detected_object_width}, 原始宽度: {object_width})")
+                            break
+            except Exception as e:
+                logger.warning(f"重新检测失败: {e}, 使用当前结果")
+                break
+        
+        # 返回最佳结果
+        if best_result is not None:
+            logger.info(f"返回最佳结果，总误差: {best_margin_error:.1%}")
+            return best_result
+        else:
+            logger.warning("未能生成有效结果，返回最后一次尝试的结果")
+            return new_canvas
+    
     def smart_crop(self, image: Image.Image, target_ratio: str = 'auto', min_resolution: int = 1200, 
-                   preserve_resolution: bool = False) -> Image.Image:
+                   preserve_resolution: bool = False, use_margin_mode: bool = True, fast_mode: bool = True) -> Image.Image:
         """
         智能裁剪图片，确保主体居中显示并保持高分辨率
         
@@ -349,10 +930,16 @@ class ShoeImageProcessor:
             target_ratio: 目标比例 '4:3', '3:4', 'auto'
             min_resolution: 最小分辨率（短边）
             preserve_resolution: 是否优先保持分辨率（适合高分辨率图片）
+            use_margin_mode: 是否使用新的边距模式（推荐）
+            fast_mode: 是否使用快速模式（默认True，大幅提升性能）
             
         Returns:
             裁剪后的PIL Image对象
         """
+        # 优先使用新的边距模式
+        if use_margin_mode:
+            return self.smart_crop_with_margins(image, target_ratio=target_ratio, min_resolution=min_resolution, fast_mode=fast_mode)
+        
         # 获取原图尺寸
         original_width, original_height = image.size
         
@@ -528,7 +1115,8 @@ class ShoeImageProcessor:
         return cropped
     
     def process_single_image(self, input_path: str, output_path: str, target_ratio: str = 'auto', 
-                           high_quality: bool = True, preserve_resolution: bool = False) -> bool:
+                           high_quality: bool = True, preserve_resolution: bool = False, 
+                           use_margin_mode: bool = True, fast_mode: bool = True) -> bool:
         """
         处理单张图片
         
@@ -538,12 +1126,14 @@ class ShoeImageProcessor:
             target_ratio: 目标比例
             high_quality: 是否使用高质量保存
             preserve_resolution: 是否优先保持分辨率（适合高分辨率图片）
+            use_margin_mode: 是否使用边距模式（确保12.5%左右边距）
+            fast_mode: 是否使用快速模式（默认True，大幅提升性能）
             
         Returns:
             是否处理成功
         """
         try:
-            logger.info(f"开始处理: {input_path}")
+            logger.info(f"开始处理: {input_path} (快速模式: {'是' if fast_mode else '否'})")
             
             # 获取原文件大小
             original_file_size = os.path.getsize(input_path)
@@ -554,8 +1144,9 @@ class ShoeImageProcessor:
                 original_format = image.format
                 original_mode = image.mode
                 
-                # 智能裁剪
-                final_image = self.smart_crop(image, target_ratio, preserve_resolution=preserve_resolution)
+                # 智能裁剪 - 传递快速模式参数
+                final_image = self.smart_crop(image, target_ratio, preserve_resolution=preserve_resolution, 
+                                             use_margin_mode=use_margin_mode, fast_mode=fast_mode)
                 
                 # 确保输出目录存在
                 output_dir = os.path.dirname(output_path)
@@ -692,7 +1283,8 @@ class ShoeImageProcessor:
     
     def process_batch(self, input_dir: str, output_dir: str, target_ratio: str = 'auto', 
                      supported_formats: List[str] = None, high_quality: bool = True, 
-                     preserve_resolution: bool = False) -> dict:
+                     preserve_resolution: bool = False, use_margin_mode: bool = True,
+                     fast_mode: bool = True) -> dict:
         """
         批量处理图片
         
@@ -703,6 +1295,8 @@ class ShoeImageProcessor:
             supported_formats: 支持的图片格式
             high_quality: 是否使用高质量保存
             preserve_resolution: 是否优先保持分辨率
+            use_margin_mode: 是否使用边距模式（确保12.5%左右边距）
+            fast_mode: 是否使用快速模式（默认True，大幅提升性能）
             
         Returns:
             处理统计信息
@@ -729,7 +1323,7 @@ class ShoeImageProcessor:
         successful = 0
         failed = 0
         
-        logger.info(f"找到 {total_files} 张图片待处理")
+        logger.info(f"找到 {total_files} 张图片待处理 (快速模式: {'是' if fast_mode else '否'})")
         
         for i, image_file in enumerate(image_files, 1):
             logger.info(f"处理进度: {i}/{total_files}")
@@ -738,9 +1332,9 @@ class ShoeImageProcessor:
             # 注意：如果process_single_image中发生格式转换，文件扩展名可能会改变
             output_file = output_path / image_file.name  # 使用原文件名
             
-            # 处理图片
+            # 处理图片 - 传递快速模式参数
             if self.process_single_image(str(image_file), str(output_file), target_ratio, 
-                                       high_quality, preserve_resolution):
+                                       high_quality, preserve_resolution, use_margin_mode, fast_mode):
                 successful += 1
             else:
                 failed += 1
@@ -755,6 +1349,243 @@ class ShoeImageProcessor:
         logger.info(f"批量处理完成! 总计: {total_files}, 成功: {successful}, 失败: {failed}")
         
         return stats
+    
+    def detect_background_color(self, image: Image.Image, fast_mode: bool = True) -> tuple:
+        """
+        智能检测图片的背景颜色（优化性能版本）
+        
+        Args:
+            image: PIL Image对象
+            fast_mode: 是否使用快速模式（默认True，大幅提升性能）
+            
+        Returns:
+            (R, G, B) 背景颜色元组
+        """
+        # 转换为numpy数组
+        img_array = np.array(image)
+        
+        if len(img_array.shape) == 2:
+            # 灰度图，转换为RGB
+            img_array = np.stack([img_array] * 3, axis=-1)
+        elif img_array.shape[2] == 4:
+            # RGBA图，只取RGB通道
+            img_array = img_array[:, :, :3]
+        
+        height, width = img_array.shape[:2]
+        
+        # 策略1: 分析图片边缘区域的颜色
+        edge_thickness = min(50, min(width, height) // 15)  # 边缘采样厚度
+        
+        # 收集边缘像素
+        edge_pixels = []
+        
+        # 上边缘
+        edge_pixels.extend(img_array[:edge_thickness, :].reshape(-1, 3))
+        # 下边缘
+        edge_pixels.extend(img_array[-edge_thickness:, :].reshape(-1, 3))
+        # 左边缘
+        edge_pixels.extend(img_array[:, :edge_thickness].reshape(-1, 3))
+        # 右边缘
+        edge_pixels.extend(img_array[:, -edge_thickness:].reshape(-1, 3))
+        
+        edge_pixels = np.array(edge_pixels)
+        
+        # 快速模式：大幅减少像素采样和聚类计算
+        if fast_mode:
+            # 对于大图片，随机采样减少计算量
+            if len(edge_pixels) > 5000:  # 如果边缘像素超过5000个
+                indices = np.random.choice(len(edge_pixels), 5000, replace=False)
+                edge_pixels = edge_pixels[indices]
+            
+            # 使用简化的聚类或直接使用中位数
+            try:
+                # 先尝试直接使用中位数（最快）
+                bg_color = np.median(edge_pixels, axis=0)
+                
+                # 检查是否是明显的单一颜色（方差很小）
+                color_variance = np.var(edge_pixels, axis=0).mean()
+                if color_variance < 100:  # 颜色比较统一
+                    logger.info(f"快速模式-中位数检测到背景颜色: RGB{tuple(bg_color.astype(int))}")
+                    return tuple(bg_color.astype(int))
+                
+                # 如果颜色变化较大，使用简化的聚类
+                from sklearn.cluster import KMeans
+                kmeans = KMeans(n_clusters=2, random_state=42, n_init=3)  # 减少聚类数和初始化次数
+                kmeans.fit(edge_pixels)
+                
+                # 找到最大的聚类
+                labels = kmeans.labels_
+                unique_labels, label_counts = np.unique(labels, return_counts=True)
+                largest_cluster_idx = unique_labels[np.argmax(label_counts)]
+                bg_color = kmeans.cluster_centers_[largest_cluster_idx]
+                
+                logger.info(f"快速模式-简化聚类检测到背景颜色: RGB{tuple(bg_color.astype(int))}")
+                
+            except ImportError:
+                logger.warning("sklearn未安装，使用中位数方法")
+                bg_color = np.median(edge_pixels, axis=0)
+                logger.info(f"快速模式-中位数检测到背景颜色: RGB{tuple(bg_color.astype(int))}")
+                
+            except Exception as e:
+                logger.warning(f"快速聚类检测失败: {e}，使用中位数")
+                bg_color = np.median(edge_pixels, axis=0)
+                logger.info(f"快速模式-中位数检测到背景颜色: RGB{tuple(bg_color.astype(int))}")
+        
+        else:
+            # 原始精确模式（保留兼容性）
+            # 策略2: 使用聚类找到主要的背景颜色
+            try:
+                # 对边缘像素进行颜色聚类
+                from sklearn.cluster import KMeans
+                
+                # 使用K-means聚类找到3个主要颜色
+                kmeans = KMeans(n_clusters=3, random_state=42, n_init=10)
+                kmeans.fit(edge_pixels)
+                
+                # 找到最大的聚类（最可能是背景）
+                labels = kmeans.labels_
+                unique_labels, label_counts = np.unique(labels, return_counts=True)
+                
+                # 获取最大聚类的中心颜色
+                largest_cluster_idx = unique_labels[np.argmax(label_counts)]
+                bg_color = kmeans.cluster_centers_[largest_cluster_idx]
+                
+                logger.info(f"使用聚类检测到背景颜色: RGB{tuple(bg_color.astype(int))}")
+                
+            except ImportError:
+                logger.warning("sklearn未安装，使用简化的背景颜色检测")
+                # 简化方法：使用边缘像素的中位数
+                bg_color = np.median(edge_pixels, axis=0)
+                logger.info(f"使用中位数检测到背景颜色: RGB{tuple(bg_color.astype(int))}")
+            
+            except Exception as e:
+                logger.warning(f"聚类背景检测失败: {e}，使用备选方法")
+                # 备选方法：分析四个角落的颜色
+                corner_pixels = []
+                corner_size = min(20, min(width, height) // 10)
+                
+                # 四个角落
+                corner_pixels.extend(img_array[:corner_size, :corner_size].reshape(-1, 3))  # 左上
+                corner_pixels.extend(img_array[:corner_size, -corner_size:].reshape(-1, 3))  # 右上
+                corner_pixels.extend(img_array[-corner_size:, :corner_size].reshape(-1, 3))  # 左下
+                corner_pixels.extend(img_array[-corner_size:, -corner_size:].reshape(-1, 3))  # 右下
+                
+                corner_pixels = np.array(corner_pixels)
+                bg_color = np.median(corner_pixels, axis=0)
+                logger.info(f"使用角落检测到背景颜色: RGB{tuple(bg_color.astype(int))}")
+        
+        # 确保颜色值在有效范围内
+        bg_color = np.clip(bg_color, 0, 255).astype(int)
+        
+        # 检查是否为接近白色的颜色
+        if np.all(bg_color > 240):
+            logger.info("检测到接近白色的背景")
+        elif np.all(bg_color < 15):
+            logger.info("检测到接近黑色的背景")
+        else:
+            logger.info(f"检测到彩色背景: RGB{tuple(bg_color)}")
+        
+        return tuple(bg_color)
+    
+    def find_object_contour_bounds(self, image: Image.Image) -> Tuple[int, int, int, int]:
+        """
+        寻找图片中主体对象的实际轮廓边界（非矩形边界框）
+        返回轮廓上最左、最右、最上、最下的像素点坐标
+        
+        Args:
+            image: PIL Image对象
+            
+        Returns:
+            (left, top, right, bottom) 轮廓边界坐标
+        """
+        # 转换为numpy数组
+        img_array = np.array(image)
+        
+        # 转换为灰度图
+        if len(img_array.shape) == 3:
+            gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
+        else:
+            gray = img_array
+        
+        width, height = image.size
+        best_contour = None
+        best_area = 0
+        
+        # 策略1: 基于亮度差异检测（适合商品图片）
+        try:
+            # 计算图片边缘的平均亮度（通常是背景色）
+            edge_samples = []
+            edge_thickness = min(50, min(width, height) // 20)
+            
+            # 采样四条边
+            edge_samples.extend(gray[:edge_thickness, :].flatten())
+            edge_samples.extend(gray[-edge_thickness:, :].flatten())
+            edge_samples.extend(gray[:, :edge_thickness].flatten())
+            edge_samples.extend(gray[:, -edge_thickness:].flatten())
+            
+            bg_brightness = np.median(edge_samples)
+            logger.info(f"检测到背景亮度: {bg_brightness:.1f}")
+            
+            # 根据背景亮度动态调整阈值
+            if bg_brightness > 200:  # 白色背景
+                threshold_offset = 25
+                _, binary = cv2.threshold(gray, bg_brightness - threshold_offset, 255, cv2.THRESH_BINARY_INV)
+            else:  # 暗色背景
+                threshold_offset = 25
+                _, binary = cv2.threshold(gray, bg_brightness + threshold_offset, 255, cv2.THRESH_BINARY)
+            
+            # 形态学处理
+            kernel = np.ones((5, 5), np.uint8)
+            binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel, iterations=2)
+            binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel, iterations=1)
+            
+            # 去除边缘噪声
+            border_size = max(3, min(width, height) // 150)
+            binary[:border_size, :] = 0
+            binary[-border_size:, :] = 0
+            binary[:, :border_size] = 0
+            binary[:, -border_size:] = 0
+            
+            contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            if contours:
+                for contour in contours:
+                    area = cv2.contourArea(contour)
+                    if area > height * width * 0.05:  # 面积至少占图片的5%
+                        if area > best_area:
+                            best_area = area
+                            best_contour = contour
+                            
+        except Exception as e:
+            logger.warning(f"轮廓检测策略失败: {e}")
+        
+        if best_contour is not None:
+            # 从轮廓中找到极值点
+            contour_points = best_contour.reshape(-1, 2)
+            
+            left = np.min(contour_points[:, 0])    # 最左边的x坐标
+            right = np.max(contour_points[:, 0])   # 最右边的x坐标
+            top = np.min(contour_points[:, 1])     # 最上边的y坐标
+            bottom = np.max(contour_points[:, 1])  # 最下边的y坐标
+            
+            # 验证检测结果的合理性
+            contour_width = right - left
+            contour_height = bottom - top
+            contour_area = cv2.contourArea(best_contour)
+            image_area = width * height
+            
+            area_ratio = contour_area / image_area
+            logger.info(f"检测到轮廓边界: 左{left}, 上{top}, 右{right}, 下{bottom}")
+            logger.info(f"轮廓尺寸: {contour_width}x{contour_height}, 轮廓面积占比: {area_ratio:.1%}")
+            
+            # 如果检测结果合理，返回轮廓边界
+            if 0.05 <= area_ratio <= 0.9:
+                return left, top, right, bottom
+            else:
+                logger.warning(f"检测到的轮廓面积占比异常: {area_ratio:.1%}, 使用保守策略")
+        
+        # 如果轮廓检测失败，回退到矩形边界框检测
+        logger.warning("轮廓检测失败，使用矩形边界框作为替代")
+        return self.find_object_bounds(image)
 
 
 def main():
@@ -769,6 +1600,10 @@ def main():
                        help='高分辨率模式，优先保持原图分辨率（推荐用于大图）')
     parser.add_argument('--quality', choices=['normal', 'high'], default='high',
                        help='保存质量 (默认: high)')
+    parser.add_argument('--margin-mode', action='store_true', default=True,
+                       help='使用边距模式，确保鞋子左右边距各占12.5% (默认启用)')
+    parser.add_argument('--no-margin-mode', action='store_true',
+                       help='禁用边距模式，使用传统裁剪方式')
     
     args = parser.parse_args()
     
@@ -779,11 +1614,16 @@ def main():
         # 设置质量参数
         high_quality = args.quality == 'high'
         preserve_resolution = args.hires
+        use_margin_mode = args.margin_mode and not args.no_margin_mode
+        
+        logger.info(f"处理参数: 比例={args.ratio}, 高质量={'是' if high_quality else '否'}, "
+                   f"高分辨率={'是' if preserve_resolution else '否'}, "
+                   f"边距模式={'是' if use_margin_mode else '否'}")
         
         if args.single or os.path.isfile(args.input):
             # 单张图片处理
             success = processor.process_single_image(
-                args.input, args.output, args.ratio, high_quality, preserve_resolution)
+                args.input, args.output, args.ratio, high_quality, preserve_resolution, use_margin_mode)
             if success:
                 print("✅ 图片处理成功!")
             else:
@@ -791,7 +1631,8 @@ def main():
                 sys.exit(1)
         else:
             # 批量处理
-            stats = processor.process_batch(args.input, args.output, args.ratio, None, high_quality, preserve_resolution)
+            stats = processor.process_batch(args.input, args.output, args.ratio, None, 
+                                          high_quality, preserve_resolution, use_margin_mode)
             print(f"✅ 批量处理完成!")
             print(f"📊 统计信息:")
             print(f"   总计: {stats['total']} 张")
