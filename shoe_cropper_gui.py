@@ -36,8 +36,9 @@ class ShoeProcessorGUI:
         self.output_dir = tk.StringVar()
         self.ratio_var = tk.StringVar(value="auto")
         self.quality_var = tk.StringVar(value="high")
-        self.hires_var = tk.BooleanVar(value=False)
+        self.hires_var = tk.BooleanVar(value=True)  # 默认选中高分辨率模式
         self.margin_mode_var = tk.BooleanVar(value=True)  # 新增：默认使用边距模式
+        self.margin_ratio_var = tk.DoubleVar(value=10.0)  # 新增：边距比例，默认10%
         self.fast_mode_var = tk.BooleanVar(value=True)  # 新增：默认使用快速模式
         
         # 处理器和队列
@@ -120,20 +121,32 @@ class ShoeProcessorGUI:
         ttk.Radiobutton(quality_frame, text="普通质量", variable=self.quality_var, value="normal").pack(side=tk.LEFT)
         
         # 高分辨率模式
-        ttk.Checkbutton(params_frame, text="高分辨率模式 (适用于大图，保持更多像素)", 
+        ttk.Checkbutton(params_frame, text="高分辨率模式 (适用于大图，保持更多像素) [默认]", 
                        variable=self.hires_var).grid(row=2, column=0, columnspan=2, sticky=tk.W, pady=10)
         
         # 边距模式
-        margin_info = ttk.Label(params_frame, text="边距模式: 确保鞋子左右边距各占10%，必要时扩展白色画布", 
+        margin_info = ttk.Label(params_frame, text="边距模式: 确保鞋子左右边距各占指定比例，必要时扩展白色画布", 
                                style='Info.TLabel', wraplength=500)
         margin_info.grid(row=3, column=0, columnspan=2, sticky=tk.W, pady=(0, 5))
         
         ttk.Checkbutton(params_frame, text="启用边距模式 (推荐，确保鞋子居中且边距标准化)", 
                        variable=self.margin_mode_var).grid(row=4, column=0, columnspan=2, sticky=tk.W, pady=5)
         
+        # 边距比例设置
+        margin_ratio_frame = ttk.Frame(params_frame)
+        margin_ratio_frame.grid(row=5, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
+        
+        ttk.Label(margin_ratio_frame, text="左右边距比例:", style='Info.TLabel').pack(side=tk.LEFT)
+        
+        margin_spinbox = ttk.Spinbox(margin_ratio_frame, from_=5.0, to=20.0, increment=0.5, 
+                                    textvariable=self.margin_ratio_var, width=8, format="%.1f")
+        margin_spinbox.pack(side=tk.LEFT, padx=(10, 5))
+        
+        ttk.Label(margin_ratio_frame, text="% (建议范围: 5%-20%)", style='Info.TLabel').pack(side=tk.LEFT)
+        
         # 快速模式
         ttk.Checkbutton(params_frame, text="快速模式 (大幅提升处理速度，轻微降低检测精度)", 
-                       variable=self.fast_mode_var).grid(row=5, column=0, columnspan=2, sticky=tk.W, pady=5)
+                       variable=self.fast_mode_var).grid(row=6, column=0, columnspan=2, sticky=tk.W, pady=5)
         
         # 控制按钮框架
         control_frame = ttk.Frame(main_frame)
@@ -319,6 +332,8 @@ class ShoeProcessorGUI:
             self.log_message(f"高质量模式: {'是' if high_quality else '否'}")
             self.log_message(f"高分辨率模式: {'是' if self.hires_var.get() else '否'}")
             self.log_message(f"边距模式: {'是' if self.margin_mode_var.get() else '否'}")
+            if self.margin_mode_var.get():
+                self.log_message(f"左右边距比例: {self.margin_ratio_var.get():.1f}%")
             self.log_message(f"快速模式: {'是' if self.fast_mode_var.get() else '否'}")
             self.log_message(f"文件名保持: 与源文件一致")
             
@@ -361,7 +376,8 @@ class ShoeProcessorGUI:
                     high_quality, 
                     self.hires_var.get(),
                     self.margin_mode_var.get(),
-                    self.fast_mode_var.get()
+                    self.fast_mode_var.get(),
+                    self.margin_ratio_var.get()
                 )
                 
                 if success:

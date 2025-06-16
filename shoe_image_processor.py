@@ -942,7 +942,8 @@ class ShoeImageProcessor:
             return new_canvas
     
     def smart_crop(self, image: Image.Image, target_ratio: str = 'auto', min_resolution: int = 800, 
-                   preserve_resolution: bool = False, use_margin_mode: bool = True, fast_mode: bool = True) -> Image.Image:
+                   preserve_resolution: bool = False, use_margin_mode: bool = True, fast_mode: bool = True,
+                   margin_ratio: float = 10.0) -> Image.Image:
         """
         智能裁剪图片，确保主体居中显示并保持高分辨率
         
@@ -959,7 +960,10 @@ class ShoeImageProcessor:
         """
         # 优先使用新的边距模式
         if use_margin_mode:
-            return self.smart_crop_with_margins(image, target_ratio=target_ratio, min_resolution=min_resolution, fast_mode=fast_mode)
+            # 将百分比转换为小数（例如10% -> 0.1）
+            margin_ratio_decimal = margin_ratio / 100.0
+            return self.smart_crop_with_margins(image, left_right_margin_ratio=margin_ratio_decimal, 
+                                              target_ratio=target_ratio, min_resolution=min_resolution, fast_mode=fast_mode)
         
         # 获取原图尺寸
         original_width, original_height = image.size
@@ -1141,7 +1145,7 @@ class ShoeImageProcessor:
     
     def process_single_image(self, input_path: str, output_path: str, target_ratio: str = 'auto', 
                            high_quality: bool = True, preserve_resolution: bool = False, 
-                           use_margin_mode: bool = True, fast_mode: bool = True) -> bool:
+                           use_margin_mode: bool = True, fast_mode: bool = True, margin_ratio: float = 10.0) -> bool:
         """
         处理单张图片
         
@@ -1169,9 +1173,9 @@ class ShoeImageProcessor:
                 original_format = image.format
                 original_mode = image.mode
                 
-                # 智能裁剪 - 传递快速模式参数
+                # 智能裁剪 - 传递快速模式参数和边距比例
                 final_image = self.smart_crop(image, target_ratio, preserve_resolution=preserve_resolution, 
-                                             use_margin_mode=use_margin_mode, fast_mode=fast_mode)
+                                             use_margin_mode=use_margin_mode, fast_mode=fast_mode, margin_ratio=margin_ratio)
                 
                 # 确保输出目录存在
                 output_dir = os.path.dirname(output_path)
@@ -1309,7 +1313,7 @@ class ShoeImageProcessor:
     def process_batch(self, input_dir: str, output_dir: str, target_ratio: str = 'auto', 
                      supported_formats: List[str] = None, high_quality: bool = True, 
                      preserve_resolution: bool = False, use_margin_mode: bool = True,
-                     fast_mode: bool = True) -> dict:
+                     fast_mode: bool = True, margin_ratio: float = 10.0) -> dict:
         """
         批量处理图片
         
@@ -1357,9 +1361,9 @@ class ShoeImageProcessor:
             # 注意：如果process_single_image中发生格式转换，文件扩展名可能会改变
             output_file = output_path / image_file.name  # 使用原文件名
             
-            # 处理图片 - 传递快速模式参数
+            # 处理图片 - 传递快速模式参数和边距比例
             if self.process_single_image(str(image_file), str(output_file), target_ratio, 
-                                       high_quality, preserve_resolution, use_margin_mode, fast_mode):
+                                       high_quality, preserve_resolution, use_margin_mode, fast_mode, margin_ratio):
                 successful += 1
             else:
                 failed += 1
