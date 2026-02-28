@@ -953,14 +953,16 @@ class ShoeImageProcessor:
                 # 高宽比 < 0.75：很宽的图，使用 4:3 横图比例
                 target_ratio = '4:3'
                 logger.info(f"检测到宽图（高宽比 {aspect_ratio:.2f} < 0.75），使用 4:3 横图比例")
-            elif aspect_ratio >= 0.75 and aspect_ratio < 1.0:
-                # 0.75 <= 高宽比 < 1：接近方形，保持原比例加边距
+            elif aspect_ratio >= 0.75 and aspect_ratio < 4.0 / 3.0:
+                # 0.75 <= 高宽比 < 4:3：接近方形或略高的图，保持原比例加边距
                 keep_original_ratio = True
-                logger.info(f"检测到接近方形图（高宽比 {aspect_ratio:.2f} 在 0.75-1.0 之间），保持原比例加边距")
+                vertical_threshold = 4.0 / 3.0
+                logger.info(f"检测到接近方形图（高宽比 {aspect_ratio:.2f} 在 0.75-{vertical_threshold:.2f} 之间），保持原比例加边距")
             else:
-                # 高宽比 >= 1：很高的图，使用 3:4 竖图比例
+                # 高宽比 >= 4:3：很高的图，使用 3:4 竖图比例
                 target_ratio = '3:4'
-                logger.info(f"检测到高图（高宽比 {aspect_ratio:.2f} >= 1.0），使用 3:4 竖图比例")
+                vertical_threshold = 4.0 / 3.0
+                logger.info(f"检测到高图（高宽比 {aspect_ratio:.2f} >= {vertical_threshold:.2f}），使用 3:4 竖图比例")
         else:
             # 用户指定了比例，使用指定比例
             logger.info(f"使用用户指定的比例: {target_ratio}")
@@ -984,8 +986,8 @@ class ShoeImageProcessor:
             ideal_canvas_height = ideal_canvas_width * object_aspect_ratio  # 保持原宽高比
         else:
             # 固定比例模式：需要同时考虑宽度和高度，确保鞋子完整显示
-            # 对于竖图（高宽比 >= 1.0），上下边距应该更小
-            is_vertical_image = aspect_ratio >= 1.0
+            # 对于竖图（高宽比 >= 4:3），上下边距应该更小
+            is_vertical_image = aspect_ratio >= 4.0 / 3.0
             
             if is_vertical_image:
                 # 竖图：上下边距使用更小的比例（3%），左右边距保持10%
@@ -1028,7 +1030,8 @@ class ShoeImageProcessor:
         original_width, original_height = image.size
         
         # 提前定义竖图边距变量，供后续使用
-        is_vertical_for_check = aspect_ratio >= 1.0
+        # 只有当高宽比 >= 4:3 时才认为是竖图
+        is_vertical_for_check = aspect_ratio >= 4.0 / 3.0
         if is_vertical_for_check:
             vertical_margin_ratio_for_check = left_right_margin_ratio * 0.3  # 竖图上下边距3%（百分比）
             # 使用最小像素值（至少20像素）和百分比的最大值
@@ -1664,7 +1667,7 @@ class ShoeImageProcessor:
                             # 方法2：基于高度计算（确保不裁剪）
                             # 对于竖图，使用更小的上下边距
                             detected_aspect_ratio = detected_object_height / detected_object_width if detected_object_width > 0 else aspect_ratio
-                            is_vertical_detected = detected_aspect_ratio >= 1.0
+                            is_vertical_detected = detected_aspect_ratio >= 4.0 / 3.0
                             
                             if is_vertical_detected:
                                 # 竖图：上下边距使用更小的比例（3%），确保完整的3%边距
@@ -1867,14 +1870,16 @@ class ShoeImageProcessor:
                 # 高宽比 < 0.75：很宽的图，使用 4:3 横图比例
                 target_ratio = '4:3'
                 logger.info(f"检测到宽图（高宽比 {aspect_ratio:.2f} < 0.75），使用 4:3 横图比例")
-            elif aspect_ratio >= 0.75 and aspect_ratio < 1.0:
-                # 0.75 <= 高宽比 < 1：接近方形，保持原比例加边距
+            elif aspect_ratio >= 0.75 and aspect_ratio < 4.0 / 3.0:
+                # 0.75 <= 高宽比 < 4:3：接近方形或略高的图，保持原比例加边距
                 keep_original_ratio = True
-                logger.info(f"检测到接近方形图（高宽比 {aspect_ratio:.2f} 在 0.75-1.0 之间），保持原比例加边距")
+                vertical_threshold = 4.0 / 3.0
+                logger.info(f"检测到接近方形图（高宽比 {aspect_ratio:.2f} 在 0.75-{vertical_threshold:.2f} 之间），保持原比例加边距")
             else:
-                # 高宽比 >= 1：很高的图，使用 3:4 竖图比例
+                # 高宽比 >= 4:3：很高的图，使用 3:4 竖图比例
                 target_ratio = '3:4'
-                logger.info(f"检测到高图（高宽比 {aspect_ratio:.2f} >= 1.0），使用 3:4 竖图比例")
+                vertical_threshold = 4.0 / 3.0
+                logger.info(f"检测到高图（高宽比 {aspect_ratio:.2f} >= {vertical_threshold:.2f}），使用 3:4 竖图比例")
         else:
             # 用户指定了比例，使用指定比例
             logger.info(f"使用用户指定的比例: {target_ratio}")
