@@ -45,6 +45,8 @@ class ShoeProcessorGUI:
         self.processor = None
         self.processing = False
         self.log_queue = queue.Queue()
+        self.pending_logs = []  # 批量日志缓存
+        self.last_progress_update = 0  # 进度更新节流
         
         # 创建界面
         self.create_widgets()
@@ -181,20 +183,23 @@ class ShoeProcessorGUI:
         self.log_text.grid(row=row, column=0, columnspan=3, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
         main_frame.rowconfigure(row, weight=1)
         
-        # 添加一些初始说明
-        self.log_text.insert(tk.END, "🎯 鞋子图片智能裁剪工具使用说明:\n")
-        self.log_text.insert(tk.END, "1. 选择包含鞋子图片的输入目录\n")
-        self.log_text.insert(tk.END, "2. 选择处理后图片的输出目录\n")
-        self.log_text.insert(tk.END, "3. 设置裁剪参数（推荐使用默认设置）\n")
-        self.log_text.insert(tk.END, "4. 点击'开始裁剪'按钮开始处理\n")
-        self.log_text.insert(tk.END, "5. 支持jpg、png、bmp等常见图片格式\n\n")
-        self.log_text.insert(tk.END, "✨ 功能特点:\n")
-        self.log_text.insert(tk.END, "• 智能检测鞋子位置，自动居中裁剪\n")
-        self.log_text.insert(tk.END, "• 🆕 边距模式：确保鞋子左右边距各占10%\n")
-        self.log_text.insert(tk.END, "• 必要时自动扩展白色画布（鞋子太靠边或太小）\n")
-        self.log_text.insert(tk.END, "• 支持各种背景色和鞋子颜色\n")
-        self.log_text.insert(tk.END, "• 保持高分辨率和图片质量\n")
-        self.log_text.insert(tk.END, "• 自动适应最佳裁剪比例\n\n")
+        # 添加一些初始说明（批量插入，减少重绘）
+        initial_text = (
+            "🎯 鞋子图片智能裁剪工具使用说明:\n"
+            "1. 选择包含鞋子图片的输入目录\n"
+            "2. 选择处理后图片的输出目录\n"
+            "3. 设置裁剪参数（推荐使用默认设置）\n"
+            "4. 点击'开始裁剪'按钮开始处理\n"
+            "5. 支持jpg、png、bmp等常见图片格式\n\n"
+            "✨ 功能特点:\n"
+            "• 智能检测鞋子位置，自动居中裁剪\n"
+            "• 🆕 边距模式：确保鞋子左右边距各占10%\n"
+            "• 必要时自动扩展白色画布（鞋子太靠边或太小）\n"
+            "• 支持各种背景色和鞋子颜色\n"
+            "• 保持高分辨率和图片质量\n"
+            "• 自动适应最佳裁剪比例\n\n"
+        )
+        self.log_text.insert(tk.END, initial_text)
         self.log_text.see(tk.END)
     
     def select_input_dir(self):
@@ -221,30 +226,72 @@ class ShoeProcessorGUI:
         formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
         self.log_handler.setFormatter(formatter)
         
-        # 获取处理器的logger并添加处理器
-        logger = logging.getLogger()
-        logger.addHandler(self.log_handler)
+        # 获取根logger
+        root_logger = logging.getLogger()
+        
+        # 在GUI模式下，移除可能导致阻塞的FileHandler和StreamHandler
+        # 只保留我们的QueueHandler，避免文件I/O阻塞事件循环
+        handlers_to_remove = []
+        for handler in root_logger.handlers[:]:
+            if isinstance(handler, (logging.FileHandler, logging.StreamHandler)):
+                handlers_to_remove.append(handler)
+        
+        for handler in handlers_to_remove:
+            root_logger.removeHandler(handler)
+        
+        # 添加我们的队列处理器
+        root_logger.addHandler(self.log_handler)
+        root_logger.setLevel(logging.INFO)
     
     def check_log_queue(self):
-        """检查日志队列并更新界面"""
+        """检查日志队列并更新界面（优化：批量处理，减少更新频率）"""
+        # 批量收集日志消息（限制每次处理的数量，避免阻塞）
+        messages = []
+        max_messages_per_check = 50  # 每次最多处理50条消息
         try:
-            while True:
+            for _ in range(max_messages_per_check):
                 record = self.log_queue.get_nowait()
                 msg = self.log_handler.format(record)
-                self.log_text.insert(tk.END, msg + '\n')
-                self.log_text.see(tk.END)
+                messages.append(msg)
         except queue.Empty:
             pass
         
-        # 每100ms检查一次
-        self.root.after(100, self.check_log_queue)
+        # 如果有新消息，批量插入（减少重绘次数）
+        if messages:
+            try:
+                # 限制日志行数，避免文本控件过大导致性能问题
+                max_lines = 1000
+                current_lines = int(self.log_text.index('end-1c').split('.')[0])
+                
+                # 如果超过最大行数，删除前面的内容
+                if current_lines + len(messages) > max_lines:
+                    lines_to_delete = current_lines + len(messages) - max_lines
+                    self.log_text.delete(1.0, f'{lines_to_delete + 1}.0')
+                
+                # 批量插入所有消息
+                all_text = '\n'.join(messages) + '\n'
+                self.log_text.insert(tk.END, all_text)
+                # 只在有大量消息时才滚动到底部，减少频繁滚动
+                if len(messages) > 5:
+                    self.log_text.see(tk.END)
+            except Exception:
+                # 如果更新失败，忽略错误继续运行
+                pass
+        
+        # 定期检查日志队列（使用统一的检查间隔，避免平台特定优化）
+        self.root.after(200, self.check_log_queue)
     
     def log_message(self, message, level="INFO"):
-        """添加日志消息"""
+        """添加日志消息（通过队列，避免直接操作UI）"""
         timestamp = self.get_timestamp()
-        formatted_msg = f"[{timestamp}] {level} - {message}\n"
-        self.log_text.insert(tk.END, formatted_msg)
-        self.log_text.see(tk.END)
+        formatted_msg = f"[{timestamp}] {level} - {message}"
+        # 使用logging系统，通过队列更新UI，避免直接操作文本控件
+        if level == "ERROR":
+            logging.error(formatted_msg)
+        elif level == "WARNING":
+            logging.warning(formatted_msg)
+        else:
+            logging.info(formatted_msg)
     
     def get_timestamp(self):
         """获取当前时间戳"""
@@ -300,9 +347,8 @@ class ShoeProcessorGUI:
         self.progress_bar.start()
         self.progress_var.set("正在处理...")
         
-        # 在新线程中处理
-        self.processing_thread = threading.Thread(target=self.process_images, daemon=True)
-        self.processing_thread.start()
+        # 启动处理线程（使用daemon线程，确保主线程退出时自动结束）
+        threading.Thread(target=self.process_images, daemon=True).start()
     
     def stop_processing(self):
         """停止处理"""
@@ -361,9 +407,11 @@ class ShoeProcessorGUI:
                     self.log_message("处理已被用户停止", "WARNING")
                     break
                 
-                # 更新进度
-                progress_msg = f"处理进度: {i}/{total_files} - {image_file.name}"
-                self.root.after(0, lambda msg=progress_msg: self.progress_var.set(msg))
+                # 更新进度（节流：每5个文件或最后一个文件才更新，减少界面更新频率）
+                if i % 5 == 0 or i == total_files:
+                    progress_msg = f"处理进度: {i}/{total_files} - {image_file.name}"
+                    # 使用after_idle将UI更新请求推送到事件队列，Tkinter会在空闲时处理
+                    self.root.after_idle(lambda msg=progress_msg: self.progress_var.set(msg))
                 
                 # 构建输出文件路径 - 保持与源文件名一致
                 output_file = Path(output_dir) / image_file.name
@@ -398,19 +446,19 @@ class ShoeProcessorGUI:
                 self.log_message(f"   失败: {failed} 张")
                 self.log_message(f"   成功率: {success_rate:.1%}")
                 
-                # 显示完成对话框
-                self.root.after(0, lambda: messagebox.showinfo(
+                # 显示完成对话框（使用after_idle确保在主线程中执行）
+                self.root.after_idle(lambda: messagebox.showinfo(
                     "处理完成", 
                     f"批量处理完成!\n\n总计: {total_files} 张\n成功: {successful} 张\n失败: {failed} 张\n成功率: {success_rate:.1%}"
                 ))
                 
         except Exception as e:
             self.log_message(f"处理过程中发生错误: {e}", "ERROR")
-            self.root.after(0, lambda: messagebox.showerror("错误", f"处理过程中发生错误:\n{e}"))
+            self.root.after_idle(lambda: messagebox.showerror("错误", f"处理过程中发生错误:\n{e}"))
         
         finally:
-            # 恢复界面状态
-            self.root.after(0, self.reset_ui_state)
+            # 恢复界面状态（使用after_idle确保在主线程中执行）
+            self.root.after_idle(self.reset_ui_state)
     
     def reset_ui_state(self):
         """重置界面状态"""
@@ -434,18 +482,18 @@ class QueueHandler(logging.Handler):
 def main():
     """主函数"""
     root = tk.Tk()
-    app = ShoeProcessorGUI(root)
     
-    # 设置窗口图标（如果有的话）
-    try:
-        # 可以添加图标文件
-        # root.iconbitmap('icon.ico')
-        pass
-    except:
-        pass
+    # macOS特定优化：设置合适的缩放比例
+    if sys.platform == "darwin":
+        try:
+            root.tk.call('tk', 'scaling', 1.0)
+        except tk.TclError:
+            pass
     
-    # 居中显示窗口
-    root.update_idletasks()
+    ShoeProcessorGUI(root)
+    
+    # 居中显示窗口（需要先update一次以获取窗口实际尺寸）
+    root.update()
     width = root.winfo_width()
     height = root.winfo_height()
     x = (root.winfo_screenwidth() // 2) - (width // 2)
