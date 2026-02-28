@@ -62,9 +62,12 @@ class ShoeImageProcessor:
         # 转换为numpy数组
         img_array = np.array(image)
         
-        # 转换为灰度图
+        # 转换为灰度图和BGR图像
+        bgr_image = None
         if len(img_array.shape) == 3:
             gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
+            # 转换为BGR格式（OpenCV使用BGR）
+            bgr_image = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
         else:
             gray = img_array
         
@@ -288,19 +291,224 @@ class ShoeImageProcessor:
         
         return left, top, right, bottom
     
-    def _filter_shadow_from_contour(self, contour, gray, bg_brightness):
+    def _detect_saliency(self, image: np.ndarray) -> np.ndarray:
+        """
+        使用显著性检测来识别主体区域
+        
+        Args:
+            image: BGR格式的图像数组
+            
+        Returns:
+            显著性图（0-255）
+        """
+        try:
+            # 尝试使用OpenCV的显著性检测
+            saliency = cv2.saliency.StaticSaliencySpectralResidual_create()
+            success, saliency_map = saliency.computeSaliency(image)
+            
+            if success:
+                # 将显著性图转换为0-255范围
+                saliency_map = (saliency_map * 255).astype(np.uint8)
+                logger.info("使用StaticSaliencySpectralResidual进行显著性检测")
+                return saliency_map
+            else:
+                # Fallback: 使用FineGrained显著性检测
+                try:
+                    saliency = cv2.saliency.StaticSaliencyFineGrained_create()
+                    success, saliency_map = saliency.computeSaliency(image)
+                    if success:
+                        saliency_map = (saliency_map * 255).astype(np.uint8)
+                        logger.info("使用StaticSaliencyFineGrained进行显著性检测")
+                        return saliency_map
+                except:
+                    pass
+                
+                # 如果都失败，返回空显著性图
+                logger.warning("显著性检测失败，返回空图")
+                return np.zeros((image.shape[0], image.shape[1]), dtype=np.uint8)
+        except Exception as e:
+            logger.warning(f"显著性检测出错: {e}")
+            return np.zeros((image.shape[0], image.shape[1]), dtype=np.uint8)
+    
+    def _grabcut_segmentation(self, image: np.ndarray, contour: np.ndarray) -> np.ndarray:
+        """
+        使用GrabCut算法进行前景/背景分割
+        
+        Args:
+            image: BGR格式的图像数组
+            contour: 初始轮廓（作为前景的初始估计）
+            
+        Returns:
+            前景mask（255=前景，0=背景）
+        """
+        try:
+            height, width = image.shape[:2]
+            
+            # 创建初始mask
+            mask = np.zeros((height, width), dtype=np.uint8)
+            
+            # 将轮廓区域标记为可能的前景
+            cv2.drawContours(mask, [contour], -1, cv2.GC_PR_FGD, -1)
+            
+            # 创建边界框作为初始估计
+            x, y, w, h = cv2.boundingRect(contour)
+            # 扩展边界框，增加一些背景区域
+            margin = 20
+            x = max(0, x - margin)
+            y = max(0, y - margin)
+            w = min(width - x, w + 2 * margin)
+            h = min(height - y, h + 2 * margin)
+            
+            # 边界框外的区域标记为确定的背景
+            mask[0:y, :] = cv2.GC_BGD
+            mask[y+h:height, :] = cv2.GC_BGD
+            mask[:, 0:x] = cv2.GC_BGD
+            mask[:, x+w:width] = cv2.GC_BGD
+            
+            # 创建GMM模型
+            bgd_model = np.zeros((1, 65), np.float64)
+            fgd_model = np.zeros((1, 65), np.float64)
+            
+            # 运行GrabCut算法
+            rect = (x, y, w, h)
+            cv2.grabCut(image, mask, rect, bgd_model, fgd_model, 5, cv2.GC_INIT_WITH_MASK)
+            
+            # 创建最终的前景mask
+            # GC_FGD和GC_PR_FGD都视为前景
+            foreground_mask = np.where((mask == cv2.GC_FGD) | (mask == cv2.GC_PR_FGD), 255, 0).astype(np.uint8)
+            
+            logger.info("使用GrabCut算法进行前景/背景分割")
+            return foreground_mask
+            
+        except Exception as e:
+            logger.warning(f"GrabCut分割失败: {e}，返回原始轮廓mask")
+            # Fallback: 返回原始轮廓mask
+            mask = np.zeros((height, width), dtype=np.uint8)
+            cv2.drawContours(mask, [contour], -1, 255, -1)
+            return mask
+    
+    def _watershed_segmentation(self, image: np.ndarray, contour: np.ndarray) -> np.ndarray:
+        """
+        使用分水岭算法进行分割
+        
+        Args:
+            image: BGR格式的图像数组
+            contour: 初始轮廓
+            
+        Returns:
+            前景mask（255=前景，0=背景）
+        """
+        try:
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            height, width = gray.shape
+            
+            # 创建标记图像
+            markers = np.zeros((height, width), dtype=np.int32)
+            
+            # 将轮廓内部标记为前景（标记值=1）
+            cv2.drawContours(markers, [contour], -1, 1, -1)
+            
+            # 轮廓外部标记为背景（标记值=2）
+            # 创建一个略大于轮廓的边界框
+            x, y, w, h = cv2.boundingRect(contour)
+            margin = 30
+            x_start = max(0, x - margin)
+            y_start = max(0, y - margin)
+            x_end = min(width, x + w + margin)
+            y_end = min(height, y + h + margin)
+            
+            # 边界框外的区域标记为背景
+            markers[0:y_start, :] = 2
+            markers[y_end:height, :] = 2
+            markers[:, 0:x_start] = 2
+            markers[:, x_end:width] = 2
+            
+            # 应用分水岭算法
+            # 首先计算梯度
+            grad_x = cv2.Sobel(gray, cv2.CV_32F, 1, 0, ksize=3)
+            grad_y = cv2.Sobel(gray, cv2.CV_32F, 0, 1, ksize=3)
+            gradient = np.sqrt(grad_x**2 + grad_y**2)
+            gradient = (gradient / gradient.max() * 255).astype(np.uint8)
+            
+            # 运行分水岭算法
+            cv2.watershed(image, markers)
+            
+            # 创建前景mask（标记值=1的区域）
+            foreground_mask = np.where(markers == 1, 255, 0).astype(np.uint8)
+            
+            logger.info("使用分水岭算法进行分割")
+            return foreground_mask
+            
+        except Exception as e:
+            logger.warning(f"分水岭分割失败: {e}，返回原始轮廓mask")
+            # Fallback: 返回原始轮廓mask
+            mask = np.zeros((height, width), dtype=np.uint8)
+            cv2.drawContours(mask, [contour], -1, 255, -1)
+            return mask
+    
+    def _filter_shadow_from_contour(self, contour, gray, bg_brightness, bgr_image=None):
         """
         从轮廓中过滤掉阴影部分
+        改进版本：优先使用GrabCut或显著性检测，fallback到阈值方法
         
         Args:
             contour: 检测到的轮廓
             gray: 灰度图像
             bg_brightness: 背景亮度值
+            bgr_image: BGR格式的图像（可选，用于GrabCut和显著性检测）
             
         Returns:
             过滤后的轮廓
         """
         try:
+            # 如果提供了BGR图像，优先使用改进的方法
+            if bgr_image is not None:
+                # 判断图像特征，选择最佳方法
+                # 对于黑色或深色鞋子，使用GrabCut或显著性检测
+                contour_pixels = gray[cv2.drawContours(np.zeros_like(gray), [contour], -1, 1, -1) > 0]
+                if len(contour_pixels) > 0:
+                    mean_brightness = np.mean(contour_pixels)
+                    
+                    # 如果主体较暗（可能是黑色鞋子），使用GrabCut
+                    if mean_brightness < 100:
+                        logger.info(f"检测到深色主体（平均亮度={mean_brightness:.1f}），使用GrabCut算法")
+                        try:
+                            foreground_mask = self._grabcut_segmentation(bgr_image, contour)
+                            # 从mask中提取轮廓
+                            filtered_contours, _ = cv2.findContours(foreground_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                            if filtered_contours:
+                                # 选择最大的轮廓
+                                best_filtered = max(filtered_contours, key=cv2.contourArea)
+                                if cv2.contourArea(best_filtered) > cv2.contourArea(contour) * 0.5:
+                                    logger.info("GrabCut成功过滤阴影")
+                                    return best_filtered
+                        except Exception as e:
+                            logger.warning(f"GrabCut失败: {e}，fallback到阈值方法")
+                    
+                    # 尝试显著性检测
+                    try:
+                        saliency_map = self._detect_saliency(bgr_image)
+                        if saliency_map.max() > 0:
+                            # 使用显著性图来改进轮廓
+                            # 将显著性图二值化
+                            _, saliency_binary = cv2.threshold(saliency_map, saliency_map.max() * 0.3, 255, cv2.THRESH_BINARY)
+                            # 与原始轮廓mask结合
+                            contour_mask = np.zeros_like(gray)
+                            cv2.drawContours(contour_mask, [contour], -1, 255, -1)
+                            combined_mask = cv2.bitwise_and(saliency_binary, contour_mask)
+                            
+                            # 从组合mask中提取轮廓
+                            filtered_contours, _ = cv2.findContours(combined_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                            if filtered_contours:
+                                best_filtered = max(filtered_contours, key=cv2.contourArea)
+                                if cv2.contourArea(best_filtered) > cv2.contourArea(contour) * 0.5:
+                                    logger.info("显著性检测成功改进轮廓")
+                                    return best_filtered
+                    except Exception as e:
+                        logger.warning(f"显著性检测失败: {e}，fallback到阈值方法")
+            
+            # Fallback到原有的阈值方法
+            logger.info("使用阈值方法过滤阴影")
             # 创建轮廓mask
             mask = np.zeros(gray.shape, dtype=np.uint8)
             cv2.drawContours(mask, [contour], -1, 255, -1)
@@ -558,9 +766,12 @@ class ShoeImageProcessor:
         # 转换为numpy数组
         img_array = np.array(image)
         
-        # 转换为灰度图
+        # 转换为灰度图和BGR图像
+        bgr_image = None
         if len(img_array.shape) == 3:
             gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
+            # 转换为BGR格式（OpenCV使用BGR）
+            bgr_image = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
         else:
             gray = img_array
         
@@ -716,10 +927,32 @@ class ShoeImageProcessor:
         # 如果所有方法都失败，使用像素级分析
         logger.warning("轮廓检测失败，使用像素级精确分析")
         
-        # 使用最严格的阈值找到所有明显非白色的像素
-        _, ultra_strict = cv2.threshold(gray, 252, 255, cv2.THRESH_BINARY_INV)
+        # 首先检测实际背景颜色（从边缘采样）
+        edge_samples = []
+        edge_thickness = min(20, min(width, height) // 30)
+        if edge_thickness > 0:
+            edge_samples.extend(gray[:edge_thickness, :].flatten())
+            edge_samples.extend(gray[-edge_thickness:, :].flatten())
+            edge_samples.extend(gray[:, :edge_thickness].flatten())
+            edge_samples.extend(gray[:, -edge_thickness:].flatten())
         
-        # 找到所有非白色像素的坐标
+        if len(edge_samples) > 0:
+            bg_brightness = np.median(edge_samples)
+            # 使用背景亮度减去一个小的阈值来检测非背景像素
+            # 对于接近白色的背景，使用更严格的阈值
+            if bg_brightness > 240:
+                threshold = bg_brightness - 5  # 非常接近白色，使用严格阈值
+            elif bg_brightness > 200:
+                threshold = bg_brightness - 10  # 浅色背景
+            else:
+                threshold = bg_brightness - 20  # 较暗背景
+        else:
+            threshold = 252  # 默认值
+        
+        # 使用动态阈值找到所有明显非背景的像素
+        _, ultra_strict = cv2.threshold(gray, threshold, 255, cv2.THRESH_BINARY_INV)
+        
+        # 找到所有非背景像素的坐标
         nonzero_coords = np.where(ultra_strict > 0)
         
         if len(nonzero_coords[0]) > 0:
@@ -728,12 +961,27 @@ class ShoeImageProcessor:
             left = np.min(nonzero_coords[1])
             right = np.max(nonzero_coords[1])
             
-            # 应用小幅收缩，确保不包含边缘白色像素
-            margin = 2
-            left = min(width - 50, left + margin)
-            right = max(50, right - margin)
-            top = min(height - 50, top + margin)
-            bottom = max(50, bottom - margin)
+            # 验证检测结果是否合理（不应该覆盖整个画布）
+            detected_width = right - left
+            detected_height = bottom - top
+            detected_area_ratio = (detected_width * detected_height) / (width * height)
+            
+            # 如果检测到的区域太大（超过80%），说明检测失败，返回保守估计
+            if detected_area_ratio > 0.8:
+                logger.warning(f"像素级检测结果异常（覆盖{detected_area_ratio:.1%}），使用保守估计")
+                # 返回画布中心区域，假设鞋子在中心
+                margin_ratio = 0.1  # 假设10%边距
+                left = int(width * margin_ratio)
+                right = int(width * (1 - margin_ratio))
+                top = int(height * margin_ratio)
+                bottom = int(height * (1 - margin_ratio))
+            else:
+                # 应用小幅收缩，确保不包含边缘背景像素
+                margin = 2
+                left = min(width - 50, left + margin)
+                right = max(50, right - margin)
+                top = min(height - 50, top + margin)
+                bottom = max(50, bottom - margin)
             
             logger.info(f"像素级边界: 左{left}, 上{top}, 右{right}, 下{bottom}")
             return left, top, right, bottom
@@ -758,9 +1006,12 @@ class ShoeImageProcessor:
         # 转换为numpy数组
         img_array = np.array(image)
         
-        # 转换为灰度图
+        # 转换为灰度图和BGR图像
+        bgr_image = None
         if len(img_array.shape) == 3:
             gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
+            # 转换为BGR格式（OpenCV使用BGR）
+            bgr_image = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
         else:
             gray = img_array
         
@@ -829,7 +1080,7 @@ class ShoeImageProcessor:
             except:
                 bg_brightness = 255  # 默认白色背景
             
-            best_contour = self._filter_shadow_from_contour(best_contour, gray, bg_brightness)
+            best_contour = self._filter_shadow_from_contour(best_contour, gray, bg_brightness, bgr_image)
             
             # 从轮廓中找到极值点
             contour_points = best_contour.reshape(-1, 2)
@@ -1525,13 +1776,45 @@ class ShoeImageProcessor:
                 # 使用专门的白色背景检测方法
                 final_left, final_top, final_right, final_bottom = self.find_object_bounds_on_white_bg(new_canvas)
                 
+                # 验证检测结果的合理性
+                detected_width = final_right - final_left
+                detected_height = final_bottom - final_top
+                detected_area_ratio = (detected_width * detected_height) / (adjusted_canvas_width * adjusted_canvas_height)
+                
+                # 如果检测结果异常（覆盖面积过大或宽度异常），使用计算出的边距值
+                use_calculated_margins = False
+                if detected_area_ratio > 0.8:  # 检测区域超过80%，说明检测失败
+                    logger.warning(f"检测结果异常（覆盖{detected_area_ratio:.1%}），使用计算出的边距值")
+                    use_calculated_margins = True
+                elif detected_width > object_width * 1.5:  # 检测宽度远大于原始宽度
+                    logger.warning(f"检测宽度异常（检测:{detected_width}, 原始:{object_width}），使用计算出的边距值")
+                    use_calculated_margins = True
+                
                 # 使用调整后的画布尺寸计算实际边距比例
                 actual_canvas_width = adjusted_canvas_width
                 actual_canvas_height = adjusted_canvas_height
-                actual_left_margin = final_left / actual_canvas_width
-                actual_right_margin = (actual_canvas_width - final_right) / actual_canvas_width
-                actual_top_margin = final_top / actual_canvas_height
-                actual_bottom_margin = (actual_canvas_height - final_bottom) / actual_canvas_height
+                
+                if use_calculated_margins:
+                    # 使用计算出的边距值（基于实际粘贴位置）
+                    # 计算左右边距
+                    paste_left = canvas_paste_x + max(0, -paste_x)
+                    paste_right = paste_left + object_width
+                    actual_left_margin = paste_left / actual_canvas_width
+                    actual_right_margin = (actual_canvas_width - paste_right) / actual_canvas_width
+                    
+                    # 计算上下边距（使用实际粘贴位置）
+                    paste_top = actual_paste_y
+                    paste_bottom = actual_paste_y + cropped_source.height
+                    actual_top_margin = paste_top / actual_canvas_height
+                    actual_bottom_margin = (actual_canvas_height - paste_bottom) / actual_canvas_height
+                    
+                    logger.info(f"  使用计算出的边距值: 左{actual_left_margin:.1%}, 右{actual_right_margin:.1%}, 上{actual_top_margin:.1%}, 下{actual_bottom_margin:.1%}")
+                else:
+                    # 使用检测到的边界
+                    actual_left_margin = final_left / actual_canvas_width
+                    actual_right_margin = (actual_canvas_width - final_right) / actual_canvas_width
+                    actual_top_margin = final_top / actual_canvas_height
+                    actual_bottom_margin = (actual_canvas_height - final_bottom) / actual_canvas_height
                 
                 # 检查垂直比例情况
                 # 对于竖图，目标是上下边距各至少3%
@@ -2503,9 +2786,12 @@ class ShoeImageProcessor:
         # 转换为numpy数组
         img_array = np.array(image)
         
-        # 转换为灰度图
+        # 转换为灰度图和BGR图像
+        bgr_image = None
         if len(img_array.shape) == 3:
             gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
+            # 转换为BGR格式（OpenCV使用BGR）
+            bgr_image = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
         else:
             gray = img_array
         
@@ -2574,7 +2860,7 @@ class ShoeImageProcessor:
             except:
                 bg_brightness = 255  # 默认白色背景
             
-            best_contour = self._filter_shadow_from_contour(best_contour, gray, bg_brightness)
+            best_contour = self._filter_shadow_from_contour(best_contour, gray, bg_brightness, bgr_image)
             
             # 从轮廓中找到极值点
             contour_points = best_contour.reshape(-1, 2)
