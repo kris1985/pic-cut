@@ -11,13 +11,14 @@ import os
 import sys
 from pathlib import Path
 import argparse
-from typing import Tuple, List
+from typing import Tuple, List, Optional
 import logging
 
 import cv2
 import numpy as np
 from PIL import Image, ImageFilter
 import shutil
+from shadow_detector import ShadowDetector
 
 # 尝试导入scipy，如果失败则使用简单的替代方案
 try:
@@ -47,6 +48,7 @@ class ShoeImageProcessor:
         """
         初始化处理器
         """
+        self.shadow_detector = ShadowDetector()
         logger.info("已初始化图片处理器")
     
     def find_object_bounds(self, image: Image.Image) -> Tuple[int, int, int, int]:
@@ -301,6 +303,11 @@ class ShoeImageProcessor:
         Returns:
             显著性图（0-255）
         """
+        # 检查OpenCV是否支持saliency模块
+        if not hasattr(cv2, 'saliency'):
+            # OpenCV版本不支持saliency模块，静默返回空图
+            return np.zeros((image.shape[0], image.shape[1]), dtype=np.uint8)
+        
         try:
             # 尝试使用OpenCV的显著性检测
             saliency = cv2.saliency.StaticSaliencySpectralResidual_create()
@@ -323,11 +330,14 @@ class ShoeImageProcessor:
                 except:
                     pass
                 
-                # 如果都失败，返回空显著性图
-                logger.warning("显著性检测失败，返回空图")
+                # 如果都失败，返回空显著性图（不记录警告，这是正常的fallback）
                 return np.zeros((image.shape[0], image.shape[1]), dtype=np.uint8)
+        except AttributeError:
+            # OpenCV版本不支持saliency模块，静默返回空图
+            return np.zeros((image.shape[0], image.shape[1]), dtype=np.uint8)
         except Exception as e:
-            logger.warning(f"显著性检测出错: {e}")
+            # 其他错误，记录debug级别日志（不影响功能）
+            logger.debug(f"显著性检测不可用: {e}")
             return np.zeros((image.shape[0], image.shape[1]), dtype=np.uint8)
     
     def _grabcut_segmentation(self, image: np.ndarray, contour: np.ndarray) -> np.ndarray:
@@ -446,313 +456,7 @@ class ShoeImageProcessor:
             cv2.drawContours(mask, [contour], -1, 255, -1)
             return mask
     
-    def _filter_shadow_from_contour(self, contour, gray, bg_brightness, bgr_image=None):
-        """
-        从轮廓中过滤掉阴影部分
-        改进版本：优先使用GrabCut或显著性检测，fallback到阈值方法
-        
-        Args:
-            contour: 检测到的轮廓
-            gray: 灰度图像
-            bg_brightness: 背景亮度值
-            bgr_image: BGR格式的图像（可选，用于GrabCut和显著性检测）
-            
-        Returns:
-            过滤后的轮廓
-        """
-        try:
-            # 如果提供了BGR图像，优先使用改进的方法
-            if bgr_image is not None:
-                # 判断图像特征，选择最佳方法
-                # 对于黑色或深色鞋子，使用GrabCut或显著性检测
-                contour_pixels = gray[cv2.drawContours(np.zeros_like(gray), [contour], -1, 1, -1) > 0]
-                if len(contour_pixels) > 0:
-                    mean_brightness = np.mean(contour_pixels)
-                    
-                    # 如果主体较暗（可能是黑色鞋子），使用GrabCut
-                    if mean_brightness < 100:
-                        logger.info(f"检测到深色主体（平均亮度={mean_brightness:.1f}），使用GrabCut算法")
-                        try:
-                            foreground_mask = self._grabcut_segmentation(bgr_image, contour)
-                            # 从mask中提取轮廓
-                            filtered_contours, _ = cv2.findContours(foreground_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-                            if filtered_contours:
-                                # 选择最大的轮廓
-                                best_filtered = max(filtered_contours, key=cv2.contourArea)
-                                if cv2.contourArea(best_filtered) > cv2.contourArea(contour) * 0.5:
-                                    logger.info("GrabCut成功过滤阴影")
-                                    return best_filtered
-                        except Exception as e:
-                            logger.warning(f"GrabCut失败: {e}，fallback到阈值方法")
-                    
-                    # 尝试显著性检测
-                    try:
-                        saliency_map = self._detect_saliency(bgr_image)
-                        if saliency_map.max() > 0:
-                            # 使用显著性图来改进轮廓
-                            # 将显著性图二值化
-                            _, saliency_binary = cv2.threshold(saliency_map, saliency_map.max() * 0.3, 255, cv2.THRESH_BINARY)
-                            # 与原始轮廓mask结合
-                            contour_mask = np.zeros_like(gray)
-                            cv2.drawContours(contour_mask, [contour], -1, 255, -1)
-                            combined_mask = cv2.bitwise_and(saliency_binary, contour_mask)
-                            
-                            # 从组合mask中提取轮廓
-                            filtered_contours, _ = cv2.findContours(combined_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-                            if filtered_contours:
-                                best_filtered = max(filtered_contours, key=cv2.contourArea)
-                                if cv2.contourArea(best_filtered) > cv2.contourArea(contour) * 0.5:
-                                    logger.info("显著性检测成功改进轮廓")
-                                    return best_filtered
-                    except Exception as e:
-                        logger.warning(f"显著性检测失败: {e}，fallback到阈值方法")
-            
-            # Fallback到原有的阈值方法
-            logger.info("使用阈值方法过滤阴影")
-            # 创建轮廓mask
-            mask = np.zeros(gray.shape, dtype=np.uint8)
-            cv2.drawContours(mask, [contour], -1, 255, -1)
-            
-            # 获取轮廓内的所有像素
-            contour_pixels = gray[mask > 0]
-            
-            if len(contour_pixels) == 0:
-                return contour
-            
-            # 分析轮廓内像素的亮度分布
-            # 主体的典型亮度应该比背景暗，但不会太暗（阴影会更暗）
-            # 对于白色背景，主体通常在 50-200 之间，阴影通常在 0-100 之间
-            
-            # 计算亮度分位数
-            p10 = np.percentile(contour_pixels, 10)  # 10%分位数（最暗的10%）
-            p25 = np.percentile(contour_pixels, 25)  # 25%分位数
-            p50 = np.percentile(contour_pixels, 50)  # 中位数
-            p75 = np.percentile(contour_pixels, 75)  # 75%分位数
-            p90 = np.percentile(contour_pixels, 90)  # 90%分位数（最亮的10%）
-            
-            # 计算亮度标准差，用于判断亮度分布是否分散
-            brightness_std = np.std(contour_pixels)
-            
-            # 识别主体亮度范围：使用中位数到75%分位数作为主体典型亮度
-            # 阴影通常比主体暗很多
-            if bg_brightness > 200:  # 白色背景
-                # 主体亮度范围：中位数附近
-                subject_brightness_min = max(0, p50 - 30)
-                
-                # 改进的阴影阈值计算：
-                # 1. 使用10%分位数（更暗的像素更可能是阴影）
-                # 2. 考虑亮度分布：如果分布分散，说明可能有阴影
-                # 3. 使用更严格的阈值：中位数减去更大的偏移量
-                if brightness_std > 30:  # 亮度分布分散，可能有阴影
-                    # 使用更严格的阈值
-                    shadow_threshold = min(p10, p25, p50 - 50)
-                else:
-                    # 亮度分布集中，使用较宽松的阈值
-                    shadow_threshold = min(p25, p50 - 40)
-                
-                # 额外检查：如果最暗的10%明显比主体暗，很可能是阴影
-                if p10 < p50 - 60:  # 最暗部分比中位数暗60以上
-                    shadow_threshold = min(shadow_threshold, p10 + 20)  # 更严格
-            else:  # 暗色背景
-                # 对于暗色背景，主体应该比背景亮
-                subject_brightness_min = max(bg_brightness + 20, p50 - 30)
-                if brightness_std > 30:
-                    shadow_threshold = min(p10, p25, p50 - 50)
-                else:
-                    shadow_threshold = min(p25, p50 - 40)
-            
-            logger.info(f"轮廓亮度分析: 10%={p10:.1f}, 25%={p25:.1f}, 50%={p50:.1f}, 75%={p75:.1f}, 90%={p90:.1f}, 标准差={brightness_std:.1f}")
-            logger.info(f"阴影阈值={shadow_threshold:.1f}")
-            
-            # 创建过滤后的mask：移除阴影部分
-            filtered_mask = mask.copy()
-            
-            # 获取轮廓的边界框
-            x, y, w, h = cv2.boundingRect(contour)
-            height, width = gray.shape
-            
-            # 方法1: 基于亮度的阴影检测（全方位，不限制位置）
-            shadow_mask_by_brightness = (gray < shadow_threshold) & (mask > 0)
-            
-            # 方法2: 使用更智能的阈值，识别浅色阴影
-            # 降低标准差阈值，更敏感地检测浅色阴影
-            if brightness_std > 20:  # 降低阈值从25到20，更敏感
-                # 使用更宽松的阈值来捕获浅色阴影
-                light_shadow_threshold = min(p25 + 15, p50 - 25)  # 更宽松的阈值
-                # 但只对明显比主体暗的区域应用（降低要求从20到15）
-                light_shadow_mask = (gray < light_shadow_threshold) & (gray < p50 - 15) & (mask > 0)
-                logger.info(f"浅色阴影检测: 阈值={light_shadow_threshold:.1f}, 标准差={brightness_std:.1f}")
-            else:
-                light_shadow_mask = np.zeros_like(mask, dtype=bool)
-            
-            # 方法3: 边缘区域直接检测 - 专门检测轮廓边缘附近的暗色区域
-            # 获取轮廓的边界框
-            x, y, w, h = cv2.boundingRect(contour)
-            contour_left = x
-            contour_right = x + w
-            contour_top = y
-            contour_bottom = y + h
-            
-            # 定义边缘区域（上下左右各50%的范围）
-            edge_margin = min(w, h) * 0.5
-            left_edge = (contour_left, contour_left + edge_margin)
-            right_edge = (contour_right - edge_margin, contour_right)
-            top_edge = (contour_top, contour_top + edge_margin)
-            bottom_edge = (contour_bottom - edge_margin, contour_bottom)
-            
-            # 创建边缘区域mask
-            height, width = gray.shape
-            y_coords, x_coords = np.ogrid[:height, :width]
-            
-            is_in_left_edge = (x_coords >= left_edge[0]) & (x_coords <= left_edge[1])
-            is_in_right_edge = (x_coords >= right_edge[0]) & (x_coords <= right_edge[1])
-            is_in_top_edge = (y_coords >= top_edge[0]) & (y_coords <= top_edge[1])
-            is_in_bottom_edge = (y_coords >= bottom_edge[0]) & (y_coords <= bottom_edge[1])
-            
-            is_in_edge_region = (is_in_left_edge | is_in_right_edge | is_in_top_edge | is_in_bottom_edge) & (mask > 0)
-            
-            # 在边缘区域使用更宽松的阈值
-            edge_shadow_threshold = min(p25 + 20, p50 - 20)  # 更宽松的阈值
-            edge_shadow_mask = (gray < edge_shadow_threshold) & (gray < p50 - 10) & is_in_edge_region
-            
-            logger.info(f"边缘阴影检测: 阈值={edge_shadow_threshold:.1f}, 检测到{np.sum(edge_shadow_mask)}个像素")
-            
-            # 方法4: 连通性分析 - 识别独立的暗色区域（可能是阴影）
-            # 创建二值图像，标记所有暗像素
-            dark_pixels = (gray < shadow_threshold) & (mask > 0)
-            dark_binary = dark_pixels.astype(np.uint8) * 255
-            
-            # 查找连通区域
-            num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(dark_binary, connectivity=8)
-            
-            # 分析每个连通区域，判断是否是阴影
-            shadow_regions = np.zeros_like(mask, dtype=bool)
-            
-            if num_labels > 1:  # 有连通区域（除了背景）
-                # 计算主体区域的典型亮度（排除最暗和最亮的10%）
-                subject_pixels = contour_pixels[(contour_pixels >= p10) & (contour_pixels <= p90)]
-                subject_mean_brightness = np.mean(subject_pixels) if len(subject_pixels) > 0 else p50
-                
-                for label_id in range(1, num_labels):  # 跳过背景（label=0）
-                    # 获取该连通区域的统计信息
-                    area = stats[label_id, cv2.CC_STAT_AREA]
-                    left = stats[label_id, cv2.CC_STAT_LEFT]
-                    top = stats[label_id, cv2.CC_STAT_TOP]
-                    region_width = stats[label_id, cv2.CC_STAT_WIDTH]
-                    region_height = stats[label_id, cv2.CC_STAT_HEIGHT]
-                    
-                    # 只处理足够大的区域（避免噪声）
-                    if area < 50:  # 太小可能是噪声
-                        continue
-                    
-                    # 提取该区域的像素亮度
-                    region_mask = (labels == label_id)
-                    region_pixels = gray[region_mask]
-                    region_mean_brightness = np.mean(region_pixels)
-                    
-                    # 判断是否是阴影：
-                    # 1. 平均亮度明显比主体暗（降低要求，从30降到20）
-                    # 2. 区域面积不超过轮廓的40%（放宽要求，从30%到40%）
-                    # 3. 区域位置在轮廓边缘附近（扩大范围，从30%到50%）
-                    
-                    # 计算亮度差异
-                    brightness_diff = subject_mean_brightness - region_mean_brightness
-                    
-                    # 放宽条件：暗20以上即可（原来是30）
-                    is_dark_enough = brightness_diff >= 20
-                    
-                    # 放宽面积限制：允许更大的阴影区域（从30%到40%）
-                    area_ratio = area / cv2.contourArea(contour)
-                    is_not_too_large = area_ratio < 0.4
-                    
-                    # 检查是否在边缘附近（扩大范围，从30%到50%）
-                    contour_left = x
-                    contour_right = x + w
-                    contour_top = y
-                    contour_bottom = y + h
-                    
-                    region_center_x = left + region_width / 2
-                    region_center_y = top + region_height / 2
-                    
-                    # 扩大边缘检测范围到50%
-                    edge_margin = min(w, h) * 0.5
-                    is_near_edge = (
-                        region_center_x < contour_left + edge_margin or  # 左边缘
-                        region_center_x > contour_right - edge_margin or  # 右边缘
-                        region_center_y < contour_top + edge_margin or  # 上边缘
-                        region_center_y > contour_bottom - edge_margin  # 下边缘
-                    )
-                    
-                    # 额外检查：如果区域明显比主体暗，即使不在边缘也可能认为是阴影
-                    # 但要求亮度差异更大（暗40以上）
-                    is_very_dark = brightness_diff >= 40
-                    
-                    # 如果满足阴影条件，标记为阴影
-                    # 条件1: 暗20以上 + 面积合理 + 在边缘附近
-                    # 条件2: 暗40以上 + 面积合理（不要求边缘）
-                    if (is_dark_enough and is_not_too_large and is_near_edge) or (is_very_dark and is_not_too_large):
-                        shadow_regions[region_mask] = True
-                        edge_info = "边缘" if is_near_edge else "内部"
-                        logger.info(f"识别到阴影区域: 位置({left:.0f},{top:.0f}), 大小{area}px, 平均亮度{region_mean_brightness:.1f}, "
-                                  f"主体亮度{subject_mean_brightness:.1f}, 亮度差{brightness_diff:.1f}, "
-                                  f"面积占比{area_ratio:.1%}, 位置={edge_info}")
-            
-            # 合并所有阴影检测结果
-            shadow_mask = shadow_mask_by_brightness | light_shadow_mask | edge_shadow_mask | shadow_regions
-            
-            filtered_mask[shadow_mask] = 0
-            
-            # 统计移除的像素数量
-            removed_pixels = np.sum(shadow_mask)
-            total_pixels = np.sum(mask > 0)
-            removal_ratio = removed_pixels / total_pixels if total_pixels > 0 else 0
-            
-            # 分别统计不同方法检测到的阴影
-            brightness_removed = np.sum(shadow_mask_by_brightness)
-            light_shadow_removed = np.sum(light_shadow_mask)
-            edge_shadow_removed = np.sum(edge_shadow_mask)
-            region_shadow_removed = np.sum(shadow_regions)
-            
-            logger.info(f"阴影检测统计: 总像素={total_pixels}, 移除={removed_pixels} ({removal_ratio:.1%})")
-            logger.info(f"  亮度检测阴影: {brightness_removed} 像素")
-            if light_shadow_removed > 0:
-                logger.info(f"  浅色阴影检测: {light_shadow_removed} 像素")
-            if edge_shadow_removed > 0:
-                logger.info(f"  边缘区域阴影: {edge_shadow_removed} 像素")
-            if region_shadow_removed > 0:
-                logger.info(f"  连通区域阴影: {region_shadow_removed} 像素")
-            
-            if removal_ratio > 0.02:  # 降低阈值到2%，让小的阴影也能被识别
-                logger.info(f"检测到阴影并移除: 移除了 {removed_pixels} 个像素 ({removal_ratio:.1%})")
-                
-                # 从过滤后的mask中重新提取轮廓
-                contours, _ = cv2.findContours(filtered_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-                
-                if contours:
-                    # 找到最大的轮廓（应该是主体）
-                    filtered_contour = max(contours, key=cv2.contourArea)
-                    filtered_area = cv2.contourArea(filtered_contour)
-                    original_area = cv2.contourArea(contour)
-                    
-                    # 验证过滤后的轮廓是否合理（面积不应该太小）
-                    if filtered_area > original_area * 0.3:  # 至少保留30%的面积
-                        logger.info(f"阴影过滤成功: 原始面积 {original_area:.0f} -> 过滤后 {filtered_area:.0f} ({filtered_area/original_area:.1%})")
-                        return filtered_contour
-                    else:
-                        logger.warning(f"过滤后轮廓面积过小 ({filtered_area/original_area:.1%})，保留原始轮廓")
-                        return contour
-                else:
-                    logger.warning("过滤后未找到轮廓，保留原始轮廓")
-                    return contour
-            else:
-                logger.info("未检测到明显的阴影，保留原始轮廓")
-                return contour
-                
-        except Exception as e:
-            logger.warning(f"阴影过滤失败: {e}，保留原始轮廓")
-            return contour
-    
-    def find_object_bounds_on_white_bg(self, image: Image.Image) -> Tuple[int, int, int, int]:
+    def find_object_bounds_on_white_bg(self, image: Image.Image) -> Optional[Tuple[int, int, int, int]]:
         """
         在白色背景上寻找对象轮廓边界（专用于最终验证）
         使用更严格的检测确保找到真实的鞋子轮廓
@@ -878,38 +582,56 @@ class ShoeImageProcessor:
             top = np.min(contour_points[:, 1])
             bottom = np.max(contour_points[:, 1])
             
-            # 精确化边界检测：在边界附近寻找真正的非白色像素
-            # 这可以避免轮廓检测时包含过多白色区域
+            # 计算背景亮度，用于动态调整阈值
+            edge_samples = []
+            edge_thickness = min(20, min(width, height) // 30)
+            if edge_thickness > 0:
+                edge_samples.extend(gray[:edge_thickness, :].flatten())
+                edge_samples.extend(gray[-edge_thickness:, :].flatten())
+                edge_samples.extend(gray[:, :edge_thickness].flatten())
+                edge_samples.extend(gray[:, -edge_thickness:].flatten())
+            bg_brightness = np.median(edge_samples) if edge_samples else 230
             
-            # 左边界精确化：从left开始向右扫描，找到第一个明显非白色的列
+            # 动态阈值：比背景暗15以上的像素才认为是非背景
+            threshold = max(200, bg_brightness - 15)
+            
+            # 精确化边界检测：在边界附近寻找真正的非背景像素
+            # 这可以避免轮廓检测时包含过多背景区域
+            
+            # 边界精确化：保守策略，只在边缘检测找到的边界附近小幅调整
+            # 避免过度精确化导致边界偏移过大
+            
+            # 左边界精确化：从left开始向右扫描（最多50px），找到第一个明显的非背景列
+            # 这样可以去除边缘检测可能包含的背景区域，但不会过度向左扩展
             for x in range(max(0, left), min(width, left + 50)):
                 col = gray[:, x]
-                non_white_pixels = np.sum(col < 245)  # 非白色像素数量
-                if non_white_pixels > height * 0.1:  # 至少10%的列是非白色
+                non_bg_pixels = np.sum(col < threshold)
+                if non_bg_pixels > height * 0.2:  # 提高阈值到20%，更严格
                     left = x
                     break
             
-            # 右边界精确化：从right开始向左扫描
+            # 右边界精确化：从right开始向左扫描（最多50px），找到最后一个明显的非背景列
+            # 这样可以去除边缘检测可能包含的背景区域，但不会过度向右扩展
             for x in range(min(width - 1, right), max(0, right - 50), -1):
                 col = gray[:, x]
-                non_white_pixels = np.sum(col < 245)
-                if non_white_pixels > height * 0.1:
+                non_bg_pixels = np.sum(col < threshold)
+                if non_bg_pixels > height * 0.2:  # 提高阈值到20%，更严格
                     right = x
                     break
             
             # 上边界精确化：从top开始向下扫描
-            for y in range(max(0, top), min(height, top + 30)):
+            for y in range(max(0, top), min(height, top + 50)):
                 row = gray[y, :]
-                non_white_pixels = np.sum(row < 245)
-                if non_white_pixels > width * 0.1:
+                non_bg_pixels = np.sum(row < threshold)
+                if non_bg_pixels > width * 0.15:
                     top = y
                     break
             
             # 下边界精确化：从bottom开始向上扫描
-            for y in range(min(height - 1, bottom), max(0, bottom - 30), -1):
+            for y in range(min(height - 1, bottom), max(0, bottom - 50), -1):
                 row = gray[y, :]
-                non_white_pixels = np.sum(row < 245)
-                if non_white_pixels > width * 0.1:
+                non_bg_pixels = np.sum(row < threshold)
+                if non_bg_pixels > width * 0.15:
                     bottom = y
                     break
             
@@ -938,19 +660,24 @@ class ShoeImageProcessor:
         
         if len(edge_samples) > 0:
             bg_brightness = np.median(edge_samples)
-            # 使用背景亮度减去一个小的阈值来检测非背景像素
-            # 对于接近白色的背景，使用更严格的阈值
+            # 使用更严格的阈值来检测非背景像素
+            # 对于接近白色的背景，使用非常严格的阈值
             if bg_brightness > 240:
-                threshold = bg_brightness - 5  # 非常接近白色，使用严格阈值
+                threshold = bg_brightness - 15  # 非常接近白色，使用更严格阈值
             elif bg_brightness > 200:
-                threshold = bg_brightness - 10  # 浅色背景
+                threshold = bg_brightness - 25  # 浅色背景，提高阈值严格度
             else:
-                threshold = bg_brightness - 20  # 较暗背景
+                threshold = bg_brightness - 30  # 较暗背景
         else:
-            threshold = 252  # 默认值
+            threshold = 245  # 默认值，更严格
         
         # 使用动态阈值找到所有明显非背景的像素
         _, ultra_strict = cv2.threshold(gray, threshold, 255, cv2.THRESH_BINARY_INV)
+        
+        # 形态学处理，去除小的噪点
+        kernel = np.ones((3, 3), np.uint8)
+        ultra_strict = cv2.morphologyEx(ultra_strict, cv2.MORPH_OPEN, kernel)
+        ultra_strict = cv2.morphologyEx(ultra_strict, cv2.MORPH_CLOSE, kernel)
         
         # 找到所有非背景像素的坐标
         nonzero_coords = np.where(ultra_strict > 0)
@@ -966,18 +693,14 @@ class ShoeImageProcessor:
             detected_height = bottom - top
             detected_area_ratio = (detected_width * detected_height) / (width * height)
             
-            # 如果检测到的区域太大（超过80%），说明检测失败，返回保守估计
-            if detected_area_ratio > 0.8:
-                logger.warning(f"像素级检测结果异常（覆盖{detected_area_ratio:.1%}），使用保守估计")
-                # 返回画布中心区域，假设鞋子在中心
-                margin_ratio = 0.1  # 假设10%边距
-                left = int(width * margin_ratio)
-                right = int(width * (1 - margin_ratio))
-                top = int(height * margin_ratio)
-                bottom = int(height * (1 - margin_ratio))
+            # 如果检测到的区域太大（超过60%）或太小（小于5%），说明检测失败
+            if detected_area_ratio > 0.6 or detected_area_ratio < 0.05:
+                logger.warning(f"像素级检测结果异常（覆盖{detected_area_ratio:.1%}），跳过像素级分析")
+                # 返回None，让调用者使用其他方法
+                return None
             else:
                 # 应用小幅收缩，确保不包含边缘背景像素
-                margin = 2
+                margin = 3
                 left = min(width - 50, left + margin)
                 right = max(50, right - margin)
                 top = min(height - 50, top + margin)
@@ -1080,7 +803,9 @@ class ShoeImageProcessor:
             except:
                 bg_brightness = 255  # 默认白色背景
             
-            best_contour = self._filter_shadow_from_contour(best_contour, gray, bg_brightness, bgr_image)
+            # 使用shadow_detector过滤阴影
+            detect_saliency_func = self._detect_saliency if hasattr(self, '_detect_saliency') else None
+            best_contour = self.shadow_detector.filter_shadow_from_contour(best_contour, gray, bg_brightness, bgr_image, detect_saliency_func)
             
             # 从轮廓中找到极值点
             contour_points = best_contour.reshape(-1, 2)
@@ -1774,21 +1499,28 @@ class ShoeImageProcessor:
             # 重新检测最终图片中的鞋子边界以验证结果
             try:
                 # 使用专门的白色背景检测方法
-                final_left, final_top, final_right, final_bottom = self.find_object_bounds_on_white_bg(new_canvas)
+                bounds_result = self.find_object_bounds_on_white_bg(new_canvas)
                 
-                # 验证检测结果的合理性
-                detected_width = final_right - final_left
-                detected_height = final_bottom - final_top
-                detected_area_ratio = (detected_width * detected_height) / (adjusted_canvas_width * adjusted_canvas_height)
-                
-                # 如果检测结果异常（覆盖面积过大或宽度异常），使用计算出的边距值
+                # 如果像素级分析返回None，使用计算出的边距值
                 use_calculated_margins = False
-                if detected_area_ratio > 0.8:  # 检测区域超过80%，说明检测失败
-                    logger.warning(f"检测结果异常（覆盖{detected_area_ratio:.1%}），使用计算出的边距值")
+                if bounds_result is None:
+                    logger.warning("像素级分析失败，使用计算出的边距值")
                     use_calculated_margins = True
-                elif detected_width > object_width * 1.5:  # 检测宽度远大于原始宽度
-                    logger.warning(f"检测宽度异常（检测:{detected_width}, 原始:{object_width}），使用计算出的边距值")
-                    use_calculated_margins = True
+                else:
+                    final_left, final_top, final_right, final_bottom = bounds_result
+                    
+                    # 验证检测结果的合理性
+                    detected_width = final_right - final_left
+                    detected_height = final_bottom - final_top
+                    detected_area_ratio = (detected_width * detected_height) / (adjusted_canvas_width * adjusted_canvas_height)
+                    
+                    # 如果检测结果异常（覆盖面积过大或宽度异常），使用计算出的边距值
+                    if detected_area_ratio > 0.6:  # 检测区域超过60%，说明检测失败
+                        logger.warning(f"检测结果异常（覆盖{detected_area_ratio:.1%}），使用计算出的边距值")
+                        use_calculated_margins = True
+                    elif detected_width > object_width * 1.5:  # 检测宽度远大于原始宽度
+                        logger.warning(f"检测宽度异常（检测:{detected_width}, 原始:{object_width}），使用计算出的边距值")
+                        use_calculated_margins = True
                 
                 # 使用调整后的画布尺寸计算实际边距比例
                 actual_canvas_width = adjusted_canvas_width
@@ -2860,7 +2592,9 @@ class ShoeImageProcessor:
             except:
                 bg_brightness = 255  # 默认白色背景
             
-            best_contour = self._filter_shadow_from_contour(best_contour, gray, bg_brightness, bgr_image)
+            # 使用shadow_detector过滤阴影
+            detect_saliency_func = self._detect_saliency if hasattr(self, '_detect_saliency') else None
+            best_contour = self.shadow_detector.filter_shadow_from_contour(best_contour, gray, bg_brightness, bgr_image, detect_saliency_func)
             
             # 从轮廓中找到极值点
             contour_points = best_contour.reshape(-1, 2)

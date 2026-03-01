@@ -38,8 +38,7 @@ class ShoeProcessorGUI:
         self.quality_var = tk.StringVar(value="high")
         self.hires_var = tk.BooleanVar(value=True)  # 默认选中高分辨率模式
         self.margin_mode_var = tk.BooleanVar(value=True)  # 新增：默认使用边距模式
-        self.margin_ratio_var = tk.DoubleVar(value=10.0)  # 新增：边距比例，默认10%
-        self.fast_mode_var = tk.BooleanVar(value=True)  # 新增：默认使用快速模式
+        self.margin_ratio_var = tk.DoubleVar(value=5.0)  # 新增：边距比例，默认5%
         
         # 处理器和队列
         self.processor = None
@@ -58,7 +57,7 @@ class ShoeProcessorGUI:
         self.check_log_queue()
     
     def setup_styles(self):
-        """设置界面样式"""
+        """设置界面样式和图标"""
         style = ttk.Style()
         style.theme_use('clam')
         
@@ -68,6 +67,37 @@ class ShoeProcessorGUI:
         style.configure('Info.TLabel', font=('Arial', 10))
         style.configure('Success.TLabel', foreground='green', font=('Arial', 10, 'bold'))
         style.configure('Error.TLabel', foreground='red', font=('Arial', 10, 'bold'))
+        
+        # 设置窗口图标
+        self.setup_window_icon()
+    
+    def setup_window_icon(self):
+        """设置窗口图标（跨平台支持）"""
+        script_dir = Path(__file__).parent
+        
+        # 优先尝试使用 PNG 图标（跨平台兼容性更好）
+        logo_path = script_dir / "logo.png"
+        if logo_path.exists():
+            try:
+                from PIL import Image, ImageTk
+                # 加载并设置图标
+                icon_image = Image.open(logo_path)
+                # 转换为 PhotoImage 对象
+                icon_photo = ImageTk.PhotoImage(icon_image)
+                # 设置窗口图标（适用于所有平台）
+                self.root.iconphoto(True, icon_photo)
+                # 保存引用，防止被垃圾回收
+                self.root.icon_image = icon_photo
+            except Exception as e:
+                # 如果 PIL 加载失败，尝试使用系统方法
+                try:
+                    if sys.platform == "win32":
+                        # Windows 系统，尝试使用 .ico 文件
+                        icon_path = script_dir / "icon.ico"
+                        if icon_path.exists():
+                            self.root.iconbitmap(str(icon_path))
+                except Exception:
+                    pass  # 如果都失败，忽略错误，使用默认图标
     
     def create_widgets(self):
         """创建界面组件"""
@@ -146,10 +176,6 @@ class ShoeProcessorGUI:
         
         ttk.Label(margin_ratio_frame, text="% (建议范围: 5%-20%)", style='Info.TLabel').pack(side=tk.LEFT)
         
-        # 快速模式
-        ttk.Checkbutton(params_frame, text="快速模式 (大幅提升处理速度，轻微降低检测精度)", 
-                       variable=self.fast_mode_var).grid(row=6, column=0, columnspan=2, sticky=tk.W, pady=5)
-        
         # 控制按钮框架
         control_frame = ttk.Frame(main_frame)
         control_frame.grid(row=row, column=0, columnspan=3, pady=20)
@@ -193,7 +219,7 @@ class ShoeProcessorGUI:
             "5. 支持jpg、png、bmp等常见图片格式\n\n"
             "✨ 功能特点:\n"
             "• 智能检测鞋子位置，自动居中裁剪\n"
-            "• 🆕 边距模式：确保鞋子左右边距各占10%\n"
+            "• 🆕 边距模式：确保鞋子左右边距各占5%\n"
             "• 必要时自动扩展白色画布（鞋子太靠边或太小）\n"
             "• 支持各种背景色和鞋子颜色\n"
             "• 保持高分辨率和图片质量\n"
@@ -380,7 +406,7 @@ class ShoeProcessorGUI:
             self.log_message(f"边距模式: {'是' if self.margin_mode_var.get() else '否'}")
             if self.margin_mode_var.get():
                 self.log_message(f"左右边距比例: {self.margin_ratio_var.get():.1f}%")
-            self.log_message(f"快速模式: {'是' if self.fast_mode_var.get() else '否'}")
+            self.log_message(f"快速模式: 否 (默认关闭)")
             self.log_message(f"文件名保持: 与源文件一致")
             
             # 获取图片文件列表
@@ -416,7 +442,7 @@ class ShoeProcessorGUI:
                 # 构建输出文件路径 - 保持与源文件名一致
                 output_file = Path(output_dir) / image_file.name
                 
-                # 处理图片
+                # 处理图片（快速模式默认关闭）
                 success = self.processor.process_single_image(
                     str(image_file), 
                     str(output_file), 
@@ -424,7 +450,7 @@ class ShoeProcessorGUI:
                     high_quality, 
                     self.hires_var.get(),
                     self.margin_mode_var.get(),
-                    self.fast_mode_var.get(),
+                    False,  # 快速模式默认关闭
                     self.margin_ratio_var.get()
                 )
                 
