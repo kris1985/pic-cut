@@ -104,13 +104,13 @@ def build_exe():
     
     # 根据系统确定文件名和后缀
     if system == 'windows':
-        app_name = 'ShoeImageCropper_v2.1_x64'  # Windows使用英文名避免编码问题
+        app_name = 'ShoeImageCropper_v3.0_x64'  # Windows使用英文名避免编码问题
         expected_ext = '.exe'
     elif system == 'darwin':  # macOS
-        app_name = 'ShoeImageCropper_v2.1_macOS'
+        app_name = 'ShoeImageCropper_v3.0_macOS'
         expected_ext = '.app'  # PyInstaller在macOS上可能生成.app或无后缀
     else:  # Linux
-        app_name = 'ShoeImageCropper_v2.1_linux'
+        app_name = 'ShoeImageCropper_v3.0_linux'
         expected_ext = ''  # Linux通常无后缀
     
     cmd = [

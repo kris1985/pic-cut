@@ -64,7 +64,7 @@ jobs:
         name: macos-app
         path: |
           dist/*.app
-          dist/鞋子图片智能裁剪工具_v2.0_macOS
+          dist/ShoeImageCropper_v3.0_macOS*
         if-no-files-found: warn
 
   build-linux:
@@ -97,7 +97,7 @@ jobs:
       with:
         name: linux-binary
         path: |
-          dist/鞋子图片智能裁剪工具_v2.0_linux
+          dist/ShoeImageCropper_v3.0_linux*
         if-no-files-found: warn
 
   release:
@@ -117,19 +117,19 @@ jobs:
           macos-app/*
           linux-binary/*
         body: |
-          ## 鞋子图片智能裁剪工具 v2.1 - 性能优化版
+          ## 鞋子图片智能裁剪工具 v3.0 - 智能阴影检测版
           
-          ### 🚀 v2.1 重大更新 - 性能优化
-          - **处理速度提升2-4倍**: 新增快速模式，大幅优化算法性能
-          - **背景检测优化**: 性能提升3.1倍，智能像素采样
-          - **算法简化**: 移除耗时的颜色聚类，优化边界检测
-          - **用户体验**: GUI新增快速模式选项，默认开启高效处理
-          - **智能平衡**: 可选择速度优先或质量优先模式
+          ### 🚀 v3.0 重大更新 - 智能阴影检测
+          - **智能轮廓断开机制**: 新增矩形腐蚀核，适应横向长条状鞋子轮廓
+          - **边缘保护机制**: 保护高梯度边缘（如蝴蝶结等细小结构）
+          - **轮廓异常检测**: 对称性、宽高比、面积占比多维度分析
+          - **改进阴影过滤**: 更准确的阴影检测和移除
+          - **GUI优化**: 默认边距改为5%，快速模式默认关闭
           
           ### 📦 下载说明
-          - **Windows用户**: 下载 `鞋子图片智能裁剪工具_v2.1_x64.exe`
-          - **macOS用户**: 下载 `.app` 文件
-          - **Linux用户**: 下载 `鞋子图片智能裁剪工具_v2.1_linux`
+          - **Windows用户**: 下载 `ShoeImageCropper_v3.0_x64.exe`
+          - **macOS用户**: 下载 `.app` 文件或 `ShoeImageCropper_v3.0_macOS`
+          - **Linux用户**: 下载 `ShoeImageCropper_v3.0_linux`
           
           ### ✨ 核心功能特性
           - 🔥 **NEW** 快速模式 (3倍+性能提升)
