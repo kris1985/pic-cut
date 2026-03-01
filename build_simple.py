@@ -49,6 +49,14 @@ def check_requirements():
         safe_print("PyInstaller installation completed")
     
     # 检查关键依赖
+    # 包名映射：import名称 -> pip包名
+    package_mapping = {
+        'cv2': 'opencv-python',
+        'numpy': 'numpy',
+        'PIL': 'Pillow',
+        'tkinter': None  # tkinter通常是Python内置的，不需要安装
+    }
+    
     required_packages = ['cv2', 'numpy', 'PIL', 'tkinter']
     missing_packages = []
     
@@ -69,9 +77,91 @@ def check_requirements():
         except ImportError:
             missing_packages.append(package)
     
+    # 如果缺少依赖，尝试自动安装
     if missing_packages:
         safe_print(f"Missing packages: {', '.join(missing_packages)}")
-        return False
+        safe_print("Attempting to install missing packages...")
+        
+        # 首先尝试从 requirements.txt 安装
+        requirements_file = Path('requirements.txt')
+        if requirements_file.exists():
+            safe_print("Installing dependencies from requirements.txt...")
+            try:
+                subprocess.run(
+                    [sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt'],
+                    check=True,
+                    capture_output=True
+                )
+                safe_print("Dependencies installed from requirements.txt")
+            except subprocess.CalledProcessError as e:
+                safe_print(f"Failed to install from requirements.txt: {e}")
+        
+        # 安装仍然缺少的包
+        packages_to_install = []
+        for package in missing_packages:
+            pip_name = package_mapping.get(package)
+            if pip_name:
+                packages_to_install.append(pip_name)
+        
+        if packages_to_install:
+            safe_print(f"Installing packages: {', '.join(packages_to_install)}")
+            try:
+                subprocess.run(
+                    [sys.executable, '-m', 'pip', 'install'] + packages_to_install,
+                    check=True,
+                    capture_output=True
+                )
+                safe_print("Packages installed successfully")
+            except subprocess.CalledProcessError as e:
+                safe_print(f"Failed to install packages: {e}")
+                safe_print("Please install missing packages manually:")
+                safe_print(f"  pip install {' '.join(packages_to_install)}")
+                return False
+        
+        # 重新检查依赖
+        safe_print("Re-checking dependencies...")
+        all_available = True
+        for package in required_packages:
+            try:
+                if package == 'cv2':
+                    import cv2
+                    safe_print(f"✓ OpenCV version: {cv2.__version__}")
+                elif package == 'numpy':
+                    import numpy
+                    safe_print(f"✓ NumPy version: {numpy.__version__}")
+                elif package == 'PIL':
+                    import PIL
+                    safe_print(f"✓ Pillow version: {PIL.__version__}")
+                elif package == 'tkinter':
+                    import tkinter
+                    safe_print("✓ Tkinter available")
+            except ImportError:
+                safe_print(f"✗ {package} still not available")
+                all_available = False
+        
+        if not all_available:
+            safe_print("Environment check failed, cannot proceed with build")
+            # 找出仍然缺少的包
+            still_missing = []
+            for package in required_packages:
+                try:
+                    if package == 'cv2':
+                        import cv2
+                    elif package == 'numpy':
+                        import numpy
+                    elif package == 'PIL':
+                        import PIL
+                    elif package == 'tkinter':
+                        import tkinter
+                except ImportError:
+                    pip_name = package_mapping.get(package)
+                    if pip_name:
+                        still_missing.append(pip_name)
+            
+            if still_missing:
+                safe_print("Please install missing packages manually:")
+                safe_print(f"  pip install {' '.join(still_missing)}")
+            return False
     
     return True
 
