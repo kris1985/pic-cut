@@ -24,7 +24,7 @@ from shoe_image_processor import ShoeImageProcessor
 class ShoeProcessorGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("鞋子图片智能裁剪工具 v2.0")
+        self.root.title("鞋子图片智能裁剪工具 v3.0")
         self.root.geometry("800x700")
         self.root.resizable(True, True)
         
