@@ -20,16 +20,7 @@ from PIL import Image, ImageFilter
 import shutil
 from shadow_detector import ShadowDetector
 
-# 尝试导入scipy，如果失败则使用简单的替代方案
-try:
-    from scipy import ndimage
-    HAS_SCIPY = True
-except ImportError:
-    HAS_SCIPY = False
-    logger.warning("scipy未安装，将使用简化的图像处理方法")
-
-
-# 配置日志
+# 配置日志（需要在导入scipy之前配置，以便在导入失败时可以使用logger）
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -39,6 +30,14 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+
+# 尝试导入scipy，如果失败则使用简单的替代方案
+try:
+    from scipy import ndimage
+    HAS_SCIPY = True
+except ImportError:
+    HAS_SCIPY = False
+    logger.warning("scipy未安装，将使用简化的图像处理方法")
 
 
 class ShoeImageProcessor:
