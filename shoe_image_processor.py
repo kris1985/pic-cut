@@ -31,6 +31,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# 尝试导入rembg，如果失败则使用传统方法
+try:
+    from rembg import remove, new_session
+    HAS_REMBG = True
+except ImportError:
+    HAS_REMBG = False
+    logger.warning("rembg未安装，将使用传统的阴影处理方法。请运行: pip install rembg")
+
 # 尝试导入scipy，如果失败则使用简单的替代方案
 try:
     from scipy import ndimage
@@ -39,20 +47,258 @@ except ImportError:
     HAS_SCIPY = False
     logger.warning("scipy未安装，将使用简化的图像处理方法")
 
+# 尝试导入YOLO（ultralytics），如果失败则使用传统方法
+try:
+    from ultralytics import YOLO
+    HAS_YOLO = True
+except ImportError:
+    HAS_YOLO = False
+    logger.info("ultralytics未安装，YOLO检测不可用。如需使用请运行: pip install ultralytics")
+
+# 尝试导入torchvision（用于Faster R-CNN），如果失败则使用传统方法
+try:
+    import torch
+    import torchvision
+    from torchvision import models, transforms
+    HAS_TORCHVISION = True
+except ImportError:
+    HAS_TORCHVISION = False
+    logger.info("torch/torchvision未安装，Faster R-CNN检测不可用。如需使用请运行: pip install torch torchvision")
+
 
 class ShoeImageProcessor:
     """鞋子图片处理器"""
     
-    def __init__(self):
+    def __init__(self, rembg_model: str = 'u2net', use_yolo: bool = False, 
+                 use_faster_rcnn: bool = False, yolo_model_path: Optional[str] = None):
         """
         初始化处理器
+        
+        Args:
+            rembg_model: rembg模型名称，可选: 'u2net', 'u2net_human_seg', 'silueta', 
+                        'isnet-general-use', 'sam' 等。默认使用 'u2net'（平衡速度和效果）
+            use_yolo: 是否启用YOLO检测（作为备选方案）
+            use_faster_rcnn: 是否启用Faster R-CNN检测（作为备选方案）
+            yolo_model_path: YOLO模型路径，如果为None则使用预训练的COCO模型（包含鞋子类别）
         """
         self.shadow_detector = ShadowDetector()
+        
+        # 初始化rembg session（如果可用）
+        self.rembg_session = None
+        if HAS_REMBG:
+            try:
+                self.rembg_session = new_session(rembg_model)
+                logger.info(f"已初始化rembg模型: {rembg_model}")
+            except Exception as e:
+                logger.warning(f"rembg初始化失败: {e}，将使用传统方法")
+                self.rembg_session = None
+        else:
+            logger.info("rembg未安装，使用传统阴影处理方法")
+        
+        # 初始化YOLO模型（如果启用且可用）
+        self.yolo_model = None
+        self.use_yolo = use_yolo and HAS_YOLO
+        if self.use_yolo:
+            try:
+                if yolo_model_path and os.path.exists(yolo_model_path):
+                    self.yolo_model = YOLO(yolo_model_path)
+                    logger.info(f"已加载自定义YOLO模型: {yolo_model_path}")
+                else:
+                    # 使用预训练的YOLOv8模型（COCO数据集包含鞋子类别）
+                    self.yolo_model = YOLO('yolov8n.pt')  # 使用nano版本以平衡速度和精度
+                    logger.info("已加载预训练YOLOv8模型（COCO数据集）")
+            except Exception as e:
+                logger.warning(f"YOLO初始化失败: {e}，将不使用YOLO检测")
+                self.yolo_model = None
+                self.use_yolo = False
+        elif use_yolo:
+            logger.info("YOLO未安装，无法使用YOLO检测")
+        
+        # 初始化Faster R-CNN模型（如果启用且可用）
+        self.faster_rcnn_model = None
+        self.use_faster_rcnn = use_faster_rcnn and HAS_TORCHVISION
+        if self.use_faster_rcnn:
+            try:
+                # 使用预训练的Faster R-CNN模型（COCO数据集）
+                self.faster_rcnn_model = models.detection.fasterrcnn_resnet50_fpn(
+                    weights=models.detection.FasterRCNN_ResNet50_FPN_Weights.COCO_V1
+                )
+                self.faster_rcnn_model.eval()
+                # COCO数据集的类别索引：0是背景，27是鞋子（shoe）
+                self.coco_shoe_class_id = 27
+                logger.info("已加载预训练Faster R-CNN模型（COCO数据集）")
+            except Exception as e:
+                logger.warning(f"Faster R-CNN初始化失败: {e}，将不使用Faster R-CNN检测")
+                self.faster_rcnn_model = None
+                self.use_faster_rcnn = False
+        elif use_faster_rcnn:
+            logger.info("torch/torchvision未安装，无法使用Faster R-CNN检测")
+        
         logger.info("已初始化图片处理器")
+    
+    def _get_foreground_mask_with_rembg(self, image: Image.Image) -> Optional[np.ndarray]:
+        """
+        使用rembg获取前景mask（去除背景和阴影）
+        
+        Args:
+            image: PIL Image对象
+            
+        Returns:
+            二值化mask数组，前景为255，背景为0。如果rembg不可用则返回None
+        """
+        if not HAS_REMBG:
+            logger.debug("rembg未安装，无法使用rembg处理")
+            return None
+        
+        if self.rembg_session is None:
+            logger.debug("rembg session未初始化，无法使用rembg处理")
+            return None
+        
+        try:
+            # 使用rembg移除背景，返回RGBA图像
+            result = remove(image, session=self.rembg_session)
+            
+            # 提取alpha通道作为mask
+            if result.mode == 'RGBA':
+                alpha_channel = np.array(result.split()[3])  # 获取alpha通道
+            else:
+                # 如果返回的不是RGBA，转换为RGBA
+                result = result.convert('RGBA')
+                alpha_channel = np.array(result.split()[3])
+            
+            # 二值化mask（alpha > 100 视为前景，降低阈值以保留更多边缘细节）
+            # 使用更宽松的阈值，避免边缘被过度裁剪
+            mask = (alpha_channel > 100).astype(np.uint8) * 255
+            
+            # 对mask进行轻微膨胀，确保边缘完整（在画布上检测时使用更大的膨胀）
+            kernel = np.ones((3, 3), np.uint8)
+            # 根据图像大小调整膨胀次数，大图使用更多膨胀
+            dilate_iterations = 2 if mask.size > 1000000 else 1  # 大于100万像素使用2次膨胀
+            mask = cv2.dilate(mask, kernel, iterations=dilate_iterations)
+            
+            logger.info(f"rembg成功生成前景mask，前景像素占比: {np.sum(mask > 0) / mask.size:.1%}")
+            return mask
+            
+        except Exception as e:
+            logger.warning(f"rembg处理失败: {e}，回退到传统方法")
+            return None
+    
+    def _detect_with_yolo(self, image: Image.Image, conf_threshold: float = 0.25) -> Optional[Tuple[int, int, int, int]]:
+        """
+        使用YOLO检测鞋子对象
+        
+        Args:
+            image: PIL Image对象
+            conf_threshold: 置信度阈值
+            
+        Returns:
+            边界框坐标 (left, top, right, bottom)，如果未检测到则返回None
+        """
+        if not self.use_yolo or self.yolo_model is None:
+            return None
+        
+        try:
+            # YOLO模型检测（COCO数据集中鞋子的类别ID是27）
+            # 但YOLOv8返回的是类别名称，需要查找'shoe'或'sneaker'等
+            results = self.yolo_model(image, conf=conf_threshold, verbose=False)
+            
+            best_box = None
+            best_conf = 0.0
+            
+            # COCO数据集中与鞋子相关的类别名称
+            shoe_classes = ['shoe', 'sneaker', 'boot', 'footwear']
+            
+            for result in results:
+                boxes = result.boxes
+                if boxes is not None:
+                    for box in boxes:
+                        # 获取类别名称
+                        cls_name = self.yolo_model.names[int(box.cls[0])].lower()
+                        conf = float(box.conf[0])
+                        
+                        # 检查是否是鞋子类别
+                        if any(shoe_class in cls_name for shoe_class in shoe_classes):
+                            if conf > best_conf:
+                                best_conf = conf
+                                # YOLO返回的是xyxy格式（左上角和右下角坐标）
+                                x1, y1, x2, y2 = box.xyxy[0].cpu().numpy()
+                                best_box = (int(x1), int(y1), int(x2), int(y2))
+            
+            if best_box is not None:
+                left, top, right, bottom = best_box
+                logger.info(f"✅ YOLO检测到鞋子: ({left}, {top}, {right}, {bottom}), 置信度: {best_conf:.2f}")
+                return left, top, right, bottom
+            else:
+                logger.debug("YOLO未检测到鞋子对象")
+                return None
+                
+        except Exception as e:
+            logger.warning(f"YOLO检测失败: {e}")
+            return None
+    
+    def _detect_with_faster_rcnn(self, image: Image.Image, conf_threshold: float = 0.5) -> Optional[Tuple[int, int, int, int]]:
+        """
+        使用Faster R-CNN检测鞋子对象
+        
+        Args:
+            image: PIL Image对象
+            conf_threshold: 置信度阈值
+            
+        Returns:
+            边界框坐标 (left, top, right, bottom)，如果未检测到则返回None
+        """
+        if not self.use_faster_rcnn or self.faster_rcnn_model is None:
+            return None
+        
+        try:
+            # 准备图像转换
+            transform = transforms.Compose([
+                transforms.ToTensor()
+            ])
+            
+            # 转换为tensor
+            img_tensor = transform(image).unsqueeze(0)
+            
+            # 检测
+            with torch.no_grad():
+                predictions = self.faster_rcnn_model(img_tensor)
+            
+            best_box = None
+            best_score = 0.0
+            
+            # COCO数据集中鞋子的类别ID是27（索引从1开始，所以实际是27）
+            # 但torchvision的COCO类别索引中，0是背景，1-80是80个类别
+            # 鞋子的索引应该是27（在COCO中是第27个类别，索引为27）
+            shoe_class_id = 27
+            
+            boxes = predictions[0]['boxes']
+            labels = predictions[0]['labels']
+            scores = predictions[0]['scores']
+            
+            for box, label, score in zip(boxes, labels, scores):
+                # 检查是否是鞋子类别且置信度足够
+                if int(label) == shoe_class_id and float(score) >= conf_threshold:
+                    if float(score) > best_score:
+                        best_score = float(score)
+                        # Faster R-CNN返回的是xyxy格式
+                        x1, y1, x2, y2 = box.cpu().numpy()
+                        best_box = (int(x1), int(y1), int(x2), int(y2))
+            
+            if best_box is not None:
+                left, top, right, bottom = best_box
+                logger.info(f"✅ Faster R-CNN检测到鞋子: ({left}, {top}, {right}, {bottom}), 置信度: {best_score:.2f}")
+                return left, top, right, bottom
+            else:
+                logger.debug("Faster R-CNN未检测到鞋子对象")
+                return None
+                
+        except Exception as e:
+            logger.warning(f"Faster R-CNN检测失败: {e}")
+            return None
     
     def find_object_bounds(self, image: Image.Image) -> Tuple[int, int, int, int]:
         """
-        寻找图片中主体对象的边界框（优化性能版本）
+        寻找图片中主体对象的边界框（优先使用rembg，回退到传统方法）
         
         Args:
             image: PIL Image对象
@@ -60,6 +306,64 @@ class ShoeImageProcessor:
         Returns:
             (left, top, right, bottom) 边界框坐标
         """
+        width, height = image.size
+        
+        # 策略0: 优先使用rembg进行精准的背景和阴影移除
+        logger.debug(f"rembg状态检查: HAS_REMBG={HAS_REMBG}, session={'已初始化' if self.rembg_session is not None else '未初始化'}")
+        rembg_mask = self._get_foreground_mask_with_rembg(image)
+        if rembg_mask is not None:
+            logger.info("✅ rembg处理成功，使用rembg结果进行边界检测")
+            try:
+                # 对mask进行形态学处理，去除小噪声
+                kernel = np.ones((3, 3), np.uint8)
+                mask_clean = cv2.morphologyEx(rembg_mask, cv2.MORPH_OPEN, kernel, iterations=1)
+                mask_clean = cv2.morphologyEx(mask_clean, cv2.MORPH_CLOSE, kernel, iterations=2)
+                
+                # 查找轮廓
+                contours, _ = cv2.findContours(mask_clean, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                
+                if contours:
+                    # 找到最大的轮廓
+                    best_contour = max(contours, key=cv2.contourArea)
+                    area = cv2.contourArea(best_contour)
+                    
+                    # 验证轮廓合理性
+                    if area > height * width * 0.05:  # 面积至少占图片的5%
+                        x, y, w, h = cv2.boundingRect(best_contour)
+                        
+                        # 智能边距调整
+                        margin_x = max(10, int(w * 0.08))
+                        margin_y = max(10, int(h * 0.12))
+                        
+                        left = max(0, x - margin_x)
+                        top = max(0, y - margin_y)
+                        right = min(width, x + w + margin_x)
+                        bottom = min(height, y + h + margin_y)
+                        
+                        # 验证检测结果的合理性
+                        detected_width = right - left
+                        detected_height = bottom - top
+                        detected_area = detected_width * detected_height
+                        image_area = width * height
+                        area_ratio = detected_area / image_area
+                        
+                        if 0.05 <= area_ratio <= 0.95:
+                            logger.info(f"✅ rembg检测到对象边界: ({left}, {top}, {right}, {bottom})")
+                            logger.info(f"对象尺寸: {detected_width}x{detected_height}, 面积占比: {area_ratio:.1%}")
+                            return left, top, right, bottom
+                        else:
+                            logger.warning(f"rembg检测结果面积占比异常: {area_ratio:.1%}，回退到传统方法")
+                    else:
+                        logger.warning(f"rembg检测到的轮廓面积过小: {area}，回退到传统方法")
+                else:
+                    logger.warning("rembg处理后未找到轮廓，回退到传统方法")
+            except Exception as e:
+                logger.warning(f"rembg轮廓提取失败: {e}，回退到传统方法")
+                import traceback
+                logger.debug(traceback.format_exc())
+        else:
+            logger.info("⚠️ rembg不可用，使用传统方法检测对象边界")
+        
         # 转换为numpy数组
         img_array = np.array(image)
         
@@ -72,7 +376,6 @@ class ShoeImageProcessor:
         else:
             gray = img_array
         
-        width, height = image.size
         best_contour = None
         best_area = 0
         best_bounds = None
@@ -159,6 +462,62 @@ class ShoeImageProcessor:
                                     
             except Exception as e:
                 logger.warning(f"边缘检测失败: {e}")
+        
+        # 策略3: YOLO目标检测（作为备选方案，在传统方法失败时使用）
+        if best_bounds is None and self.use_yolo:
+            logger.info("尝试使用YOLO进行目标检测")
+            yolo_bounds = self._detect_with_yolo(image, conf_threshold=0.25)
+            if yolo_bounds is not None:
+                left, top, right, bottom = yolo_bounds
+                # 验证检测结果的合理性
+                detected_width = right - left
+                detected_height = bottom - top
+                detected_area = detected_width * detected_height
+                image_area = width * height
+                area_ratio = detected_area / image_area
+                
+                if 0.05 <= area_ratio <= 0.95:
+                    # 智能边距调整
+                    margin_x = max(10, int(detected_width * 0.08))
+                    margin_y = max(10, int(detected_height * 0.12))
+                    
+                    left = max(0, left - margin_x)
+                    top = max(0, top - margin_y)
+                    right = min(width, right + margin_x)
+                    bottom = min(height, bottom + margin_y)
+                    
+                    best_bounds = (left, top, right, bottom)
+                    logger.info(f"✅ YOLO检测成功，使用YOLO结果")
+                else:
+                    logger.warning(f"YOLO检测结果面积占比异常: {area_ratio:.1%}，继续尝试其他方法")
+        
+        # 策略4: Faster R-CNN目标检测（作为最后的备选方案）
+        if best_bounds is None and self.use_faster_rcnn:
+            logger.info("尝试使用Faster R-CNN进行目标检测")
+            frcnn_bounds = self._detect_with_faster_rcnn(image, conf_threshold=0.5)
+            if frcnn_bounds is not None:
+                left, top, right, bottom = frcnn_bounds
+                # 验证检测结果的合理性
+                detected_width = right - left
+                detected_height = bottom - top
+                detected_area = detected_width * detected_height
+                image_area = width * height
+                area_ratio = detected_area / image_area
+                
+                if 0.05 <= area_ratio <= 0.95:
+                    # 智能边距调整
+                    margin_x = max(10, int(detected_width * 0.08))
+                    margin_y = max(10, int(detected_height * 0.12))
+                    
+                    left = max(0, left - margin_x)
+                    top = max(0, top - margin_y)
+                    right = min(width, right + margin_x)
+                    bottom = min(height, bottom + margin_y)
+                    
+                    best_bounds = (left, top, right, bottom)
+                    logger.info(f"✅ Faster R-CNN检测成功，使用Faster R-CNN结果")
+                else:
+                    logger.warning(f"Faster R-CNN检测结果面积占比异常: {area_ratio:.1%}")
         
         # 移除了复杂的颜色聚类策略以提升性能
         
@@ -458,7 +817,7 @@ class ShoeImageProcessor:
     def find_object_bounds_on_white_bg(self, image: Image.Image) -> Optional[Tuple[int, int, int, int]]:
         """
         在白色背景上寻找对象轮廓边界（专用于最终验证）
-        使用更严格的检测确保找到真实的鞋子轮廓
+        优先使用rembg进行精准检测，回退到传统方法
         
         Args:
             image: PIL Image对象（白色背景）
@@ -466,6 +825,55 @@ class ShoeImageProcessor:
         Returns:
             (left, top, right, bottom) 轮廓边界坐标
         """
+        # 策略0: 优先使用rembg进行精准检测
+        rembg_mask = self._get_foreground_mask_with_rembg(image)
+        if rembg_mask is not None:
+            try:
+                # 对mask进行形态学处理，去除小噪声
+                kernel = np.ones((3, 3), np.uint8)
+                mask_clean = cv2.morphologyEx(rembg_mask, cv2.MORPH_OPEN, kernel, iterations=1)
+                mask_clean = cv2.morphologyEx(mask_clean, cv2.MORPH_CLOSE, kernel, iterations=2)
+                
+                # 查找轮廓
+                contours, _ = cv2.findContours(mask_clean, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                
+                if contours:
+                    # 找到最大的轮廓
+                    best_contour = max(contours, key=cv2.contourArea)
+                    area = cv2.contourArea(best_contour)
+                    width, height = image.size
+                    
+                    # 验证轮廓合理性
+                    if area > height * width * 0.05:  # 面积至少占图片的5%
+                        # 从轮廓中找到极值点
+                        contour_points = best_contour.reshape(-1, 2)
+                        
+                        left = np.min(contour_points[:, 0])
+                        right = np.max(contour_points[:, 0])
+                        top = np.min(contour_points[:, 1])
+                        bottom = np.max(contour_points[:, 1])
+                        
+                        # 验证检测结果的合理性
+                        detected_width = right - left
+                        detected_height = bottom - top
+                        detected_area = detected_width * detected_height
+                        image_area = width * height
+                        area_ratio = detected_area / image_area
+                        
+                        if 0.05 <= area_ratio <= 0.9:
+                            logger.info(f"✅ rembg在画布上检测到轮廓边界: 左{left}, 上{top}, 右{right}, 下{bottom}")
+                            logger.info(f"轮廓尺寸: {detected_width}x{detected_height}, 轮廓面积占比: {area_ratio:.1%}")
+                            return left, top, right, bottom
+                        else:
+                            logger.warning(f"rembg在画布上检测到的轮廓面积占比异常: {area_ratio:.1%}，回退到传统方法")
+            except Exception as e:
+                logger.warning(f"rembg在画布上轮廓提取失败: {e}，回退到传统方法")
+                import traceback
+                logger.debug(traceback.format_exc())
+        
+        # 回退到传统方法
+        logger.info("在画布上使用传统方法检测轮廓边界")
+        
         # 转换为numpy数组
         img_array = np.array(image)
         
@@ -919,25 +1327,25 @@ class ShoeImageProcessor:
             logger.info(f"检测到原图背景颜色: RGB{background_color}")
         
         # 确定目标比例（新的智能选择逻辑）
-        # 高宽比 = object_height / object_width
-        aspect_ratio = object_height / object_width if object_width > 0 else 1.0
+        # 判断是横图还是竖图：基于宽度和高度的比较
         keep_original_ratio = False  # 是否保持原比例
         
         if target_ratio == 'auto':
-            if aspect_ratio < 0.75:
-                # 高宽比 < 0.75：很宽的图，使用 4:3 横图比例
+            if object_width > object_height:
+                # 横图：宽度大于高度，使用 4:3 比例
                 target_ratio = '4:3'
-                logger.info(f"检测到宽图（高宽比 {aspect_ratio:.2f} < 0.75），使用 4:3 横图比例")
-            elif aspect_ratio >= 0.75 and aspect_ratio < 4.0 / 3.0:
-                # 0.75 <= 高宽比 < 4:3：接近方形或略高的图，保持原比例加边距
-                keep_original_ratio = True
-                vertical_threshold = 4.0 / 3.0
-                logger.info(f"检测到接近方形图（高宽比 {aspect_ratio:.2f} 在 0.75-{vertical_threshold:.2f} 之间），保持原比例加边距")
-            else:
-                # 高宽比 >= 4:3：很高的图，使用 3:4 竖图比例
+                aspect_ratio = object_height / object_width if object_width > 0 else 1.0
+                logger.info(f"检测到横图（宽度{object_width} > 高度{object_height}，高宽比 {aspect_ratio:.2f}），使用 4:3 横图比例")
+            elif object_height > object_width:
+                # 竖图：高度大于宽度，使用 3:4 比例
                 target_ratio = '3:4'
-                vertical_threshold = 4.0 / 3.0
-                logger.info(f"检测到高图（高宽比 {aspect_ratio:.2f} >= {vertical_threshold:.2f}），使用 3:4 竖图比例")
+                aspect_ratio = object_height / object_width if object_width > 0 else 1.0
+                logger.info(f"检测到竖图（高度{object_height} > 宽度{object_width}，高宽比 {aspect_ratio:.2f}），使用 3:4 竖图比例")
+            else:
+                # 接近方形：保持原比例加边距
+                keep_original_ratio = True
+                aspect_ratio = object_height / object_width if object_width > 0 else 1.0
+                logger.info(f"检测到接近方形图（宽度{object_width} ≈ 高度{object_height}，高宽比 {aspect_ratio:.2f}），保持原比例加边距")
         else:
             # 用户指定了比例，使用指定比例
             logger.info(f"使用用户指定的比例: {target_ratio}")
@@ -1231,35 +1639,167 @@ class ShoeImageProcessor:
             # 处理原图的粘贴和裁剪
             source_image = image
             source_width, source_height = source_image.size
-            
-            # 计算需要从原图中提取的区域
-            src_left = max(0, -paste_x)
-            src_top = max(0, -paste_y)
-            src_right = min(source_width, src_left + final_canvas_width - max(0, paste_x))
-            src_bottom = min(source_height, src_top + final_canvas_height - max(0, paste_y))
-            
-            # 计算在新画布上的粘贴位置
-            canvas_paste_x = max(0, paste_x)
-            canvas_paste_y = max(0, paste_y)
+            logger.info(f"  原图尺寸: {source_width}x{source_height}")
             
             # 处理粘贴位置为负数的情况
+            left_extension = 0
             top_extension = 0
-            if paste_y < 0:
-                if is_vertical_for_check:
+            
+            # 对于横图，不应该扩展画布，应该调整裁剪区域
+            # 对于竖图，可以扩展画布以确保上下边距
+            if is_vertical_for_check:
+                # 竖图：可以扩展画布
+                if paste_x < 0:
+                    left_extension = int(-paste_x)
+                    logger.info(f"  粘贴位置X为负数 ({paste_x:.0f}px)，竖图扩展画布左边 {left_extension}px 以保持左右边距均衡")
+                    # 检测左边边缘的背景颜色，用于填充扩展区域
+                    left_edge_bg_color = self.detect_edge_background_color(source_image, edge='left', fast_mode=fast_mode)
+                
+                if paste_y < 0:
                     # 竖图：需要向上扩展画布
                     top_extension = int(-paste_y)
                     # 调整粘贴位置，使其在扩展后的画布上从顶部开始
                     canvas_paste_y = 0
-                    logger.info(f"  粘贴位置Y为负数 ({paste_y:.0f}px)，需要扩展画布顶部 {top_extension}px")
-                else:
-                    # 横图：不扩展画布，保持原来的提取逻辑
-                    # 粘贴位置从画布顶部开始，但保持原来的src_top计算（包含鞋子）
-                    canvas_paste_y = 0
-                    logger.info(f"  粘贴位置Y为负数 ({paste_y:.0f}px)，横图不扩展画布，保持原图提取区域")
+                    logger.info(f"  粘贴位置Y为负数 ({paste_y:.0f}px)，竖图扩展画布顶部 {top_extension}px")
+                    # 检测顶部边缘的背景颜色，用于填充扩展区域
+                    top_edge_bg_color = self.detect_edge_background_color(source_image, edge='top', fast_mode=fast_mode)
+            else:
+                # 横图：不扩展画布，调整裁剪区域和粘贴位置
+                if paste_x < 0:
+                    # 横图：粘贴位置X为负数，说明鞋子太靠右，需要调整裁剪区域
+                    # 将粘贴位置调整为0，并相应调整裁剪区域
+                    logger.info(f"  粘贴位置X为负数 ({paste_x:.0f}px)，横图不扩展画布，调整裁剪区域")
+                    # 调整粘贴位置为0，并调整裁剪区域
+                    paste_x = 0
+                    # 调整原图中心位置，使其能够适配画布
+                    # 计算新的裁剪起点
+                    adjusted_left = max(0, original_shoe_center_x - final_canvas_width / 2)
+                    # 如果调整后的left超出原图范围，则从原图左边开始
+                    if adjusted_left + final_canvas_width > source_width:
+                        adjusted_left = max(0, source_width - final_canvas_width)
+                    # 重新计算粘贴位置
+                    paste_x = int(target_shoe_center_x - (adjusted_left + original_shoe_center_x - left))
+                    logger.info(f"  横图调整后粘贴位置X: {paste_x:.0f}px")
+                
+                if paste_y < 0:
+                    # 横图：粘贴位置Y为负数，说明鞋子太靠下，需要调整裁剪区域
+                    logger.info(f"  粘贴位置Y为负数 ({paste_y:.0f}px)，横图不扩展画布，调整裁剪区域")
+                    # 调整粘贴位置为0，并调整裁剪区域
+                    paste_y = 0
+                    # 调整原图中心位置，使其能够适配画布
+                    # 计算新的裁剪起点
+                    adjusted_top = max(0, original_shoe_center_y - final_canvas_height / 2)
+                    # 如果调整后的top超出原图范围，则从原图顶部开始
+                    if adjusted_top + final_canvas_height > source_height:
+                        adjusted_top = max(0, source_height - final_canvas_height)
+                    # 重新计算粘贴位置
+                    paste_y = int(target_shoe_center_y - (adjusted_top + original_shoe_center_y - top))
+                    logger.info(f"  横图调整后粘贴位置Y: {paste_y:.0f}px")
             
             # 对于竖图，特别检查：如果原图不够高，需要确保底部边距
             adjusted_canvas_height = final_canvas_height + top_extension
-            adjusted_canvas_width = final_canvas_width
+            adjusted_canvas_width = final_canvas_width + left_extension
+            
+            # 计算需要从原图中提取的区域
+            if is_vertical_for_check:
+                # 竖图：考虑扩展
+                src_left = max(0, -paste_x)
+                src_top = max(0, -paste_y)
+                src_right = min(source_width, src_left + adjusted_canvas_width - left_extension - max(0, paste_x))
+                src_bottom = min(source_height, src_top + adjusted_canvas_height - top_extension - max(0, paste_y))
+                
+                # 计算在新画布上的粘贴位置（考虑左边扩展）
+                canvas_paste_x = max(0, paste_x) + left_extension
+                canvas_paste_y = max(0, paste_y)
+            else:
+                # 横图：不扩展画布，直接裁剪原图，确保鞋子居中且边距正确
+                # 计算裁剪区域，使鞋子中心对齐到画布中心，并确保裁剪区域完全在原图范围内
+                shoe_center_x_in_source = original_shoe_center_x
+                shoe_center_y_in_source = original_shoe_center_y
+                
+                # 计算裁剪区域的起点，使鞋子中心对齐到画布中心
+                ideal_src_left = int(shoe_center_x_in_source - final_canvas_width / 2)
+                ideal_src_top = int(shoe_center_y_in_source - final_canvas_height / 2)
+                
+                # 限制裁剪区域在原图范围内
+                src_left = max(0, ideal_src_left)
+                src_top = max(0, ideal_src_top)
+                
+                # 如果裁剪区域超出原图范围，调整起点
+                if src_left + final_canvas_width > source_width:
+                    src_left = max(0, source_width - final_canvas_width)
+                if src_top + final_canvas_height > source_height:
+                    src_top = max(0, source_height - final_canvas_height)
+                
+                # 计算裁剪区域的终点（确保不超出原图）
+                # 先计算理想裁剪区域
+                ideal_src_right = src_left + final_canvas_width
+                ideal_src_bottom = src_top + final_canvas_height
+                
+                # 限制在原图范围内
+                src_right = min(source_width, ideal_src_right)
+                src_bottom = min(source_height, ideal_src_bottom)
+                
+                # 如果裁剪区域超出原图，调整起点
+                if src_right - src_left < final_canvas_width:
+                    # 宽度不足，调整起点
+                    src_left = max(0, source_width - final_canvas_width)
+                    src_right = min(source_width, src_left + final_canvas_width)
+                    logger.info(f"  横图宽度不足，调整裁剪起点: src_left={src_left}, src_right={src_right}")
+                if src_bottom - src_top < final_canvas_height:
+                    # 高度不足，调整起点
+                    src_top = max(0, source_height - final_canvas_height)
+                    src_bottom = min(source_height, src_top + final_canvas_height)
+                    logger.info(f"  横图高度不足，调整裁剪起点: src_top={src_top}, src_bottom={src_bottom}")
+                
+                # 最终验证裁剪区域在原图范围内
+                if src_right > source_width or src_bottom > source_height:
+                    logger.warning(f"  横图裁剪区域超出原图范围！原图: {source_width}x{source_height}, 裁剪区域: ({src_left}, {src_top}, {src_right}, {src_bottom})")
+                    src_right = min(source_width, src_right)
+                    src_bottom = min(source_height, src_bottom)
+                
+                # 实际裁剪尺寸（可能小于目标画布尺寸）
+                actual_crop_width = src_right - src_left
+                actual_crop_height = src_bottom - src_top
+                
+                # 如果裁剪区域小于目标画布，调整画布尺寸以保持4:3比例
+                if actual_crop_width < final_canvas_width or actual_crop_height < final_canvas_height:
+                    # 保持4:3比例，使用较小的尺寸
+                    if actual_crop_width / final_canvas_width < actual_crop_height / final_canvas_height:
+                        adjusted_canvas_width = actual_crop_width
+                        adjusted_canvas_height = int(actual_crop_width * 3 / 4)
+                    else:
+                        adjusted_canvas_height = actual_crop_height
+                        adjusted_canvas_width = int(actual_crop_height * 4 / 3)
+                    
+                    # 重新调整裁剪区域，确保鞋子居中且不超出原图
+                    ideal_src_left = int(original_shoe_center_x - adjusted_canvas_width / 2)
+                    ideal_src_top = int(original_shoe_center_y - adjusted_canvas_height / 2)
+                    
+                    src_left = max(0, min(ideal_src_left, source_width - adjusted_canvas_width))
+                    src_top = max(0, min(ideal_src_top, source_height - adjusted_canvas_height))
+                    
+                    src_right = min(source_width, src_left + adjusted_canvas_width)
+                    src_bottom = min(source_height, src_top + adjusted_canvas_height)
+                    
+                    logger.info(f"  横图裁剪区域超出原图，调整画布尺寸: {final_canvas_width}x{final_canvas_height} -> {adjusted_canvas_width}x{adjusted_canvas_height}")
+                else:
+                    adjusted_canvas_width = final_canvas_width
+                    adjusted_canvas_height = final_canvas_height
+                
+                # 横图粘贴位置：鞋子在新画布中的位置，使其居中
+                # 鞋子在原图中的位置相对于裁剪起点
+                shoe_left_in_crop = left - src_left
+                shoe_top_in_crop = top - src_top
+                
+                # 计算鞋子在新画布中的位置，使其居中
+                # 确保鞋子位置在画布范围内
+                canvas_paste_x = max(0, min(int(adjusted_canvas_width / 2 - object_width / 2), adjusted_canvas_width - object_width))
+                canvas_paste_y = max(0, min(int(adjusted_canvas_height / 2 - object_height / 2), adjusted_canvas_height - object_height))
+                
+                logger.info(f"  横图裁剪区域: ({src_left}, {src_top}, {src_right}, {src_bottom})")
+                logger.info(f"  横图粘贴位置: ({canvas_paste_x}, {canvas_paste_y})")
+                logger.info(f"  横图画布尺寸: {adjusted_canvas_width}x{adjusted_canvas_height}")
             
             # 如果扩展了画布高度，对于竖图（3:4），需要调整宽度以保持比例
             # 横图不需要调整，使用原来的方式
@@ -1299,10 +1839,33 @@ class ShoeImageProcessor:
                         logger.info(f"  扩展画布高度到: {adjusted_canvas_width}x{adjusted_canvas_height}")
             
             # 创建背景色的新画布（使用调整后的高度和宽度，包括顶部扩展）
-            new_canvas = Image.new('RGB', (adjusted_canvas_width, adjusted_canvas_height), background_color)
+            # 横图：不创建新画布，直接使用裁剪后的原图
+            # 竖图：创建新画布用于粘贴
+            if is_vertical_for_check:
+                # 竖图：如果扩展了左边，使用左边边缘的背景颜色；如果扩展了顶部，使用顶部边缘的背景颜色
+                if left_extension > 0:
+                    canvas_bg_color = left_edge_bg_color
+                    logger.info(f"  使用左边边缘背景颜色填充扩展区域: RGB{canvas_bg_color}")
+                elif top_extension > 0:
+                    canvas_bg_color = top_edge_bg_color
+                    logger.info(f"  使用顶部边缘背景颜色填充扩展区域: RGB{canvas_bg_color}")
+                else:
+                    canvas_bg_color = background_color
+                    logger.info(f"  使用整体背景颜色: RGB{canvas_bg_color}")
+                new_canvas = Image.new('RGB', (adjusted_canvas_width, adjusted_canvas_height), canvas_bg_color)
+            else:
+                # 横图：不创建新画布，后续直接使用裁剪后的原图
+                new_canvas = None
+                logger.info(f"  横图不创建新画布，直接使用裁剪后的原图")
             
             # 提取原图需要的部分
             if src_left < src_right and src_top < src_bottom:
+                # 确保裁剪区域在原图范围内
+                src_left = max(0, min(src_left, source_width - 1))
+                src_top = max(0, min(src_top, source_height - 1))
+                src_right = max(src_left + 1, min(src_right, source_width))
+                src_bottom = max(src_top + 1, min(src_bottom, source_height))
+                
                 cropped_source = source_image.crop((src_left, src_top, src_right, src_bottom))
                 
                 # 确保格式正确
@@ -1314,11 +1877,46 @@ class ShoeImageProcessor:
                     else:
                         cropped_source = cropped_source.convert('RGB')
                 
-                # 如果扩展了顶部，调整粘贴位置（在扩展后的画布上，粘贴位置应该加上顶部扩展的高度）
-                actual_paste_y = canvas_paste_y + top_extension
-                
-                # 粘贴到新画布
-                new_canvas.paste(cropped_source, (canvas_paste_x, actual_paste_y))
+                # 横图：直接返回裁剪后的原图，不需要粘贴操作
+                if not is_vertical_for_check:
+                    # 横图直接返回裁剪后的原图
+                    logger.info(f"  横图直接返回裁剪后的原图: {cropped_source.width}x{cropped_source.height}")
+                    # 更新画布尺寸为裁剪后的图片尺寸
+                    adjusted_canvas_width = cropped_source.width
+                    adjusted_canvas_height = cropped_source.height
+                    # 横图不需要粘贴，直接使用裁剪后的图片
+                    new_canvas = cropped_source
+                    # 横图的粘贴位置就是鞋子在裁剪图片中的位置（相对于裁剪起点）
+                    canvas_paste_x = left - src_left
+                    canvas_paste_y = top - src_top
+                    actual_paste_y = canvas_paste_y
+                    logger.info(f"  横图鞋子在裁剪图片中的位置: ({canvas_paste_x}, {canvas_paste_y})")
+                else:
+                    # 竖图：需要粘贴到新画布
+                    # 如果裁剪后的图片尺寸大于画布尺寸，调整画布尺寸
+                    if cropped_source.width > adjusted_canvas_width or cropped_source.height > adjusted_canvas_height:
+                        logger.warning(f"  裁剪后的图片尺寸 ({cropped_source.width}x{cropped_source.height}) 大于画布尺寸 ({adjusted_canvas_width}x{adjusted_canvas_height})，调整画布尺寸")
+                        if cropped_source.width > adjusted_canvas_width:
+                            adjusted_canvas_width = cropped_source.width
+                            adjusted_canvas_height = int(cropped_source.width * 3 / 4)
+                        if cropped_source.height > adjusted_canvas_height:
+                            adjusted_canvas_height = cropped_source.height
+                            adjusted_canvas_width = int(cropped_source.height * 4 / 3)
+                        logger.info(f"  调整后画布尺寸: {adjusted_canvas_width}x{adjusted_canvas_height}")
+                        # 重新创建画布
+                        if left_extension > 0:
+                            canvas_bg_color = left_edge_bg_color
+                        elif top_extension > 0:
+                            canvas_bg_color = top_edge_bg_color
+                        else:
+                            canvas_bg_color = background_color
+                        new_canvas = Image.new('RGB', (adjusted_canvas_width, adjusted_canvas_height), canvas_bg_color)
+                    
+                    # 如果扩展了顶部，调整粘贴位置（在扩展后的画布上，粘贴位置应该加上顶部扩展的高度）
+                    actual_paste_y = canvas_paste_y + top_extension
+                    
+                    # 粘贴到新画布
+                    new_canvas.paste(cropped_source, (canvas_paste_x, actual_paste_y))
                 
                 # 对于竖图，验证上下边距并确保均衡
                 if is_vertical_for_check:
@@ -1495,179 +2093,197 @@ class ShoeImageProcessor:
                         final_canvas_width = adjusted_canvas_width
                         logger.info(f"  最终画布尺寸: {final_canvas_width}x{final_canvas_height}")
             
-            # 重新检测最终图片中的鞋子边界以验证结果
-            try:
-                # 使用专门的白色背景检测方法
-                bounds_result = self.find_object_bounds_on_white_bg(new_canvas)
+            # 直接使用粘贴位置和原图尺寸计算实际边距（移除不必要的二次检测）
+            # 原因：我们已经知道原图上鞋子的位置和尺寸，也知道粘贴位置，可以直接计算边距
+            # 二次检测在白色背景上可能不准确，且每次迭代都要重新运行rembg，很慢
+            actual_canvas_width = adjusted_canvas_width
+            actual_canvas_height = adjusted_canvas_height
+            
+            # 使用计算出的边距值（基于实际粘贴位置）
+            # 防止除以0的错误
+            if actual_canvas_width <= 0:
+                logger.error(f"画布宽度无效: {actual_canvas_width}，跳过此迭代")
+                continue
+            if actual_canvas_height <= 0:
+                logger.error(f"画布高度无效: {actual_canvas_height}，跳过此迭代")
+                continue
+            
+            # 计算左右边距（使用实际的粘贴位置和图片尺寸）
+            if is_vertical_for_check:
+                # 竖图：canvas_paste_x 已经包含了 left_extension，所以直接使用
+                paste_left = canvas_paste_x
+                # 使用实际粘贴的图片宽度，而不是 object_width（因为可能被裁剪）
+                # 确保不超出画布范围
+                paste_right = min(actual_canvas_width, paste_left + cropped_source.width)
+            else:
+                # 横图：鞋子在裁剪图片中的位置
+                paste_left = canvas_paste_x
+                paste_right = paste_left + object_width
+            
+            actual_left_margin = paste_left / actual_canvas_width
+            actual_right_margin = (actual_canvas_width - paste_right) / actual_canvas_width
+            
+            # 计算上下边距（使用实际粘贴位置）
+            paste_top = actual_paste_y
+            if is_vertical_for_check:
+                # 竖图：确保不超出画布范围
+                paste_bottom = min(actual_canvas_height, actual_paste_y + cropped_source.height)
+            else:
+                # 横图：鞋子在裁剪图片中的位置
+                paste_bottom = paste_top + object_height
+            
+            actual_top_margin = paste_top / actual_canvas_height
+            actual_bottom_margin = (actual_canvas_height - paste_bottom) / actual_canvas_height
+            
+            logger.info(f"  使用计算出的边距值: 左{actual_left_margin:.1%}, 右{actual_right_margin:.1%}, 上{actual_top_margin:.1%}, 下{actual_bottom_margin:.1%}")
+            
+            # 检查垂直比例情况
+            # 对于竖图，目标是上下边距各至少3%
+            # 对于横图，目标是5.5:4.5的上下比例
+            if is_vertical_for_check:
+                # 竖图：检查上下边距是否都至少是3%，并且是否均衡
+                target_vertical_margin = left_right_margin_ratio * 0.3  # 3%
+                top_margin_ok = actual_top_margin >= target_vertical_margin * 0.8  # 至少80%的要求
+                bottom_margin_ok = actual_bottom_margin >= target_vertical_margin * 0.8  # 至少80%的要求
                 
-                # 如果像素级分析返回None，使用计算出的边距值
-                use_calculated_margins = False
-                if bounds_result is None:
-                    logger.warning("像素级分析失败，使用计算出的边距值")
-                    use_calculated_margins = True
-                else:
-                    final_left, final_top, final_right, final_bottom = bounds_result
-                    
-                    # 验证检测结果的合理性
-                    detected_width = final_right - final_left
-                    detected_height = final_bottom - final_top
-                    detected_area_ratio = (detected_width * detected_height) / (adjusted_canvas_width * adjusted_canvas_height)
-                    
-                    # 如果检测结果异常（覆盖面积过大或宽度异常），使用计算出的边距值
-                    if detected_area_ratio > 0.6:  # 检测区域超过60%，说明检测失败
-                        logger.warning(f"检测结果异常（覆盖{detected_area_ratio:.1%}），使用计算出的边距值")
-                        use_calculated_margins = True
-                    elif detected_width > object_width * 1.5:  # 检测宽度远大于原始宽度
-                        logger.warning(f"检测宽度异常（检测:{detected_width}, 原始:{object_width}），使用计算出的边距值")
-                        use_calculated_margins = True
+                # 计算上下边距的均衡性（差异应该小于总边距的10%）
+                total_vertical_margin = actual_top_margin + actual_bottom_margin
+                margin_balance_diff = abs(actual_top_margin - actual_bottom_margin)
+                margin_balance_ratio = margin_balance_diff / total_vertical_margin if total_vertical_margin > 0 else 0
+                margin_balanced = margin_balance_ratio < 0.1  # 差异小于10%认为均衡
                 
-                # 使用调整后的画布尺寸计算实际边距比例
-                actual_canvas_width = adjusted_canvas_width
-                actual_canvas_height = adjusted_canvas_height
-                
-                if use_calculated_margins:
-                    # 使用计算出的边距值（基于实际粘贴位置）
-                    # 计算左右边距
-                    paste_left = canvas_paste_x + max(0, -paste_x)
-                    paste_right = paste_left + object_width
-                    actual_left_margin = paste_left / actual_canvas_width
-                    actual_right_margin = (actual_canvas_width - paste_right) / actual_canvas_width
-                    
-                    # 计算上下边距（使用实际粘贴位置）
-                    paste_top = actual_paste_y
-                    paste_bottom = actual_paste_y + cropped_source.height
-                    actual_top_margin = paste_top / actual_canvas_height
-                    actual_bottom_margin = (actual_canvas_height - paste_bottom) / actual_canvas_height
-                    
-                    logger.info(f"  使用计算出的边距值: 左{actual_left_margin:.1%}, 右{actual_right_margin:.1%}, 上{actual_top_margin:.1%}, 下{actual_bottom_margin:.1%}")
-                else:
-                    # 使用检测到的边界
-                    actual_left_margin = final_left / actual_canvas_width
-                    actual_right_margin = (actual_canvas_width - final_right) / actual_canvas_width
-                    actual_top_margin = final_top / actual_canvas_height
-                    actual_bottom_margin = (actual_canvas_height - final_bottom) / actual_canvas_height
-                
-                # 检查垂直比例情况
-                # 对于竖图，目标是上下边距各至少3%
-                # 对于横图，目标是5.5:4.5的上下比例
-                if is_vertical_for_check:
-                    # 竖图：检查上下边距是否都至少是3%，并且是否均衡
-                    target_vertical_margin = left_right_margin_ratio * 0.3  # 3%
-                    top_margin_ok = actual_top_margin >= target_vertical_margin * 0.8  # 至少80%的要求
-                    bottom_margin_ok = actual_bottom_margin >= target_vertical_margin * 0.8  # 至少80%的要求
-                    
-                    # 计算上下边距的均衡性（差异应该小于总边距的10%）
-                    total_vertical_margin = actual_top_margin + actual_bottom_margin
-                    margin_balance_diff = abs(actual_top_margin - actual_bottom_margin)
-                    margin_balance_ratio = margin_balance_diff / total_vertical_margin if total_vertical_margin > 0 else 0
-                    margin_balanced = margin_balance_ratio < 0.1  # 差异小于10%认为均衡
-                    
-                    # 计算垂直边距误差（相对于目标3%）
-                    top_margin_error = max(0, target_vertical_margin - actual_top_margin)
-                    bottom_margin_error = max(0, target_vertical_margin - actual_bottom_margin)
+                # 计算垂直边距误差（相对于目标3%）
+                top_margin_error = max(0, target_vertical_margin - actual_top_margin)
+                bottom_margin_error = max(0, target_vertical_margin - actual_bottom_margin)
+                # 防止除以0
+                if target_vertical_margin > 0:
                     vertical_position_error = (top_margin_error + bottom_margin_error) / target_vertical_margin
-                    
-                    logger.info(f"  最终检测结果 (竖图模式):")
-                    logger.info(f"    画布尺寸: {actual_canvas_width}x{actual_canvas_height}")
-                    logger.info(f"    鞋子边界: 左{final_left}, 上{final_top}, 右{final_right}, 下{final_bottom}")
-                    logger.info(f"    实际边距: 左{actual_left_margin:.1%}, 右{actual_right_margin:.1%}, 上{actual_top_margin:.1%}, 下{actual_bottom_margin:.1%}")
-                    logger.info(f"    目标左右边距: {left_right_margin_ratio:.1%}")
-                    logger.info(f"    目标上下边距: 各{target_vertical_margin:.1%} (至少，均衡)")
-                    logger.info(f"    上下边距检查: 上{'✅' if top_margin_ok else '❌'} ({actual_top_margin:.1%}), 下{'✅' if bottom_margin_ok else '❌'} ({actual_bottom_margin:.1%})")
-                    logger.info(f"    边距均衡性: {'✅' if margin_balanced else '❌'} (差异 {margin_balance_ratio:.1%})")
-                    logger.info(f"    垂直边距误差: {vertical_position_error:.1%}")
                 else:
-                    # 横图：检查5.5:4.5的上下比例
-                    target_top_ratio = 5.5 / (5.5 + 4.5)  # = 0.55 = 55%
-                    target_bottom_ratio = 4.5 / (5.5 + 4.5)  # = 0.45 = 45%
-                    
-                    # 计算理想的上下边距比例
-                    vertical_position_error = abs(actual_top_margin / (actual_top_margin + actual_bottom_margin) - target_top_ratio)
-                    
-                    logger.info(f"  最终检测结果:")
-                    logger.info(f"    画布尺寸: {actual_canvas_width}x{actual_canvas_height}")
-                    logger.info(f"    鞋子边界: 左{final_left}, 上{final_top}, 右{final_right}, 下{final_bottom}")
-                    logger.info(f"    实际边距: 左{actual_left_margin:.1%}, 右{actual_right_margin:.1%}, 上{actual_top_margin:.1%}, 下{actual_bottom_margin:.1%}")
-                    logger.info(f"    目标左右边距: {left_right_margin_ratio:.1%}")
-                    logger.info(f"    目标上下比例: {target_top_ratio:.1%}:{target_bottom_ratio:.1%}")
-                    logger.info(f"    实际上下比例: {actual_top_margin/(actual_top_margin + actual_bottom_margin):.1%}:{actual_bottom_margin/(actual_top_margin + actual_bottom_margin):.1%}")
-                    logger.info(f"    垂直比例误差: {vertical_position_error:.1%}")
+                    vertical_position_error = 1.0  # 如果目标边距为0，设置最大误差
                 
-                # 检查边距是否符合要求
-                left_diff = abs(actual_left_margin - left_right_margin_ratio)
-                right_diff = abs(actual_right_margin - left_right_margin_ratio)
-                margin_error = max(left_diff, right_diff)
+                logger.info(f"  最终结果 (竖图模式):")
+                logger.info(f"    画布尺寸: {actual_canvas_width}x{actual_canvas_height}")
+                logger.info(f"    鞋子位置: 左{paste_left:.0f}, 上{paste_top:.0f}, 右{paste_right:.0f}, 下{paste_bottom:.0f}")
+                logger.info(f"    实际边距: 左{actual_left_margin:.1%}, 右{actual_right_margin:.1%}, 上{actual_top_margin:.1%}, 下{actual_bottom_margin:.1%}")
+                logger.info(f"    目标左右边距: {left_right_margin_ratio:.1%}")
+                logger.info(f"    目标上下边距: 各{target_vertical_margin:.1%} (至少，均衡)")
+                logger.info(f"    上下边距检查: 上{'✅' if top_margin_ok else '❌'} ({actual_top_margin:.1%}), 下{'✅' if bottom_margin_ok else '❌'} ({actual_bottom_margin:.1%})")
+                logger.info(f"    边距均衡性: {'✅' if margin_balanced else '❌'} (差异 {margin_balance_ratio:.1%})")
+                logger.info(f"    垂直边距误差: {vertical_position_error:.1%}")
+            else:
+                # 横图：检查5.5:4.5的上下比例
+                target_top_ratio = 5.5 / (5.5 + 4.5)  # = 0.55 = 55%
+                target_bottom_ratio = 4.5 / (5.5 + 4.5)  # = 0.45 = 45%
                 
-                # 检查左右是否均衡
-                left_right_balance_error = abs(actual_left_margin - actual_right_margin)
+                # 计算理想的上下边距比例（防止除以0）
+                total_vertical_margin = actual_top_margin + actual_bottom_margin
+                if total_vertical_margin > 0:
+                    actual_top_ratio = actual_top_margin / total_vertical_margin
+                    actual_bottom_ratio = actual_bottom_margin / total_vertical_margin
+                    vertical_position_error = abs(actual_top_ratio - target_top_ratio)
+                else:
+                    # 如果上下边距都为0，设置一个较大的误差值
+                    actual_top_ratio = 0.5
+                    actual_bottom_ratio = 0.5
+                    vertical_position_error = 1.0  # 最大误差
                 
-                # 对于竖图，检查上下边距是否都至少是3%，并且是否均衡
-                if is_vertical_for_check:
-                    target_vertical_margin = left_right_margin_ratio * 0.3  # 3%
-                    top_margin_diff = max(0, target_vertical_margin - actual_top_margin)
-                    bottom_margin_diff = max(0, target_vertical_margin - actual_bottom_margin)
+                logger.info(f"  最终结果:")
+                logger.info(f"    画布尺寸: {actual_canvas_width}x{actual_canvas_height}")
+                logger.info(f"    鞋子位置: 左{paste_left:.0f}, 上{paste_top:.0f}, 右{paste_right:.0f}, 下{paste_bottom:.0f}")
+                logger.info(f"    实际边距: 左{actual_left_margin:.1%}, 右{actual_right_margin:.1%}, 上{actual_top_margin:.1%}, 下{actual_bottom_margin:.1%}")
+                logger.info(f"    目标左右边距: {left_right_margin_ratio:.1%}")
+                logger.info(f"    目标上下比例: {target_top_ratio:.1%}:{target_bottom_ratio:.1%}")
+                if total_vertical_margin > 0:
+                    logger.info(f"    实际上下比例: {actual_top_ratio:.1%}:{actual_bottom_ratio:.1%}")
+                else:
+                    logger.info(f"    实际上下比例: 无法计算（上下边距都为0）")
+                logger.info(f"    垂直比例误差: {vertical_position_error:.1%}")
+            
+            # 检查边距是否符合要求
+            left_diff = abs(actual_left_margin - left_right_margin_ratio)
+            right_diff = abs(actual_right_margin - left_right_margin_ratio)
+            margin_error = max(left_diff, right_diff)
+            
+            # 检查左右是否均衡
+            left_right_balance_error = abs(actual_left_margin - actual_right_margin)
+            
+            # 对于竖图，检查上下边距是否都至少是3%，并且是否均衡
+            if is_vertical_for_check:
+                target_vertical_margin = left_right_margin_ratio * 0.3  # 3%
+                top_margin_diff = max(0, target_vertical_margin - actual_top_margin)
+                bottom_margin_diff = max(0, target_vertical_margin - actual_bottom_margin)
+                # 防止除以0
+                if target_vertical_margin > 0:
                     vertical_margin_error = (top_margin_diff + bottom_margin_diff) / target_vertical_margin
-                    
-                    # 计算上下边距的均衡性
-                    total_vertical_margin = actual_top_margin + actual_bottom_margin
-                    margin_balance_diff = abs(actual_top_margin - actual_bottom_margin)
-                    margin_balance_ratio = margin_balance_diff / total_vertical_margin if total_vertical_margin > 0 else 0
                 else:
-                    vertical_margin_error = vertical_position_error
-                    margin_balance_ratio = 0
+                    vertical_margin_error = 1.0  # 如果目标边距为0，设置最大误差
                 
-                # 保存最佳结果（考虑边距均衡性）
-                balance_penalty = margin_balance_ratio * 0.5 if is_vertical_for_check else 0  # 竖图边距不均衡的惩罚
-                total_error = margin_error + left_right_balance_error + vertical_margin_error * 2 + balance_penalty
-                if total_error < best_margin_error:
-                    best_margin_error = total_error
-                    best_result = new_canvas.copy()
+                # 计算上下边距的均衡性
+                total_vertical_margin = actual_top_margin + actual_bottom_margin
+                margin_balance_diff = abs(actual_top_margin - actual_bottom_margin)
+                margin_balance_ratio = margin_balance_diff / total_vertical_margin if total_vertical_margin > 0 else 0
+            else:
+                vertical_margin_error = vertical_position_error
+                margin_balance_ratio = 0
+            
+            # 保存最佳结果（考虑边距均衡性）
+            balance_penalty = margin_balance_ratio * 0.5 if is_vertical_for_check else 0  # 竖图边距不均衡的惩罚
+            total_error = margin_error + left_right_balance_error + vertical_margin_error * 2 + balance_penalty
+            if total_error < best_margin_error:
+                best_margin_error = total_error
+                best_result = new_canvas.copy()
+            
+            # 检查是否满足所有要求
+            margin_ok = left_diff < 0.02 and right_diff < 0.02  # 边距误差小于2%
+            balance_ok = left_right_balance_error < 0.02  # 左右均衡误差小于2%
+            
+            if is_vertical_for_check:
+                # 竖图：检查上下边距是否都至少是3%（允许20%的误差），并且是否均衡（差异小于10%）
+                margin_amount_ok = top_margin_diff < target_vertical_margin * 0.2 and bottom_margin_diff < target_vertical_margin * 0.2
+                margin_balance_ok = margin_balance_ratio < 0.1  # 差异小于10%认为均衡
+                vertical_ok = margin_amount_ok and margin_balance_ok
+            else:
+                # 横图：检查5.5:4.5比例
+                vertical_ok = vertical_position_error < 0.03  # 垂直比例误差小于3%
+            
+            if margin_ok and balance_ok and vertical_ok:
+                logger.info("✅ 边距、均衡和垂直比例都符合要求！")
+                return new_canvas
+            else:
+                issues = []
+                if not margin_ok:
+                    issues.append(f"边距偏差(左{left_diff:.1%}, 右{right_diff:.1%})")
+                if not balance_ok:
+                    issues.append(f"左右不均衡({left_right_balance_error:.1%})")
+                if not vertical_ok:
+                    if is_vertical_for_check:
+                        if not margin_amount_ok:
+                            issues.append(f"上下边距不足(上{actual_top_margin:.1%}, 下{actual_bottom_margin:.1%}, 目标各{target_vertical_margin:.1%})")
+                        if not margin_balance_ok:
+                            issues.append(f"上下边距不均衡(差异{margin_balance_ratio:.1%})")
+                    else:
+                        issues.append(f"垂直比例偏差({vertical_position_error:.1%})")
                 
-                # 检查是否满足所有要求
-                margin_ok = left_diff < 0.02 and right_diff < 0.02  # 边距误差小于2%
-                balance_ok = left_right_balance_error < 0.02  # 左右均衡误差小于2%
+                logger.warning(f"⚠️ {', '.join(issues)}")
                 
-                if is_vertical_for_check:
-                    # 竖图：检查上下边距是否都至少是3%（允许20%的误差），并且是否均衡（差异小于10%）
-                    margin_amount_ok = top_margin_diff < target_vertical_margin * 0.2 and bottom_margin_diff < target_vertical_margin * 0.2
-                    margin_balance_ok = margin_balance_ratio < 0.1  # 差异小于10%认为均衡
-                    vertical_ok = margin_amount_ok and margin_balance_ok
-                else:
-                    # 横图：检查5.5:4.5比例
-                    vertical_ok = vertical_position_error < 0.03  # 垂直比例误差小于3%
-                
-                if margin_ok and balance_ok and vertical_ok:
-                    logger.info("✅ 边距、均衡和垂直比例都符合要求！")
-                    return new_canvas
-                else:
-                    issues = []
-                    if not margin_ok:
-                        issues.append(f"边距偏差(左{left_diff:.1%}, 右{right_diff:.1%})")
-                    if not balance_ok:
-                        issues.append(f"左右不均衡({left_right_balance_error:.1%})")
-                    if not vertical_ok:
-                        if is_vertical_for_check:
-                            if not margin_amount_ok:
-                                issues.append(f"上下边距不足(上{actual_top_margin:.1%}, 下{actual_bottom_margin:.1%}, 目标各{target_vertical_margin:.1%})")
-                            if not margin_balance_ok:
-                                issues.append(f"上下边距不均衡(差异{margin_balance_ratio:.1%})")
-                        else:
-                            issues.append(f"垂直比例偏差({vertical_position_error:.1%})")
-                    
-                    logger.warning(f"⚠️ {', '.join(issues)}")
-                    
-                    # 如果不是最后一次迭代，尝试调整
-                    if iteration < max_iterations - 1:
-                        logger.info("  基于检测结果重新计算理想定位...")
+                # 如果不是最后一次迭代，尝试调整
+                # 横图不应该重新计算，因为横图应该直接裁剪原图，不扩展画布
+                if iteration < max_iterations - 1 and is_vertical_for_check:
+                    try:
+                        logger.info("  基于计算结果重新计算理想定位...")
                         
-                        # 基于实际检测到的鞋子边界，重新计算理想的画布尺寸和定位
-                        detected_object_width = final_right - final_left
-                        detected_object_height = final_bottom - final_top
+                        # 基于实际粘贴位置和原图尺寸，重新计算理想的画布尺寸和定位
+                        detected_object_width = paste_right - paste_left
+                        detected_object_height = paste_bottom - paste_top
                         
                         # 检验检测结果的合理性
-                        if (detected_object_width > object_width * 0.7 and 
-                            detected_object_width < object_width * 1.5):
-                            
+                        # 检查宽度和高度是否合理
+                        width_ok = (detected_object_width > object_width * 0.7 and 
+                                    detected_object_width < object_width * 1.5)
+                        height_ok = (detected_object_height > object_height * 0.7 and 
+                                     detected_object_height < object_height * 1.5)
+                        
+                        if width_ok and height_ok:
                             # 基于检测到的鞋子尺寸重新计算理想画布
                             # 方法1：基于宽度计算
                             new_ideal_width_by_width = detected_object_width / (1 - 2 * left_right_margin_ratio)
@@ -1722,9 +2338,9 @@ class ShoeImageProcessor:
                                     logger.warning(f"    调整后的高度 {new_ideal_height:.0f}px 不足以容纳鞋子，保持当前尺寸")
                             
                             # 重新计算鞋子的理想中心位置
-                            # 基于检测到的鞋子中心，而不是原始的left/right
-                            detected_center_x = (final_left + final_right) / 2
-                            detected_center_y = (final_top + final_bottom) / 2
+                            # 基于粘贴位置计算鞋子中心
+                            detected_center_x = (paste_left + paste_right) / 2
+                            detected_center_y = (paste_top + paste_bottom) / 2
                             
                             # 计算鞋子在原图中的对应中心（反向推算）
                             # 当前detected_center在画布中，需要映射回原图坐标
@@ -1757,8 +2373,11 @@ class ShoeImageProcessor:
                             original_center_y = detected_center_y - actual_paste_y_in_canvas + max(0, -paste_y)
                             
                             # 确保坐标在原图范围内（防止超出边界）
-                            original_center_x = max(object_width / 2, min(source_width - object_width / 2, original_center_x))
-                            original_center_y = max(object_height / 2, min(source_height - object_height / 2, original_center_y))
+                            # 使用检测到的对象尺寸，而不是原始尺寸，以确保不会缩小边界框
+                            detected_half_width = detected_object_width / 2
+                            detected_half_height = detected_object_height / 2
+                            original_center_x = max(detected_half_width, min(source_width - detected_half_width, original_center_x))
+                            original_center_y = max(detected_half_height, min(source_height - detected_half_height, original_center_y))
                             
                             # 如果垂直比例误差太大，特别调整垂直位置
                             if not vertical_ok:
@@ -1817,22 +2436,44 @@ class ShoeImageProcessor:
                                     original_center_y += correction_offset
                                     logger.info(f"    垂直比例修正 (第{iteration+1}次): 偏移 {correction_offset:.0f} 像素 (比例偏差: {ratio_offset:.1%}, 修正率: {correction_factor:.0%})")
                             
-                            # 基于原图中心更新left, right, top, bottom（保持尺寸不变）
-                            half_width = object_width / 2
-                            half_height = object_height / 2
+                            # 基于原图中心更新left, right, top, bottom（使用检测到的尺寸，确保不缩小）
+                            # 使用检测到的对象尺寸，而不是原始尺寸，以确保包含所有检测到的内容
+                            half_width = detected_object_width / 2
+                            half_height = detected_object_height / 2
                             left = original_center_x - half_width
                             right = original_center_x + half_width
                             top = original_center_y - half_height
                             bottom = original_center_y + half_height
                             
+                            # 确保边界不会缩小（至少保持原始尺寸）
+                            if right - left < object_width:
+                                # 如果检测到的宽度小于原始宽度，使用原始宽度
+                                half_width = object_width / 2
+                                left = original_center_x - half_width
+                                right = original_center_x + half_width
+                            if bottom - top < object_height:
+                                # 如果检测到的高度小于原始高度，使用原始高度
+                                half_height = object_height / 2
+                                top = original_center_y - half_height
+                                bottom = original_center_y + half_height
+                            
+                            # 确保边界在原图范围内
+                            left = max(0, min(left, source_width - 1))
+                            right = max(left + 1, min(right, source_width))
+                            top = max(0, min(top, source_height - 1))
+                            bottom = max(top + 1, min(bottom, source_height))
+                            
                             logger.info(f"    更新原图鞋子坐标: 中心({original_center_x:.0f}, {original_center_y:.0f})")
                             logger.info(f"    新边界: 左{left:.0f}, 上{top:.0f}, 右{right:.0f}, 下{bottom:.0f}")
                         else:
-                            logger.warning(f"检测结果异常，跳过调整 (检测宽度: {detected_object_width}, 原始宽度: {object_width})")
+                            if not width_ok:
+                                logger.warning(f"检测宽度异常，跳过调整 (检测:{detected_object_width}, 原始:{object_width})")
+                            if not height_ok:
+                                logger.warning(f"检测高度异常，跳过调整 (检测:{detected_object_height}, 原始:{object_height})")
                             break
-            except Exception as e:
-                logger.warning(f"重新检测失败: {e}, 使用当前结果")
-                break
+                    except Exception as e:
+                        logger.warning(f"重新计算失败: {e}, 使用当前结果")
+                        break
         
         # 返回最佳结果
         if best_result is not None:
@@ -1875,25 +2516,25 @@ class ShoeImageProcessor:
         object_height = bottom - top
         
         # 确定目标比例（新的智能选择逻辑）
-        # 高宽比 = object_height / object_width
-        aspect_ratio = object_height / object_width if object_width > 0 else 1.0
+        # 判断是横图还是竖图：基于宽度和高度的比较
         keep_original_ratio = False  # 是否保持原比例
         
         if target_ratio == 'auto':
-            if aspect_ratio < 0.75:
-                # 高宽比 < 0.75：很宽的图，使用 4:3 横图比例
+            if object_width > object_height:
+                # 横图：宽度大于高度，使用 4:3 比例
                 target_ratio = '4:3'
-                logger.info(f"检测到宽图（高宽比 {aspect_ratio:.2f} < 0.75），使用 4:3 横图比例")
-            elif aspect_ratio >= 0.75 and aspect_ratio < 4.0 / 3.0:
-                # 0.75 <= 高宽比 < 4:3：接近方形或略高的图，保持原比例加边距
-                keep_original_ratio = True
-                vertical_threshold = 4.0 / 3.0
-                logger.info(f"检测到接近方形图（高宽比 {aspect_ratio:.2f} 在 0.75-{vertical_threshold:.2f} 之间），保持原比例加边距")
-            else:
-                # 高宽比 >= 4:3：很高的图，使用 3:4 竖图比例
+                aspect_ratio = object_height / object_width if object_width > 0 else 1.0
+                logger.info(f"检测到横图（宽度{object_width} > 高度{object_height}，高宽比 {aspect_ratio:.2f}），使用 4:3 横图比例")
+            elif object_height > object_width:
+                # 竖图：高度大于宽度，使用 3:4 比例
                 target_ratio = '3:4'
-                vertical_threshold = 4.0 / 3.0
-                logger.info(f"检测到高图（高宽比 {aspect_ratio:.2f} >= {vertical_threshold:.2f}），使用 3:4 竖图比例")
+                aspect_ratio = object_height / object_width if object_width > 0 else 1.0
+                logger.info(f"检测到竖图（高度{object_height} > 宽度{object_width}，高宽比 {aspect_ratio:.2f}），使用 3:4 竖图比例")
+            else:
+                # 接近方形：保持原比例加边距
+                keep_original_ratio = True
+                aspect_ratio = object_height / object_width if object_width > 0 else 1.0
+                logger.info(f"检测到接近方形图（宽度{object_width} ≈ 高度{object_height}，高宽比 {aspect_ratio:.2f}），保持原比例加边距")
         else:
             # 用户指定了比例，使用指定比例
             logger.info(f"使用用户指定的比例: {target_ratio}")
@@ -2503,10 +3144,56 @@ class ShoeImageProcessor:
         
         return tuple(bg_color)
     
+    def detect_edge_background_color(self, image: Image.Image, edge: str = 'left', fast_mode: bool = True) -> tuple:
+        """
+        检测图片特定边缘的背景颜色
+        
+        Args:
+            image: PIL Image对象
+            edge: 边缘位置 'left', 'right', 'top', 'bottom'
+            fast_mode: 是否使用快速模式
+            
+        Returns:
+            (R, G, B) 背景颜色元组
+        """
+        img_array = np.array(image)
+        
+        if len(img_array.shape) == 2:
+            img_array = np.stack([img_array] * 3, axis=-1)
+        elif img_array.shape[2] == 4:
+            img_array = img_array[:, :, :3]
+        
+        height, width = img_array.shape[:2]
+        edge_thickness = min(50, min(width, height) // 15)
+        
+        # 根据边缘位置采样
+        if edge == 'left':
+            edge_pixels = img_array[:, :edge_thickness].reshape(-1, 3)
+        elif edge == 'right':
+            edge_pixels = img_array[:, -edge_thickness:].reshape(-1, 3)
+        elif edge == 'top':
+            edge_pixels = img_array[:edge_thickness, :].reshape(-1, 3)
+        elif edge == 'bottom':
+            edge_pixels = img_array[-edge_thickness:, :].reshape(-1, 3)
+        else:
+            # 默认使用左边
+            edge_pixels = img_array[:, :edge_thickness].reshape(-1, 3)
+        
+        edge_pixels = np.array(edge_pixels)
+        
+        # 使用中位数快速检测
+        if len(edge_pixels) > 5000:
+            indices = np.random.choice(len(edge_pixels), 5000, replace=False)
+            edge_pixels = edge_pixels[indices]
+        
+        bg_color = np.median(edge_pixels, axis=0)
+        logger.info(f"检测到{edge}边缘背景颜色: RGB{tuple(bg_color.astype(int))}")
+        return tuple(bg_color.astype(int))
+    
     def find_object_contour_bounds(self, image: Image.Image) -> Tuple[int, int, int, int]:
         """
         寻找图片中主体对象的实际轮廓边界（非矩形边界框）
-        返回轮廓上最左、最右、最上、最下的像素点坐标
+        优先使用rembg进行精准的背景和阴影移除，返回轮廓上最左、最右、最上、最下的像素点坐标
         
         Args:
             image: PIL Image对象
@@ -2514,10 +3201,12 @@ class ShoeImageProcessor:
         Returns:
             (left, top, right, bottom) 轮廓边界坐标
         """
-        # 转换为numpy数组
+        width, height = image.size
+        
+        # 转换为numpy数组（提前转换，供rembg和传统方法使用）
         img_array = np.array(image)
         
-        # 转换为灰度图和BGR图像
+        # 转换为灰度图和BGR图像（提前转换，供阴影过滤使用）
         bgr_image = None
         if len(img_array.shape) == 3:
             gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
@@ -2526,7 +3215,113 @@ class ShoeImageProcessor:
         else:
             gray = img_array
         
-        width, height = image.size
+        # 策略0: 优先使用rembg进行精准的背景和阴影移除
+        logger.debug(f"rembg状态检查: HAS_REMBG={HAS_REMBG}, session={'已初始化' if self.rembg_session is not None else '未初始化'}")
+        rembg_mask = self._get_foreground_mask_with_rembg(image)
+        if rembg_mask is not None:
+            logger.info("✅ rembg处理成功，使用rembg结果进行轮廓检测")
+            try:
+                # 对mask进行形态学处理，去除小噪声
+                kernel = np.ones((3, 3), np.uint8)
+                mask_clean = cv2.morphologyEx(rembg_mask, cv2.MORPH_OPEN, kernel, iterations=1)
+                mask_clean = cv2.morphologyEx(mask_clean, cv2.MORPH_CLOSE, kernel, iterations=2)
+                
+                # 查找轮廓
+                contours, _ = cv2.findContours(mask_clean, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                
+                if contours:
+                    # 对于多只鞋子的情况，合并所有相关轮廓
+                    # 首先按面积排序，选择较大的轮廓
+                    sorted_contours = sorted(contours, key=cv2.contourArea, reverse=True)
+                    
+                    # 收集所有符合条件的轮廓点（面积大于图片5%的轮廓）
+                    all_points = []
+                    total_area = 0
+                    for contour in sorted_contours:
+                        area = cv2.contourArea(contour)
+                        # 只考虑面积大于图片5%的轮廓（可能是鞋子）
+                        if area > height * width * 0.05:
+                            all_points.extend(contour.reshape(-1, 2))
+                            total_area += area
+                    
+                    if all_points:
+                        # 使用所有轮廓的极值点创建合并后的边界框
+                        all_points = np.array(all_points)
+                        left = int(np.min(all_points[:, 0]))
+                        right = int(np.max(all_points[:, 0]))
+                        top = int(np.min(all_points[:, 1]))
+                        bottom = int(np.max(all_points[:, 1]))
+                        area = total_area
+                        
+                        # 创建一个包含所有轮廓的矩形轮廓（用于阴影过滤）
+                        best_contour = np.array([
+                            [[left, top]],
+                            [[right, top]],
+                            [[right, bottom]],
+                            [[left, bottom]]
+                        ], dtype=np.int32)
+                        
+                        logger.info(f"检测到多个轮廓，已合并: 总面积{area:.0f}, 边界框({left}, {top}, {right}, {bottom})")
+                    else:
+                        # 如果没有符合条件的轮廓，使用最大的轮廓
+                        best_contour = sorted_contours[0]
+                        area = cv2.contourArea(best_contour)
+                        contour_points = best_contour.reshape(-1, 2)
+                        left = np.min(contour_points[:, 0])
+                        right = np.max(contour_points[:, 0])
+                        top = np.min(contour_points[:, 1])
+                        bottom = np.max(contour_points[:, 1])
+                    
+                    # 验证轮廓合理性
+                    if area > height * width * 0.05:  # 面积至少占图片的5%
+                        # 先进行阴影过滤
+                        try:
+                            edge_samples = []
+                            edge_thickness = min(50, min(width, height) // 20)
+                            edge_samples.extend(gray[:edge_thickness, :].flatten())
+                            edge_samples.extend(gray[-edge_thickness:, :].flatten())
+                            edge_samples.extend(gray[:, :edge_thickness].flatten())
+                            edge_samples.extend(gray[:, -edge_thickness:].flatten())
+                            bg_brightness = np.median(edge_samples)
+                        except:
+                            bg_brightness = 255  # 默认白色背景
+                        
+                        # 使用shadow_detector过滤阴影
+                        detect_saliency_func = self._detect_saliency if hasattr(self, '_detect_saliency') else None
+                        best_contour = self.shadow_detector.filter_shadow_from_contour(best_contour, gray, bg_brightness, bgr_image, detect_saliency_func)
+                        
+                        # 从过滤后的轮廓中找到极值点
+                        contour_points = best_contour.reshape(-1, 2)
+                        left = np.min(contour_points[:, 0])
+                        right = np.max(contour_points[:, 0])
+                        top = np.min(contour_points[:, 1])
+                        bottom = np.max(contour_points[:, 1])
+                        
+                        # 验证检测结果的合理性
+                        contour_width = right - left
+                        contour_height = bottom - top
+                        contour_area = cv2.contourArea(best_contour)
+                        image_area = width * height
+                        area_ratio = contour_area / image_area
+                        
+                        if 0.05 <= area_ratio <= 0.9:
+                            logger.info(f"✅ rembg检测到轮廓边界（已过滤阴影）: 左{left}, 上{top}, 右{right}, 下{bottom}")
+                            logger.info(f"轮廓尺寸: {contour_width}x{contour_height}, 轮廓面积占比: {area_ratio:.1%}")
+                            return left, top, right, bottom
+                        else:
+                            logger.warning(f"rembg检测到的轮廓面积占比异常: {area_ratio:.1%}，回退到传统方法")
+                    else:
+                        logger.warning(f"rembg检测到的轮廓面积过小: {area}，回退到传统方法")
+                else:
+                    logger.warning("rembg处理后未找到轮廓，回退到传统方法")
+            except Exception as e:
+                logger.warning(f"rembg轮廓提取失败: {e}，回退到传统方法")
+                import traceback
+                logger.debug(traceback.format_exc())
+        else:
+            logger.info("⚠️ rembg不可用，使用传统方法检测轮廓边界")
+            # gray 和 bgr_image 已在上面定义
+        
         best_contour = None
         best_area = 0
         

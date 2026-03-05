@@ -382,6 +382,55 @@ class ShoeProcessorGUI:
         self.progress_var.set("正在停止...")
         self.log_message("用户请求停止处理", "WARNING")
     
+    def safe_show_message(self, title, message, msg_type="info"):
+        """
+        安全地显示消息框，检查窗口是否仍然有效
+        
+        Args:
+            title: 消息框标题
+            message: 消息内容
+            msg_type: 消息类型 ("info", "error", "warning")
+        """
+        try:
+            # 检查窗口是否仍然存在且有效
+            if not self.root.winfo_exists():
+                return
+            
+            # 尝试获取窗口状态
+            self.root.winfo_viewable()
+            
+            # 根据类型显示不同的消息框
+            if msg_type == "info":
+                messagebox.showinfo(title, message)
+            elif msg_type == "error":
+                messagebox.showerror(title, message)
+            elif msg_type == "warning":
+                messagebox.showwarning(title, message)
+        except (tk.TclError, RuntimeError):
+            # 窗口已被销毁或主循环已结束，忽略错误
+            pass
+    
+    def safe_call_after_idle(self, func):
+        """
+        安全地调用 after_idle，检查窗口是否仍然有效
+        
+        Args:
+            func: 要执行的函数
+        """
+        try:
+            # 检查窗口是否仍然存在且有效
+            if not self.root.winfo_exists():
+                return
+            
+            # 尝试获取窗口状态
+            self.root.winfo_viewable()
+            
+            # 安全地调用 after_idle
+            self.root.after_idle(func)
+        except (tk.TclError, RuntimeError):
+            # 窗口已被销毁或主循环已结束，忽略错误
+            pass
+    
     def process_images(self):
         """处理图片的主要逻辑"""
         try:
@@ -436,8 +485,8 @@ class ShoeProcessorGUI:
                 # 更新进度（节流：每5个文件或最后一个文件才更新，减少界面更新频率）
                 if i % 5 == 0 or i == total_files:
                     progress_msg = f"处理进度: {i}/{total_files} - {image_file.name}"
-                    # 使用after_idle将UI更新请求推送到事件队列，Tkinter会在空闲时处理
-                    self.root.after_idle(lambda msg=progress_msg: self.progress_var.set(msg))
+                    # 使用安全方法将UI更新请求推送到事件队列
+                    self.safe_call_after_idle(lambda msg=progress_msg: self.progress_var.set(msg))
                 
                 # 构建输出文件路径 - 保持与源文件名一致
                 output_file = Path(output_dir) / image_file.name
@@ -472,27 +521,40 @@ class ShoeProcessorGUI:
                 self.log_message(f"   失败: {failed} 张")
                 self.log_message(f"   成功率: {success_rate:.1%}")
                 
-                # 显示完成对话框（使用after_idle确保在主线程中执行）
-                self.root.after_idle(lambda: messagebox.showinfo(
-                    "处理完成", 
-                    f"批量处理完成!\n\n总计: {total_files} 张\n成功: {successful} 张\n失败: {failed} 张\n成功率: {success_rate:.1%}"
-                ))
+                # 显示完成对话框（使用安全方法确保窗口有效）
+                self.safe_call_after_idle(
+                    lambda: self.safe_show_message(
+                        "处理完成", 
+                        f"批量处理完成!\n\n总计: {total_files} 张\n成功: {successful} 张\n失败: {failed} 张\n成功率: {success_rate:.1%}",
+                        "info"
+                    )
+                )
                 
         except Exception as e:
             self.log_message(f"处理过程中发生错误: {e}", "ERROR")
-            self.root.after_idle(lambda: messagebox.showerror("错误", f"处理过程中发生错误:\n{e}"))
+            self.safe_call_after_idle(
+                lambda: self.safe_show_message("错误", f"处理过程中发生错误:\n{e}", "error")
+            )
         
         finally:
-            # 恢复界面状态（使用after_idle确保在主线程中执行）
-            self.root.after_idle(self.reset_ui_state)
+            # 恢复界面状态（使用安全方法确保窗口有效）
+            self.safe_call_after_idle(self.reset_ui_state)
     
     def reset_ui_state(self):
         """重置界面状态"""
-        self.processing = False
-        self.start_button.config(state=tk.NORMAL)
-        self.stop_button.config(state=tk.DISABLED)
-        self.progress_bar.stop()
-        self.progress_var.set("就绪")
+        try:
+            # 检查窗口是否仍然存在且有效
+            if not self.root.winfo_exists():
+                return
+            
+            self.processing = False
+            self.start_button.config(state=tk.NORMAL)
+            self.stop_button.config(state=tk.DISABLED)
+            self.progress_bar.stop()
+            self.progress_var.set("就绪")
+        except (tk.TclError, RuntimeError):
+            # 窗口已被销毁或主循环已结束，忽略错误
+            pass
 
 
 class QueueHandler(logging.Handler):
