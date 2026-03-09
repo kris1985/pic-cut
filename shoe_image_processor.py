@@ -544,14 +544,15 @@ class ShoeImageProcessor:
             image_area = width * height
             
             area_ratio = detected_area / image_area
+            aspect_ratio = detected_width / detected_height if detected_height > 0 else 1
             logger.info(f"检测到对象边界: ({left}, {top}, {right}, {bottom})")
             logger.info(f"对象尺寸: {detected_width}x{detected_height}, 面积占比: {area_ratio:.1%}")
             
-            # 如果检测结果合理，返回边界
-            if 0.1 <= area_ratio <= 0.9:
+            # 如果检测结果合理，返回边界（放宽至5%支持小物体；宽高比0.3~4.5支持横放拖鞋等）
+            if 0.05 <= area_ratio <= 0.9 and 0.3 <= aspect_ratio <= 4.5:
                 return left, top, right, bottom
             else:
-                logger.warning(f"检测到的边界面积占比异常: {area_ratio:.1%}, 使用保守策略")
+                logger.warning(f"检测到的边界面积占比异常: {area_ratio:.1%} 或宽高比{aspect_ratio:.1f}异常, 使用保守策略")
         
         # 如果所有策略都失败，使用保守策略
         logger.warning("对象检测失败，使用保守裁剪策略")
@@ -637,17 +638,17 @@ class ShoeImageProcessor:
                 return left, top, right, bottom
         
         # 如果活跃度分析也失败，使用传统的保守策略
-        # 但是针对商品图片做优化：假设商品在中下部分
-        logger.info("使用传统保守策略，假设商品在中下部分")
+        # 假设商品在中下部分，使用更紧凑的60%中心区域（避免"没剪裁"感）
+        logger.info("使用传统保守策略，假设商品在中下部分（60%中心区域）")
         
-        # 水平方向：使用中间80%区域
-        margin_w = int(width * 0.1)
+        # 水平方向：使用中间60%区域（左右各20%边距）
+        margin_w = int(width * 0.2)
         left = margin_w
         right = width - margin_w
         
-        # 垂直方向：假设商品在中下部分，使用下部70%区域
-        top = int(height * 0.15)  # 从15%位置开始
-        bottom = int(height * 0.95)  # 到95%位置结束
+        # 垂直方向：假设商品在中下部分，使用中间60%区域（上25%下15%边距）
+        top = int(height * 0.25)
+        bottom = int(height * 0.85)
         
         return left, top, right, bottom
     
