@@ -31,9 +31,9 @@ class ShoeProcessorGUI:
         # 设置图标和样式
         self.setup_styles()
         
-        # 初始化变量（默认输入/输出目录）
-        self.input_dir = tk.StringVar(value="/Users/taohuang/Desktop/新建文件夹_副本2")
-        self.output_dir = tk.StringVar(value="/Users/taohuang/Desktop/新建文件夹_副本")
+        # 初始化变量
+        self.input_dir = tk.StringVar()
+        self.output_dir = tk.StringVar()
         self.ratio_var = tk.StringVar(value="auto")
         self.quality_var = tk.StringVar(value="high")
         self.hires_var = tk.BooleanVar(value=True)  # 默认选中高分辨率模式
