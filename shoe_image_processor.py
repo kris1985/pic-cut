@@ -1303,13 +1303,14 @@ class ShoeImageProcessor:
             logger.info(f"扩展画布: {original_width}x{original_height} -> {new_canvas_width}x{new_canvas_height}")
             logger.info(f"扩展边距: 左{expand_left}, 右{expand_right}, 上{expand_top}, 下{expand_bottom}")
             
-            # 创建扩展的背景色画布
-            expanded_canvas = Image.new('RGB', (new_canvas_width, new_canvas_height), background_color)
-            
-            # 将原图粘贴到扩展画布上
-            paste_x = int(expand_left)
-            paste_y = int(expand_top)
-            expanded_canvas.paste(image, (paste_x, paste_y))
+            # 渐变背景用白色填充（与鞋子更搭），纯色背景用单色填充
+            if self._is_gradient_background(image):
+                expanded_canvas = Image.new('RGB', (new_canvas_width, new_canvas_height), (255, 255, 255))
+                expanded_canvas.paste(image, (int(expand_left), int(expand_top)))
+                logger.info(f"检测到渐变背景，使用白色填充扩展区域")
+            else:
+                expanded_canvas = Image.new('RGB', (new_canvas_width, new_canvas_height), background_color)
+                expanded_canvas.paste(image, (int(expand_left), int(expand_top)))
             
             # 更新鞋子在新画布中的坐标
             left += expand_left
@@ -1338,8 +1339,11 @@ class ShoeImageProcessor:
                 target_ratio = '4:3'
                 logger.info(f"检测到横图（宽度{object_width} > 高度{object_height}，高宽比 {aspect_ratio:.2f}），使用 4:3 横图比例")
             elif object_height > object_width:
-                # 竖图：高:宽 >= 4:3 时用 3:4，否则保持原比例
-                if aspect_ratio >= 4.0 / 3.0:
+                # 竖图：高宽比>=1.7用2:3收紧画布减少左右留白，>=4:3用3:4，否则保持原比例
+                if aspect_ratio >= 1.7:
+                    target_ratio = '2:3'
+                    logger.info(f"检测到细长竖图（高宽比 {aspect_ratio:.2f} >= 1.7），使用 2:3 比例收紧画布减少左右留白")
+                elif aspect_ratio >= 4.0 / 3.0:
                     target_ratio = '3:4'
                     logger.info(f"检测到竖图（高度{object_height} > 宽度{object_width}，高宽比 {aspect_ratio:.2f} >= 4:3），使用 3:4 竖图比例")
                 else:
@@ -1362,6 +1366,8 @@ class ShoeImageProcessor:
             ratio_w, ratio_h = 4, 3
         elif target_ratio == '3:4':
             ratio_w, ratio_h = 3, 4
+        elif target_ratio == '2:3':
+            ratio_w, ratio_h = 2, 3
         else:
             raise ValueError(f"不支持的比例: {target_ratio}")
         
@@ -1646,25 +1652,27 @@ class ShoeImageProcessor:
             
             # 处理粘贴位置为负数的情况
             left_extension = 0
+            right_extension = 0
             top_extension = 0
+            bottom_extension = 0
             
             # 对于横图，不应该扩展画布，应该调整裁剪区域
             # 对于竖图，可以扩展画布以确保上下边距
             if is_vertical_for_check:
-                # 竖图：可以扩展画布
+                # 竖图：对称扩展使主体居中（左+右、上+下各分一半）
                 if paste_x < 0:
-                    left_extension = int(-paste_x)
-                    logger.info(f"  粘贴位置X为负数 ({paste_x:.0f}px)，竖图扩展画布左边 {left_extension}px 以保持左右边距均衡")
-                    # 检测左边边缘的背景颜色，用于填充扩展区域
+                    total_x = int(-paste_x)
+                    left_extension = (total_x + 1) // 2
+                    right_extension = total_x - left_extension
+                    logger.info(f"  粘贴位置X为负数 ({paste_x:.0f}px)，竖图对称扩展: 左{left_extension}px 右{right_extension}px 使主体居中")
                     left_edge_bg_color = self.detect_edge_background_color(source_image, edge='left', fast_mode=fast_mode)
                 
                 if paste_y < 0:
-                    # 竖图：需要向上扩展画布
-                    top_extension = int(-paste_y)
-                    # 调整粘贴位置，使其在扩展后的画布上从顶部开始
+                    total_y = int(-paste_y)
+                    top_extension = (total_y + 1) // 2
+                    bottom_extension = total_y - top_extension
                     canvas_paste_y = 0
-                    logger.info(f"  粘贴位置Y为负数 ({paste_y:.0f}px)，竖图扩展画布顶部 {top_extension}px")
-                    # 检测顶部边缘的背景颜色，用于填充扩展区域
+                    logger.info(f"  粘贴位置Y为负数 ({paste_y:.0f}px)，竖图对称扩展: 上{top_extension}px 下{bottom_extension}px 使主体居中")
                     top_edge_bg_color = self.detect_edge_background_color(source_image, edge='top', fast_mode=fast_mode)
             else:
                 # 横图：paste_y<0 时也扩展画布，避免鞋子偏下
@@ -1701,20 +1709,37 @@ class ShoeImageProcessor:
                 bottom = bottom + top_extension
             
             # 对于竖图，特别检查：如果原图不够高，需要确保底部边距
-            adjusted_canvas_height = final_canvas_height + top_extension
-            adjusted_canvas_width = final_canvas_width + left_extension
+            adjusted_canvas_height = final_canvas_height + top_extension + bottom_extension
+            adjusted_canvas_width = final_canvas_width + left_extension + right_extension
             
             # 计算需要从原图中提取的区域
             if is_vertical_for_check:
-                # 竖图：考虑扩展
-                src_left = max(0, -paste_x)
-                src_top = max(0, -paste_y)
-                src_right = min(source_width, src_left + adjusted_canvas_width - left_extension - max(0, paste_x))
-                src_bottom = min(source_height, src_top + adjusted_canvas_height - top_extension - max(0, paste_y))
+                # 竖图：对称扩展时裁剪以鞋子为中心，粘贴到 left_extension/top_extension
+                if left_extension > 0 or right_extension > 0:
+                    ideal_src_left = int(original_shoe_center_x - final_canvas_width / 2)
+                    src_left = max(0, ideal_src_left)
+                    src_right = min(source_width, src_left + final_canvas_width)
+                    if src_right - src_left < final_canvas_width:
+                        src_left = max(0, source_width - final_canvas_width)
+                        src_right = min(source_width, src_left + final_canvas_width)
+                    canvas_paste_x = left_extension
+                else:
+                    src_left = max(0, -paste_x)
+                    src_right = min(source_width, src_left + adjusted_canvas_width - left_extension - max(0, paste_x))
+                    canvas_paste_x = max(0, paste_x) + left_extension
                 
-                # 计算在新画布上的粘贴位置（考虑左边扩展）
-                canvas_paste_x = max(0, paste_x) + left_extension
-                canvas_paste_y = max(0, paste_y)
+                if top_extension > 0 or bottom_extension > 0:
+                    ideal_src_top = int(original_shoe_center_y - final_canvas_height / 2)
+                    src_top = max(0, ideal_src_top)
+                    src_bottom = min(source_height, src_top + final_canvas_height)
+                    if src_bottom - src_top < final_canvas_height:
+                        src_top = max(0, source_height - final_canvas_height)
+                        src_bottom = min(source_height, src_top + final_canvas_height)
+                    canvas_paste_y = top_extension
+                else:
+                    src_top = max(0, -paste_y)
+                    src_bottom = min(source_height, src_top + adjusted_canvas_height - top_extension - max(0, paste_y))
+                    canvas_paste_y = max(0, paste_y)
             else:
                 # 横图：不扩展画布，直接裁剪原图，确保鞋子居中且边距正确
                 # 计算裁剪区域，使鞋子中心对齐到画布中心，并确保裁剪区域完全在原图范围内
@@ -1805,14 +1830,22 @@ class ShoeImageProcessor:
                 logger.info(f"  横图粘贴位置: ({canvas_paste_x}, {canvas_paste_y})")
                 logger.info(f"  横图画布尺寸: {adjusted_canvas_width}x{adjusted_canvas_height}")
             
-            # 如果扩展了画布高度，对于竖图（3:4），需要调整宽度以保持比例
-            # 横图不需要调整，使用原来的方式
+            # 如果扩展了画布高度，对于竖图（3:4），需要调整宽度以保持比例，但必须能容纳内容+左右白边；同理高度也需能容纳上+内容+下
             if top_extension > 0 and is_vertical_for_check and not keep_original_ratio:
-                # 竖图3:4比例：宽度 = 高度 * 3 / 4
                 ideal_width_for_height = int(adjusted_canvas_height * ratio_w / ratio_h)
-                if abs(ideal_width_for_height - adjusted_canvas_width) > 1:
-                    adjusted_canvas_width = ideal_width_for_height
-                    logger.info(f"  调整画布宽度以保持3:4比例: {final_canvas_width} -> {adjusted_canvas_width} (高度: {adjusted_canvas_height})")
+                crop_width = src_right - src_left if src_right > src_left else final_canvas_width
+                crop_height = src_bottom - src_top if src_bottom > src_top else final_canvas_height
+                min_width_for_content = left_extension + crop_width + right_extension
+                min_height_for_content = top_extension + crop_height + bottom_extension
+                new_width = max(ideal_width_for_height, min_width_for_content)
+                if abs(new_width - adjusted_canvas_width) > 1:
+                    adjusted_canvas_width = new_width
+                    logger.info(f"  调整画布宽度以保持3:4比例且容纳内容: {final_canvas_width} -> {adjusted_canvas_width} (高度: {adjusted_canvas_height}, 最小宽度: {min_width_for_content})")
+                ideal_height_for_width = int(adjusted_canvas_width * ratio_h / ratio_w)
+                new_height = max(adjusted_canvas_height, ideal_height_for_width, min_height_for_content)
+                if new_height > adjusted_canvas_height:
+                    adjusted_canvas_height = new_height
+                    logger.info(f"  同步扩展画布高度以保持3:4: {adjusted_canvas_height}px (最小高度: {min_height_for_content})")
             if is_vertical_for_check:
                 # 计算实际能提取的高度
                 extracted_height = src_bottom - src_top
@@ -1833,30 +1866,29 @@ class ShoeImageProcessor:
                         logger.warning(f"  原图高度严重不足 (缺失 {height_deficit:.0f}px)，扩展画布")
                         # 扩展画布高度
                         adjusted_canvas_height = int(final_canvas_height + height_deficit)
-                        # 对于竖图（3:4），调整宽度以保持比例
-                        # 横图不需要调整，使用原来的方式
+                        # 对于竖图（3:4），调整宽度以保持比例，但必须能容纳内容+左右白边；同理高度也需能容纳上+内容+下
                         if is_vertical_for_check and not keep_original_ratio:
                             ideal_width_for_height = int(adjusted_canvas_height * ratio_w / ratio_h)
-                            if abs(ideal_width_for_height - adjusted_canvas_width) > 1:
-                                adjusted_canvas_width = ideal_width_for_height
-                                logger.info(f"  调整画布宽度以保持3:4比例: {final_canvas_width} -> {adjusted_canvas_width} (高度: {adjusted_canvas_height})")
+                            crop_width = src_right - src_left if src_right > src_left else final_canvas_width
+                            crop_height = src_bottom - src_top if src_bottom > src_top else final_canvas_height
+                            min_width_for_content = left_extension + crop_width + right_extension
+                            min_height_for_content = top_extension + crop_height + bottom_extension
+                            new_width = max(ideal_width_for_height, min_width_for_content)
+                            if abs(new_width - adjusted_canvas_width) > 1:
+                                adjusted_canvas_width = new_width
+                                logger.info(f"  调整画布宽度以保持3:4比例且容纳内容: {final_canvas_width} -> {adjusted_canvas_width} (高度: {adjusted_canvas_height}, 最小宽度: {min_width_for_content})")
+                            ideal_height_for_width = int(adjusted_canvas_width * ratio_h / ratio_w)
+                            new_height = max(adjusted_canvas_height, ideal_height_for_width, min_height_for_content)
+                            if new_height > adjusted_canvas_height:
+                                adjusted_canvas_height = new_height
+                                logger.info(f"  同步扩展画布高度以保持3:4: {adjusted_canvas_height}px (最小高度: {min_height_for_content})")
                         logger.info(f"  扩展画布高度到: {adjusted_canvas_width}x{adjusted_canvas_height}")
             
             # 创建背景色的新画布（使用调整后的高度和宽度，包括顶部扩展）
             # 横图：不创建新画布，直接使用裁剪后的原图
             # 竖图：创建新画布用于粘贴
             if is_vertical_for_check:
-                # 竖图：如果扩展了左边，使用左边边缘的背景颜色；如果扩展了顶部，使用顶部边缘的背景颜色
-                if left_extension > 0:
-                    canvas_bg_color = left_edge_bg_color
-                    logger.info(f"  使用左边边缘背景颜色填充扩展区域: RGB{canvas_bg_color}")
-                elif top_extension > 0:
-                    canvas_bg_color = top_edge_bg_color
-                    logger.info(f"  使用顶部边缘背景颜色填充扩展区域: RGB{canvas_bg_color}")
-                else:
-                    canvas_bg_color = background_color
-                    logger.info(f"  使用整体背景颜色: RGB{canvas_bg_color}")
-                new_canvas = Image.new('RGB', (adjusted_canvas_width, adjusted_canvas_height), canvas_bg_color)
+                new_canvas = None  # 稍后在裁剪后根据是否渐变创建
             else:
                 # 横图：不创建新画布，后续直接使用裁剪后的原图
                 new_canvas = None
@@ -1907,19 +1939,32 @@ class ShoeImageProcessor:
                             adjusted_canvas_height = cropped_source.height
                             adjusted_canvas_width = int(cropped_source.height * 4 / 3)
                         logger.info(f"  调整后画布尺寸: {adjusted_canvas_width}x{adjusted_canvas_height}")
-                        # 重新创建画布
-                        if left_extension > 0:
+                    
+                    # 粘贴位置：对称扩展时 canvas_paste_y 已是目标位置，否则需加上 top_extension
+                    if top_extension > 0 or bottom_extension > 0:
+                        actual_paste_y = canvas_paste_y
+                    else:
+                        actual_paste_y = canvas_paste_y + top_extension
+                    
+                    # 渐变/复杂背景用白色填充（与鞋子更搭），纯色用边缘颜色
+                    has_extension = left_extension > 0 or right_extension > 0 or top_extension > 0 or bottom_extension > 0
+                    if has_extension and self._is_gradient_background(source_image):
+                        canvas_bg_color = (255, 255, 255)
+                        logger.info(f"  检测到渐变背景，使用白色填充扩展区域")
+                    elif has_extension:
+                        if left_extension > 0 or right_extension > 0:
                             canvas_bg_color = left_edge_bg_color
-                        elif top_extension > 0:
+                            logger.info(f"  使用边缘背景颜色填充左右扩展区域: RGB{canvas_bg_color}")
+                        elif top_extension > 0 or bottom_extension > 0:
                             canvas_bg_color = top_edge_bg_color
+                            logger.info(f"  使用边缘背景颜色填充上下扩展区域: RGB{canvas_bg_color}")
                         else:
                             canvas_bg_color = background_color
-                        new_canvas = Image.new('RGB', (adjusted_canvas_width, adjusted_canvas_height), canvas_bg_color)
-                    
-                    # 如果扩展了顶部，调整粘贴位置（在扩展后的画布上，粘贴位置应该加上顶部扩展的高度）
-                    actual_paste_y = canvas_paste_y + top_extension
-                    
-                    # 粘贴到新画布
+                            logger.info(f"  使用整体背景颜色: RGB{canvas_bg_color}")
+                    else:
+                        canvas_bg_color = background_color
+                        logger.info(f"  使用整体背景颜色: RGB{canvas_bg_color}")
+                    new_canvas = Image.new('RGB', (adjusted_canvas_width, adjusted_canvas_height), canvas_bg_color)
                     new_canvas.paste(cropped_source, (canvas_paste_x, actual_paste_y))
                 
                 # 对于竖图，验证上下边距并确保均衡
@@ -1991,8 +2036,8 @@ class ShoeImageProcessor:
                             # 更新实际粘贴位置
                             actual_paste_y = new_actual_paste_y
                             canvas_paste_y = actual_paste_y - top_extension
-                            # 重新创建画布并粘贴
-                            new_canvas = Image.new('RGB', (adjusted_canvas_width, adjusted_canvas_height), background_color)
+                            # 重新创建画布并粘贴（使用与初始画布一致的填充色：渐变用白，否则用背景色）
+                            new_canvas = Image.new('RGB', (adjusted_canvas_width, adjusted_canvas_height), canvas_bg_color)
                             new_canvas.paste(cropped_source, (canvas_paste_x, actual_paste_y))
                             logger.info(f"  调整粘贴位置 {adjustment:+.0f}px 以均衡上下边距 (迭代 {iteration + 1})")
                             
@@ -2020,19 +2065,27 @@ class ShoeImageProcessor:
                             additional_bottom = max(int(-adjustment), int(ideal_total_height - adjusted_canvas_height))
                             adjusted_canvas_height = adjusted_canvas_height + additional_bottom
                             
-                            # 对于竖图（3:4），调整宽度以保持比例
-                            # 横图不需要调整，使用原来的方式
+                            # 对于竖图（3:4），调整宽度以保持比例，但必须能容纳内容+左右白边；同理高度也需能容纳上+内容+下
                             if is_vertical_for_check and not keep_original_ratio:
                                 ideal_width_for_height = int(adjusted_canvas_height * ratio_w / ratio_h)
-                                if abs(ideal_width_for_height - adjusted_canvas_width) > 1:
-                                    adjusted_canvas_width = ideal_width_for_height
-                                    logger.info(f"  调整画布宽度以保持3:4比例: {final_canvas_width} -> {adjusted_canvas_width} (高度: {adjusted_canvas_height})")
+                                min_width_for_content = left_extension + cropped_source.width + right_extension
+                                new_width = max(ideal_width_for_height, min_width_for_content)
+                                if abs(new_width - adjusted_canvas_width) > 1:
+                                    adjusted_canvas_width = new_width
+                                    logger.info(f"  调整画布宽度以保持3:4比例且容纳内容: {final_canvas_width} -> {adjusted_canvas_width} (高度: {adjusted_canvas_height}, 最小宽度: {min_width_for_content})")
+                                # 若宽度被放大，需同步扩展高度以保持3:4，且高度必须能容纳上+内容+下
+                                min_height_for_content = top_extension + cropped_source.height + bottom_extension
+                                ideal_height_for_width = int(adjusted_canvas_width * ratio_h / ratio_w)
+                                new_height = max(adjusted_canvas_height, ideal_height_for_width, min_height_for_content)
+                                if new_height > adjusted_canvas_height:
+                                    adjusted_canvas_height = new_height
+                                    logger.info(f"  同步扩展画布高度以保持3:4: {adjusted_canvas_height}px (最小高度: {min_height_for_content})")
                             
                             # 重新计算理想的粘贴位置，使上下边距完全均衡
                             ideal_paste_y = (adjusted_canvas_height - cropped_source.height) / 2
                             actual_paste_y = int(ideal_paste_y)
                             canvas_paste_y = actual_paste_y - top_extension
-                            new_canvas = Image.new('RGB', (adjusted_canvas_width, adjusted_canvas_height), background_color)
+                            new_canvas = Image.new('RGB', (adjusted_canvas_width, adjusted_canvas_height), canvas_bg_color)
                             new_canvas.paste(cropped_source, (canvas_paste_x, actual_paste_y))
                             logger.info(f"  扩展画布底部 {additional_bottom}px 并调整到理想位置以完全均衡上下边距 (迭代 {iteration + 1})")
                             
@@ -2056,19 +2109,27 @@ class ShoeImageProcessor:
                             top_extension = top_extension + additional_top
                             adjusted_canvas_height = adjusted_canvas_height + additional_top
                             
-                            # 对于竖图（3:4），调整宽度以保持比例
-                            # 横图不需要调整，使用原来的方式
+                            # 对于竖图（3:4），调整宽度以保持比例，但必须能容纳内容+左右白边；同理高度也需能容纳上+内容+下
                             if is_vertical_for_check and not keep_original_ratio:
                                 ideal_width_for_height = int(adjusted_canvas_height * ratio_w / ratio_h)
-                                if abs(ideal_width_for_height - adjusted_canvas_width) > 1:
-                                    adjusted_canvas_width = ideal_width_for_height
-                                    logger.info(f"  调整画布宽度以保持3:4比例: {final_canvas_width} -> {adjusted_canvas_width} (高度: {adjusted_canvas_height})")
+                                min_width_for_content = left_extension + cropped_source.width + right_extension
+                                new_width = max(ideal_width_for_height, min_width_for_content)
+                                if abs(new_width - adjusted_canvas_width) > 1:
+                                    adjusted_canvas_width = new_width
+                                    logger.info(f"  调整画布宽度以保持3:4比例且容纳内容: {final_canvas_width} -> {adjusted_canvas_width} (高度: {adjusted_canvas_height}, 最小宽度: {min_width_for_content})")
+                                # 若宽度被放大，需同步扩展高度以保持3:4，且高度必须能容纳上+内容+下
+                                min_height_for_content = top_extension + cropped_source.height + bottom_extension
+                                ideal_height_for_width = int(adjusted_canvas_width * ratio_h / ratio_w)
+                                new_height = max(adjusted_canvas_height, ideal_height_for_width, min_height_for_content)
+                                if new_height > adjusted_canvas_height:
+                                    adjusted_canvas_height = new_height
+                                    logger.info(f"  同步扩展画布高度以保持3:4: {adjusted_canvas_height}px (最小高度: {min_height_for_content})")
                             
                             # 重新计算理想的粘贴位置，使上下边距完全均衡
                             ideal_paste_y = (adjusted_canvas_height - cropped_source.height) / 2
                             actual_paste_y = int(ideal_paste_y)
                             canvas_paste_y = actual_paste_y - top_extension
-                            new_canvas = Image.new('RGB', (adjusted_canvas_width, adjusted_canvas_height), background_color)
+                            new_canvas = Image.new('RGB', (adjusted_canvas_width, adjusted_canvas_height), canvas_bg_color)
                             new_canvas.paste(cropped_source, (canvas_paste_x, actual_paste_y))
                             logger.info(f"  扩展画布顶部 {additional_top}px 并调整到理想位置以完全均衡上下边距 (迭代 {iteration + 1})")
                             
@@ -2530,8 +2591,11 @@ class ShoeImageProcessor:
                 target_ratio = '4:3'
                 logger.info(f"检测到横图（宽度{object_width} > 高度{object_height}，高宽比 {aspect_ratio:.2f}），使用 4:3 横图比例")
             elif object_height > object_width:
-                # 竖图：高:宽 >= 4:3 时用 3:4，否则保持原比例
-                if aspect_ratio >= 4.0 / 3.0:
+                # 竖图：高宽比>=1.7用2:3收紧画布减少左右留白，>=4:3用3:4，否则保持原比例
+                if aspect_ratio >= 1.7:
+                    target_ratio = '2:3'
+                    logger.info(f"检测到细长竖图（高宽比 {aspect_ratio:.2f} >= 1.7），使用 2:3 比例收紧画布减少左右留白")
+                elif aspect_ratio >= 4.0 / 3.0:
                     target_ratio = '3:4'
                     logger.info(f"检测到竖图（高度{object_height} > 宽度{object_width}，高宽比 {aspect_ratio:.2f} >= 4:3），使用 3:4 竖图比例")
                 else:
@@ -2620,6 +2684,8 @@ class ShoeImageProcessor:
                 ratio_w, ratio_h = 4, 3
             elif target_ratio == '3:4':
                 ratio_w, ratio_h = 3, 4
+            elif target_ratio == '2:3':
+                ratio_w, ratio_h = 2, 3
             else:
                 raise ValueError(f"不支持的比例: {target_ratio}")
             
@@ -3012,6 +3078,86 @@ class ShoeImageProcessor:
         logger.info(f"批量处理完成! 总计: {total_files}, 成功: {successful}, 失败: {failed}")
         
         return stats
+    
+    def _is_gradient_background(self, image: Image.Image, threshold: float = 20.0) -> bool:
+        """
+        检测是否为渐变背景（四边颜色差异较大时判定为渐变）
+        
+        Args:
+            image: PIL Image对象
+            threshold: 边缘颜色差异阈值，超过则判定为渐变
+            
+        Returns:
+            True 表示渐变背景
+        """
+        arr = np.array(image.convert('RGB'))
+        h, w = arr.shape[:2]
+        t = min(30, min(h, w) // 20)  # 边缘采样厚度
+        
+        left_avg = np.median(arr[:, :t, :].reshape(-1, 3), axis=0)
+        right_avg = np.median(arr[:, -t:, :].reshape(-1, 3), axis=0)
+        top_avg = np.median(arr[:t, :, :].reshape(-1, 3), axis=0)
+        bottom_avg = np.median(arr[-t:, :, :].reshape(-1, 3), axis=0)
+        
+        colors = np.array([left_avg, right_avg, top_avg, bottom_avg])
+        max_diff = np.max(np.ptp(colors, axis=0))
+        
+        is_gradient = max_diff > threshold
+        if is_gradient:
+            logger.info(f"检测到渐变背景 (边缘颜色差异: {max_diff:.0f} > {threshold})，将使用白色填充")
+        return is_gradient
+    
+    def _extend_image_edge_replication(self, image: Image.Image, expand_left: int, expand_right: int,
+                                        expand_top: int, expand_bottom: int) -> Image.Image:
+        """
+        通过边缘像素延伸扩展画布，适用于渐变背景（避免单色填充不搭）
+        
+        Args:
+            image: 原图
+            expand_left/right/top/bottom: 各边扩展像素数
+            
+        Returns:
+            扩展后的图像
+        """
+        w, h = image.size
+        img_arr = np.array(image.convert('RGB'))
+        
+        new_w = w + expand_left + expand_right
+        new_h = h + expand_top + expand_bottom
+        new_img = np.zeros((new_h, new_w, 3), dtype=img_arr.dtype)
+        
+        # 放置原图
+        new_img[expand_top:expand_top + h, expand_left:expand_left + w] = img_arr
+        
+        # 左边缘延伸：复制最左列
+        if expand_left > 0:
+            left_col = img_arr[:, 0:1, :]
+            new_img[expand_top:expand_top + h, 0:expand_left] = np.tile(left_col, (1, expand_left, 1))
+        
+        # 右边缘延伸
+        if expand_right > 0:
+            right_col = img_arr[:, -1:, :]
+            new_img[expand_top:expand_top + h, expand_left + w:new_w] = np.tile(right_col, (1, expand_right, 1))
+        
+        # 上边缘延伸（含左上、右上角）
+        if expand_top > 0:
+            top_row = img_arr[0:1, :, :]
+            new_img[0:expand_top, expand_left:expand_left + w] = np.tile(top_row, (expand_top, 1, 1))
+            if expand_left > 0:
+                new_img[0:expand_top, 0:expand_left] = img_arr[0, 0]
+            if expand_right > 0:
+                new_img[0:expand_top, expand_left + w:new_w] = img_arr[0, -1]
+        
+        # 下边缘延伸
+        if expand_bottom > 0:
+            bottom_row = img_arr[-1:, :, :]
+            new_img[expand_top + h:new_h, expand_left:expand_left + w] = np.tile(bottom_row, (expand_bottom, 1, 1))
+            if expand_left > 0:
+                new_img[expand_top + h:new_h, 0:expand_left] = img_arr[-1, 0]
+            if expand_right > 0:
+                new_img[expand_top + h:new_h, expand_left + w:new_w] = img_arr[-1, -1]
+        
+        return Image.fromarray(new_img, mode='RGB')
     
     def detect_background_color(self, image: Image.Image, fast_mode: bool = True) -> tuple:
         """
@@ -3467,7 +3613,7 @@ def main():
     parser = argparse.ArgumentParser(description='鞋子图片批量处理工具')
     parser.add_argument('input', help='输入文件或目录路径')
     parser.add_argument('output', help='输出文件或目录路径')
-    parser.add_argument('--ratio', choices=['4:3', '3:4', 'auto'], default='auto', 
+    parser.add_argument('--ratio', choices=['4:3', '3:4', '2:3', 'auto'], default='auto', 
                        help='目标比例 (默认: auto)')
     parser.add_argument('--single', action='store_true', help='处理单张图片')
     parser.add_argument('--hires', action='store_true', 
