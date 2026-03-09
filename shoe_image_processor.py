@@ -1331,20 +1331,22 @@ class ShoeImageProcessor:
         keep_original_ratio = False  # 是否保持原比例
         
         if target_ratio == 'auto':
+            aspect_ratio = object_height / object_width if object_width > 0 else 1.0
             if object_width > object_height:
                 # 横图：宽度大于高度，使用 4:3 比例
                 target_ratio = '4:3'
-                aspect_ratio = object_height / object_width if object_width > 0 else 1.0
                 logger.info(f"检测到横图（宽度{object_width} > 高度{object_height}，高宽比 {aspect_ratio:.2f}），使用 4:3 横图比例")
             elif object_height > object_width:
-                # 竖图：高度大于宽度，使用 3:4 比例
-                target_ratio = '3:4'
-                aspect_ratio = object_height / object_width if object_width > 0 else 1.0
-                logger.info(f"检测到竖图（高度{object_height} > 宽度{object_width}，高宽比 {aspect_ratio:.2f}），使用 3:4 竖图比例")
+                # 竖图：高:宽 >= 4:3 时用 3:4，否则保持原比例
+                if aspect_ratio >= 4.0 / 3.0:
+                    target_ratio = '3:4'
+                    logger.info(f"检测到竖图（高度{object_height} > 宽度{object_width}，高宽比 {aspect_ratio:.2f} >= 4:3），使用 3:4 竖图比例")
+                else:
+                    keep_original_ratio = True
+                    logger.info(f"检测到略竖图（高度{object_height} > 宽度{object_width}，高宽比 {aspect_ratio:.2f} < 4:3），保持原比例加边距")
             else:
                 # 接近方形：保持原比例加边距
                 keep_original_ratio = True
-                aspect_ratio = object_height / object_width if object_width > 0 else 1.0
                 logger.info(f"检测到接近方形图（宽度{object_width} ≈ 高度{object_height}，高宽比 {aspect_ratio:.2f}），保持原比例加边距")
         else:
             # 用户指定了比例，使用指定比例
@@ -1664,37 +1666,38 @@ class ShoeImageProcessor:
                     # 检测顶部边缘的背景颜色，用于填充扩展区域
                     top_edge_bg_color = self.detect_edge_background_color(source_image, edge='top', fast_mode=fast_mode)
             else:
-                # 横图：不扩展画布，调整裁剪区域和粘贴位置
+                # 横图：paste_y<0 时也扩展画布，避免鞋子偏下
                 if paste_x < 0:
                     # 横图：粘贴位置X为负数，说明鞋子太靠右，需要调整裁剪区域
-                    # 将粘贴位置调整为0，并相应调整裁剪区域
                     logger.info(f"  粘贴位置X为负数 ({paste_x:.0f}px)，横图不扩展画布，调整裁剪区域")
-                    # 调整粘贴位置为0，并调整裁剪区域
                     paste_x = 0
-                    # 调整原图中心位置，使其能够适配画布
-                    # 计算新的裁剪起点
                     adjusted_left = max(0, original_shoe_center_x - final_canvas_width / 2)
-                    # 如果调整后的left超出原图范围，则从原图左边开始
                     if adjusted_left + final_canvas_width > source_width:
                         adjusted_left = max(0, source_width - final_canvas_width)
-                    # 重新计算粘贴位置
                     paste_x = int(target_shoe_center_x - (adjusted_left + original_shoe_center_x - left))
                     logger.info(f"  横图调整后粘贴位置X: {paste_x:.0f}px")
                 
                 if paste_y < 0:
-                    # 横图：粘贴位置Y为负数，说明鞋子太靠下，需要调整裁剪区域
-                    logger.info(f"  粘贴位置Y为负数 ({paste_y:.0f}px)，横图不扩展画布，调整裁剪区域")
-                    # 调整粘贴位置为0，并调整裁剪区域
+                    # 横图：粘贴位置Y为负数说明需更多上方空间，扩展画布顶部使鞋子垂直居中
+                    top_extension = int(-paste_y)
+                    logger.info(f"  粘贴位置Y为负数 ({paste_y:.0f}px)，横图扩展画布顶部 {top_extension}px 使鞋子居中")
                     paste_y = 0
-                    # 调整原图中心位置，使其能够适配画布
-                    # 计算新的裁剪起点
-                    adjusted_top = max(0, original_shoe_center_y - final_canvas_height / 2)
-                    # 如果调整后的top超出原图范围，则从原图顶部开始
-                    if adjusted_top + final_canvas_height > source_height:
-                        adjusted_top = max(0, source_height - final_canvas_height)
-                    # 重新计算粘贴位置
-                    paste_y = int(target_shoe_center_y - (adjusted_top + original_shoe_center_y - top))
-                    logger.info(f"  横图调整后粘贴位置Y: {paste_y:.0f}px")
+            
+            # 横图 paste_y<0 时扩展源图顶部，使裁剪时鞋子能垂直居中
+            if not is_vertical_for_check and top_extension > 0:
+                extended_height = source_height + top_extension
+                ideal_crop_bottom = original_shoe_center_y + top_extension + final_canvas_height / 2
+                bottom_extension = max(0, int(ideal_crop_bottom - extended_height))
+                if bottom_extension > 0:
+                    extended_height += bottom_extension
+                    logger.info(f"  横图扩展画布底部 {bottom_extension}px 以容纳居中裁剪")
+                extended_canvas = Image.new('RGB', (source_width, extended_height), background_color)
+                extended_canvas.paste(source_image, (0, top_extension))
+                source_image = extended_canvas
+                source_width, source_height = extended_canvas.size
+                original_shoe_center_y = original_shoe_center_y + top_extension
+                top = top + top_extension
+                bottom = bottom + top_extension
             
             # 对于竖图，特别检查：如果原图不够高，需要确保底部边距
             adjusted_canvas_height = final_canvas_height + top_extension
@@ -2520,20 +2523,22 @@ class ShoeImageProcessor:
         keep_original_ratio = False  # 是否保持原比例
         
         if target_ratio == 'auto':
+            aspect_ratio = object_height / object_width if object_width > 0 else 1.0
             if object_width > object_height:
                 # 横图：宽度大于高度，使用 4:3 比例
                 target_ratio = '4:3'
-                aspect_ratio = object_height / object_width if object_width > 0 else 1.0
                 logger.info(f"检测到横图（宽度{object_width} > 高度{object_height}，高宽比 {aspect_ratio:.2f}），使用 4:3 横图比例")
             elif object_height > object_width:
-                # 竖图：高度大于宽度，使用 3:4 比例
-                target_ratio = '3:4'
-                aspect_ratio = object_height / object_width if object_width > 0 else 1.0
-                logger.info(f"检测到竖图（高度{object_height} > 宽度{object_width}，高宽比 {aspect_ratio:.2f}），使用 3:4 竖图比例")
+                # 竖图：高:宽 >= 4:3 时用 3:4，否则保持原比例
+                if aspect_ratio >= 4.0 / 3.0:
+                    target_ratio = '3:4'
+                    logger.info(f"检测到竖图（高度{object_height} > 宽度{object_width}，高宽比 {aspect_ratio:.2f} >= 4:3），使用 3:4 竖图比例")
+                else:
+                    keep_original_ratio = True
+                    logger.info(f"检测到略竖图（高度{object_height} > 宽度{object_width}，高宽比 {aspect_ratio:.2f} < 4:3），保持原比例加边距")
             else:
                 # 接近方形：保持原比例加边距
                 keep_original_ratio = True
-                aspect_ratio = object_height / object_width if object_width > 0 else 1.0
                 logger.info(f"检测到接近方形图（宽度{object_width} ≈ 高度{object_height}，高宽比 {aspect_ratio:.2f}），保持原比例加边距")
         else:
             # 用户指定了比例，使用指定比例
@@ -3286,16 +3291,38 @@ class ShoeImageProcessor:
                         except:
                             bg_brightness = 255  # 默认白色背景
                         
+                        # 保存阴影过滤前的边界框，用于安全边距（防止裁到主体）
+                        pre_left = int(np.min(best_contour.reshape(-1, 2)[:, 0]))
+                        pre_right = int(np.max(best_contour.reshape(-1, 2)[:, 0]))
+                        pre_top = int(np.min(best_contour.reshape(-1, 2)[:, 1]))
+                        pre_bottom = int(np.max(best_contour.reshape(-1, 2)[:, 1]))
+                        
                         # 使用shadow_detector过滤阴影
                         detect_saliency_func = self._detect_saliency if hasattr(self, '_detect_saliency') else None
                         best_contour = self.shadow_detector.filter_shadow_from_contour(best_contour, gray, bg_brightness, bgr_image, detect_saliency_func)
                         
                         # 从过滤后的轮廓中找到极值点
                         contour_points = best_contour.reshape(-1, 2)
-                        left = np.min(contour_points[:, 0])
-                        right = np.max(contour_points[:, 0])
-                        top = np.min(contour_points[:, 1])
-                        bottom = np.max(contour_points[:, 1])
+                        post_left = int(np.min(contour_points[:, 0]))
+                        post_right = int(np.max(contour_points[:, 0]))
+                        post_top = int(np.min(contour_points[:, 1]))
+                        post_bottom = int(np.max(contour_points[:, 1]))
+                        
+                        # 使用过滤前后边界的并集，防止阴影过滤过激裁到主体
+                        left = min(pre_left, post_left)
+                        right = max(pre_right, post_right)
+                        top = min(pre_top, post_top)
+                        bottom = max(pre_bottom, post_bottom)
+                        
+                        # 额外安全边距（轮廓尺寸的8%），进一步防止裁到主体
+                        contour_width = right - left
+                        contour_height = bottom - top
+                        margin_x = max(15, int(contour_width * 0.08))
+                        margin_y = max(15, int(contour_height * 0.08))
+                        left = max(0, left - margin_x)
+                        right = min(width, right + margin_x)
+                        top = max(0, top - margin_y)
+                        bottom = min(height, bottom + margin_y)
                         
                         # 验证检测结果的合理性
                         contour_width = right - left
@@ -3305,7 +3332,7 @@ class ShoeImageProcessor:
                         area_ratio = contour_area / image_area
                         
                         if 0.05 <= area_ratio <= 0.9:
-                            logger.info(f"✅ rembg检测到轮廓边界（已过滤阴影）: 左{left}, 上{top}, 右{right}, 下{bottom}")
+                            logger.info(f"✅ rembg检测到轮廓边界（已过滤阴影+安全边距）: 左{left}, 上{top}, 右{right}, 下{bottom}")
                             logger.info(f"轮廓尺寸: {contour_width}x{contour_height}, 轮廓面积占比: {area_ratio:.1%}")
                             return left, top, right, bottom
                         else:
@@ -3386,17 +3413,32 @@ class ShoeImageProcessor:
             except:
                 bg_brightness = 255  # 默认白色背景
             
+            # 保存阴影过滤前的边界框
+            pre_left = int(np.min(best_contour.reshape(-1, 2)[:, 0]))
+            pre_right = int(np.max(best_contour.reshape(-1, 2)[:, 0]))
+            pre_top = int(np.min(best_contour.reshape(-1, 2)[:, 1]))
+            pre_bottom = int(np.max(best_contour.reshape(-1, 2)[:, 1]))
+            
             # 使用shadow_detector过滤阴影
             detect_saliency_func = self._detect_saliency if hasattr(self, '_detect_saliency') else None
             best_contour = self.shadow_detector.filter_shadow_from_contour(best_contour, gray, bg_brightness, bgr_image, detect_saliency_func)
             
-            # 从轮廓中找到极值点
+            # 从轮廓中找到极值点，使用并集+安全边距防止裁到主体
             contour_points = best_contour.reshape(-1, 2)
-            
-            left = np.min(contour_points[:, 0])    # 最左边的x坐标
-            right = np.max(contour_points[:, 0])   # 最右边的x坐标
-            top = np.min(contour_points[:, 1])     # 最上边的y坐标
-            bottom = np.max(contour_points[:, 1])  # 最下边的y坐标
+            post_left = int(np.min(contour_points[:, 0]))
+            post_right = int(np.max(contour_points[:, 0]))
+            post_top = int(np.min(contour_points[:, 1]))
+            post_bottom = int(np.max(contour_points[:, 1]))
+            left = min(pre_left, post_left)
+            right = max(pre_right, post_right)
+            top = min(pre_top, post_top)
+            bottom = max(pre_bottom, post_bottom)
+            margin_x = max(15, int((right - left) * 0.08))
+            margin_y = max(15, int((bottom - top) * 0.08))
+            left = max(0, left - margin_x)
+            right = min(width, right + margin_x)
+            top = max(0, top - margin_y)
+            bottom = min(height, bottom + margin_y)
             
             # 验证检测结果的合理性
             contour_width = right - left
@@ -3405,7 +3447,7 @@ class ShoeImageProcessor:
             image_area = width * height
             
             area_ratio = contour_area / image_area
-            logger.info(f"检测到轮廓边界（已过滤阴影）: 左{left}, 上{top}, 右{right}, 下{bottom}")
+            logger.info(f"检测到轮廓边界（已过滤阴影+安全边距）: 左{left}, 上{top}, 右{right}, 下{bottom}")
             logger.info(f"轮廓尺寸: {contour_width}x{contour_height}, 轮廓面积占比: {area_ratio:.1%}")
             
             # 如果检测结果合理，返回轮廓边界
